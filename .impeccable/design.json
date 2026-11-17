@@ -1,0 +1,624 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-17T17:52:00+00:00",
+  "title": "Design System: Sellbird",
+  "extensions": {
+    "colorMeta": {
+      "cobalt": {
+        "role": "primary",
+        "displayName": "Cobalt",
+        "canonical": "oklch(48.8% 0.217 264)",
+        "darkValue": "#3D6FF5",
+        "tonalRamp": [
+          "#010629",
+          "#081F5E",
+          "#173A98",
+          "#2858D8",
+          "#4E81F9",
+          "#7FABFF",
+          "#AFD0FF",
+          "#D6EFFF"
+        ]
+      },
+      "cobalt-deep": {
+        "role": "primary",
+        "displayName": "Cobalt Deep",
+        "canonical": "oklch(42.4% 0.181 266)",
+        "darkValue": "#5A85FF",
+        "tonalRamp": [
+          "#020824",
+          "#0F2155",
+          "#223E8B",
+          "#375DC5",
+          "#5B83E7",
+          "#89ACFB",
+          "#B6D0FF",
+          "#DBEFFF"
+        ]
+      },
+      "cobalt-wash": {
+        "role": "primary",
+        "displayName": "Cobalt Wash",
+        "canonical": "oklch(95.7% 0.019 266)",
+        "darkValue": "#111C36",
+        "tonalRamp": [
+          "#0A0B0E",
+          "#24262B",
+          "#42454D",
+          "#616670",
+          "#848993",
+          "#AAAEB6",
+          "#CED1D7",
+          "#ECEEF3"
+        ]
+      },
+      "cobalt-hairline": {
+        "role": "primary",
+        "displayName": "Cobalt Hairline",
+        "canonical": "oklch(89.1% 0.048 266)",
+        "darkValue": "#1E3366",
+        "tonalRamp": [
+          "#080B12",
+          "#202633",
+          "#3C4558",
+          "#5A6681",
+          "#7D89A3",
+          "#A4AEC3",
+          "#CAD1E1",
+          "#E9EFFA"
+        ]
+      },
+      "chart-muted": {
+        "role": "primary",
+        "displayName": "Chart Muted",
+        "canonical": "oklch(85.7% 0.063 265)",
+        "darkValue": "#22365F",
+        "tonalRamp": [
+          "#070B14",
+          "#1E2637",
+          "#39455E",
+          "#566688",
+          "#7989AB",
+          "#A1AEC9",
+          "#C7D1E6",
+          "#E8EFFD"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(97.3% 0.001 286)",
+        "darkValue": "#0E0E10",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#262627",
+          "#454545",
+          "#666667",
+          "#89898A",
+          "#AEAEAE",
+          "#D1D1D1",
+          "#EEEEEF"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "oklch(100.0% 0.000 90)",
+        "darkValue": "#161618",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#262626",
+          "#454545",
+          "#666666",
+          "#898989",
+          "#AEAEAE",
+          "#D1D1D1",
+          "#EEEEEE"
+        ]
+      },
+      "surface-inset": {
+        "role": "neutral",
+        "displayName": "Surface Inset",
+        "canonical": "oklch(96.4% 0.001 286)",
+        "darkValue": "#1D1D20",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#262627",
+          "#454545",
+          "#666667",
+          "#89898A",
+          "#AEAEAE",
+          "#D1D1D1",
+          "#EEEEEF"
+        ]
+      },
+      "surface-pressed": {
+        "role": "neutral",
+        "displayName": "Surface Pressed",
+        "canonical": "oklch(94.1% 0.003 286)",
+        "darkValue": "#26262A",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#262627",
+          "#454546",
+          "#666667",
+          "#89898A",
+          "#AEAEAF",
+          "#D1D1D2",
+          "#EEEEEF"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(92.9% 0.004 286)",
+        "darkValue": "#26262A",
+        "tonalRamp": [
+          "#0B0B0C",
+          "#262627",
+          "#454546",
+          "#666668",
+          "#89898B",
+          "#AEAEAF",
+          "#D1D1D2",
+          "#EEEEEF"
+        ]
+      },
+      "hairline-strong": {
+        "role": "neutral",
+        "displayName": "Hairline Strong",
+        "canonical": "oklch(87.8% 0.007 286)",
+        "darkValue": "#34343A",
+        "tonalRamp": [
+          "#0B0B0C",
+          "#262628",
+          "#454548",
+          "#66666A",
+          "#89898D",
+          "#ADADB1",
+          "#D1D1D3",
+          "#EEEEF0"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(17.9% 0.004 286)",
+        "darkValue": "#F3F3F5",
+        "tonalRamp": [
+          "#0B0B0C",
+          "#262627",
+          "#454547",
+          "#666668",
+          "#89898B",
+          "#AEAEAF",
+          "#D1D1D2",
+          "#EEEEEF"
+        ]
+      },
+      "ink-secondary": {
+        "role": "neutral",
+        "displayName": "Ink Secondary",
+        "canonical": "oklch(47.4% 0.013 286)",
+        "darkValue": "#A3A3AC",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#26262A",
+          "#44444A",
+          "#65656D",
+          "#888890",
+          "#ADADB3",
+          "#D0D0D5",
+          "#EEEEF1"
+        ]
+      },
+      "ink-tertiary": {
+        "role": "neutral",
+        "displayName": "Ink Tertiary",
+        "canonical": "oklch(63.9% 0.012 286)",
+        "darkValue": "#6E6E77",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#262629",
+          "#44444A",
+          "#65656C",
+          "#88888F",
+          "#ADADB3",
+          "#D0D0D5",
+          "#EEEEF1"
+        ]
+      },
+      "status-good": {
+        "role": "status",
+        "displayName": "Status Good",
+        "canonical": "oklch(51.5% 0.110 157)",
+        "darkValue": "#5CCB8F",
+        "tonalRamp": [
+          "#001005",
+          "#052F1A",
+          "#155233",
+          "#26774D",
+          "#549B72",
+          "#87BC9B",
+          "#B5DCC3",
+          "#DBF6E5"
+        ]
+      },
+      "status-good-bg": {
+        "role": "status",
+        "displayName": "Status Good Bg",
+        "canonical": "oklch(96.1% 0.018 161)",
+        "darkValue": "#10261B",
+        "tonalRamp": [
+          "#090C0A",
+          "#222825",
+          "#3F4743",
+          "#5E6963",
+          "#818C86",
+          "#A8B0AB",
+          "#CCD3CF",
+          "#EBF0ED"
+        ]
+      },
+      "status-waiting": {
+        "role": "status",
+        "displayName": "Status Waiting",
+        "canonical": "oklch(50.8% 0.108 73)",
+        "darkValue": "#F0B84F",
+        "tonalRamp": [
+          "#140800",
+          "#372100",
+          "#5E3D06",
+          "#885C13",
+          "#AB8045",
+          "#CAA77B",
+          "#E6CCAC",
+          "#FEEBD5"
+        ]
+      },
+      "status-waiting-bg": {
+        "role": "status",
+        "displayName": "Status Waiting Bg",
+        "canonical": "oklch(97.0% 0.031 85)",
+        "darkValue": "#2A2010",
+        "tonalRamp": [
+          "#0D0B07",
+          "#2A261D",
+          "#4B4437",
+          "#6E6553",
+          "#918877",
+          "#B4AD9F",
+          "#D6D0C6",
+          "#F2EEE7"
+        ]
+      },
+      "status-bad": {
+        "role": "status",
+        "displayName": "Status Bad",
+        "canonical": "oklch(50.3% 0.180 23)",
+        "darkValue": "#FF7A85",
+        "tonalRamp": [
+          "#1E0002",
+          "#4B090E",
+          "#7D1B21",
+          "#B22F35",
+          "#D75C5B",
+          "#F08E8A",
+          "#FFBBB7",
+          "#FFE0DC"
+        ]
+      },
+      "status-bad-bg": {
+        "role": "status",
+        "displayName": "Status Bad Bg",
+        "canonical": "oklch(95.7% 0.019 9)",
+        "darkValue": "#2C1316",
+        "tonalRamp": [
+          "#0E0A0B",
+          "#2B2425",
+          "#4C4243",
+          "#706264",
+          "#938587",
+          "#B6ABAC",
+          "#D7CFD0",
+          "#F2EDED"
+        ]
+      },
+      "status-active": {
+        "role": "status",
+        "displayName": "Status Active",
+        "canonical": "oklch(52.0% 0.094 223)",
+        "darkValue": "#4CC3D9",
+        "tonalRamp": [
+          "#000E15",
+          "#012B38",
+          "#0A4D60",
+          "#19718A",
+          "#4C94AD",
+          "#82B7CB",
+          "#B2D8E7",
+          "#D9F4FE"
+        ]
+      },
+      "status-active-bg": {
+        "role": "status",
+        "displayName": "Status Active Bg",
+        "canonical": "oklch(96.1% 0.018 209)",
+        "darkValue": "#0C2328",
+        "tonalRamp": [
+          "#080C0D",
+          "#212829",
+          "#3D4749",
+          "#5B696B",
+          "#7F8C8E",
+          "#A6B0B2",
+          "#CBD3D4",
+          "#EAF0F1"
+        ]
+      },
+      "status-note": {
+        "role": "status",
+        "displayName": "Status Note",
+        "canonical": "oklch(47.9% 0.172 297)",
+        "darkValue": "#B79BF5",
+        "tonalRamp": [
+          "#0E0420",
+          "#2C194D",
+          "#4E317F",
+          "#724CB5",
+          "#9373D7",
+          "#B59EEE",
+          "#D6C6FF",
+          "#F2E7FF"
+        ]
+      },
+      "status-note-bg": {
+        "role": "status",
+        "displayName": "Status Note Bg",
+        "canonical": "oklch(95.2% 0.022 303)",
+        "darkValue": "#1E1730",
+        "tonalRamp": [
+          "#0C0A0E",
+          "#27252B",
+          "#47434C",
+          "#686370",
+          "#8B8793",
+          "#B0ACB6",
+          "#D2CFD7",
+          "#EFEDF3"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "page-title": {
+        "displayName": "Page title",
+        "purpose": "One per view."
+      },
+      "kpi": {
+        "displayName": "KPI",
+        "purpose": "Headline counts on Today."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card and empty-state headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default text, capped at 68ch."
+      },
+      "ui": {
+        "displayName": "UI",
+        "purpose": "Buttons, nav, tables, labels."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Metadata, badges, footers."
+      },
+      "overline": {
+        "displayName": "Overline",
+        "purpose": "Uppercase sidebar group labels only."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Codes, keys and literal values."
+      }
+    },
+    "shadows": [
+      {
+        "name": "surface-rest",
+        "value": "0 0 0 1px rgb(17 17 19 / 0.06), 0 1px 2px -1px rgb(17 17 19 / 0.06), 0 2px 4px 0 rgb(17 17 19 / 0.04)",
+        "purpose": "Cards, tables, active nav item, selected segment."
+      },
+      {
+        "name": "surface-hover",
+        "value": "0 0 0 1px rgb(17 17 19 / 0.09), 0 1px 2px -1px rgb(17 17 19 / 0.08), 0 2px 6px 0 rgb(17 17 19 / 0.06)",
+        "purpose": "Clickable cards on pointer hover."
+      },
+      {
+        "name": "pop",
+        "value": "0 0 0 1px rgb(17 17 19 / 0.08), 0 12px 32px -8px rgb(17 17 19 / 0.18)",
+        "purpose": "Menus, dialogs, toasts."
+      },
+      {
+        "name": "button",
+        "value": "0 0 0 1px rgb(17 17 19 / 0.10), 0 1px 2px rgb(17 17 19 / 0.06)",
+        "purpose": "Secondary, danger and icon buttons."
+      },
+      {
+        "name": "button-primary",
+        "value": "inset 0 1px 0 rgb(255 255 255 / 0.18), 0 0 0 1px #1A44C2, 0 1px 2px rgb(17 17 19 / 0.12)",
+        "purpose": "Primary button."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Bar and progress fills (400ms)."
+      },
+      {
+        "name": "feedback",
+        "value": "150ms ease-out",
+        "purpose": "Button colour, shadow and press scale (0.96)."
+      },
+      {
+        "name": "hover",
+        "value": "120ms ease",
+        "purpose": "Nav, inputs and row actions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "xs",
+        "value": "520px"
+      },
+      {
+        "name": "sm",
+        "value": "700px"
+      },
+      {
+        "name": "md",
+        "value": "760px"
+      },
+      {
+        "name": "md-lg",
+        "value": "860px"
+      },
+      {
+        "name": "lg",
+        "value": "900px"
+      },
+      {
+        "name": "xl",
+        "value": "1000px"
+      },
+      {
+        "name": "content",
+        "value": "1180px"
+      }
+    ],
+    "unreferencedAssets": [
+      "sellbird/web/fonts/newsreader.woff2 ships but no stylesheet references it."
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one primary action in a region: approve, send, run.",
+      "html": "<button class=\"ds-btn ds-btn-primary\"><svg viewBox=\"0 0 24 24\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12.5 4.5 4.5L19 7.5\"/></svg>Approve and send</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;font:500 13px/1 Geist,-apple-system,sans-serif;cursor:pointer;transition:background-color 150ms ease-out,color 150ms ease-out,scale 150ms ease-out}.ds-btn:active{scale:.96}.ds-btn:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}.ds-btn-primary{background:#1D4ED8;color:#fff;box-shadow:inset 0 1px 0 rgb(255 255 255/.18),0 0 0 1px #1A44C2,0 1px 2px rgb(17 17 19/.12)}.ds-btn-primary:hover{background:#1E40AF}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Every other action; white with a hairline ring.",
+      "html": "<button class=\"ds-btn2\">Edit draft</button>",
+      "css": ".ds-btn2{display:inline-flex;align-items:center;height:32px;padding:0 12px;border:none;border-radius:6px;font:500 13px/1 Geist,-apple-system,sans-serif;background:#fff;color:#111113;box-shadow:0 0 0 1px rgb(17 17 19/.10),0 1px 2px rgb(17 17 19/.06);cursor:pointer;transition:background-color 150ms ease-out,scale 150ms ease-out}.ds-btn2:hover{background:#F3F3F4}.ds-btn2:active{scale:.96}.ds-btn2:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive actions: red text on a neutral button, never a red fill.",
+      "html": "<button class=\"ds-btn-danger\">Reject</button>",
+      "css": ".ds-btn-danger{display:inline-flex;align-items:center;height:32px;padding:0 12px;border:none;border-radius:6px;font:500 13px/1 Geist,-apple-system,sans-serif;background:#fff;color:#B4232F;box-shadow:0 0 0 1px rgb(17 17 19/.10),0 1px 2px rgb(17 17 19/.06);cursor:pointer;transition:background-color 150ms ease-out,scale 150ms ease-out}.ds-btn-danger:hover{background:#F3F3F4}.ds-btn-danger:active{scale:.96}.ds-btn-danger:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Form fields with a cobalt focus halo.",
+      "html": "<label class=\"ds-field\"><span>Daily send limit</span><input class=\"ds-input\" value=\"50\"></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:6px;font:500 13px Geist,-apple-system,sans-serif;color:#111113}.ds-input{height:36px;padding:0 12px;font:400 14px Geist,-apple-system,sans-serif;background:#fff;color:#111113;border:1px solid #D6D6DB;border-radius:6px;transition:border-color 120ms ease,box-shadow 120ms ease}.ds-input:focus{outline:none;border-color:#1D4ED8;box-shadow:0 0 0 3px #EBF1FE}"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Grouped sidebar with a lifted active item and waiting counts.",
+      "html": "<nav class=\"ds-nav\"><div class=\"ds-nav-label\">Pipeline</div><button class=\"ds-nav-item on\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10.5 12 3l9 7.5\"/><path d=\"M5.5 9v11h13V9\"/></svg><span>Today</span></button><button class=\"ds-nav-item\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 13h5l1.5 3h5l1.5-3h5\"/><path d=\"M5.5 5h13L21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6z\"/></svg><span>Outbox</span><b class=\"ds-count\">5</b></button></nav>",
+      "css": ".ds-nav{display:flex;flex-direction:column;gap:1px;width:212px;background:#F6F6F7;padding:12px}.ds-nav-label{font:500 11px Geist,sans-serif;color:#8B8B93;text-transform:uppercase;letter-spacing:.06em;padding:0 10px 6px}.ds-nav-item{display:flex;align-items:center;gap:10px;height:32px;padding:0 10px;border:none;border-radius:6px;background:none;color:#5B5B63;font:500 13px/1 Geist,sans-serif;cursor:pointer;transition:background-color 120ms ease,color 120ms ease}.ds-nav-item span{flex:1;text-align:left}.ds-nav-item svg{color:#8B8B93}.ds-nav-item:hover{background:#F3F3F4;color:#111113}.ds-nav-item.on{background:#fff;color:#111113;box-shadow:0 0 0 1px rgb(17 17 19/.06),0 1px 2px -1px rgb(17 17 19/.06),0 2px 4px 0 rgb(17 17 19/.04)}.ds-nav-item.on svg{color:#1D4ED8}.ds-nav-item:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}.ds-count{min-width:20px;height:18px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;border-radius:99px;background:#EBF1FE;color:#1D4ED8}"
+    },
+    {
+      "name": "Status Badges",
+      "kind": "chip",
+      "refersTo": "badge-waiting",
+      "description": "The only coloured text: dot + tint + hairline per status.",
+      "html": "<span class=\"ds-badge w\">Needs you</span> <span class=\"ds-badge g\">Verified</span> <span class=\"ds-badge b\">Bounced</span> <span class=\"ds-badge a\">Sending</span> <span class=\"ds-tag\">Roofing</span>",
+      "css": ".ds-badge,.ds-tag{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;font:500 12px/1 Geist,sans-serif;border-radius:99px;border:1px solid transparent;white-space:nowrap}.ds-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}.ds-badge.w{background:#FFF4DE;color:#8A5A00;border-color:#F6DFAE}.ds-badge.g{background:#E8F6EE;color:#1F7A4D;border-color:#C6EAD5}.ds-badge.b{background:#FDECEE;color:#B4232F;border-color:#F7CDD2}.ds-badge.a{background:#E5F6F9;color:#0E7490;border-color:#BDE5EE}.ds-tag{background:#F3F3F4;color:#5B5B63;border-color:#E7E7EA}"
+    },
+    {
+      "name": "KPI Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Lifted white card with a tabular headline number.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-kpi-label\">Waiting for you</div><div class=\"ds-kpi\">12</div><div class=\"ds-kpi-note\"><b>5</b> drafts \u00b7 7 replies</div></div>",
+      "css": ".ds-card{background:#fff;border-radius:14px;padding:24px;width:220px;box-shadow:0 0 0 1px rgb(17 17 19/.06),0 1px 2px -1px rgb(17 17 19/.06),0 2px 4px 0 rgb(17 17 19/.04);font-family:Geist,sans-serif;font-variant-numeric:tabular-nums;transition:box-shadow 150ms ease-out}.ds-card:hover{box-shadow:0 0 0 1px rgb(17 17 19/.09),0 1px 2px -1px rgb(17 17 19/.08),0 2px 6px 0 rgb(17 17 19/.06)}.ds-kpi-label{font-size:13px;color:#5B5B63}.ds-kpi{font-size:28px;font-weight:600;letter-spacing:-.03em;line-height:1.1;color:#111113;margin:6px 0 4px}.ds-kpi-note{font-size:12px;color:#8B8B93}.ds-kpi-note b{color:#5B5B63;font-weight:500}"
+    },
+    {
+      "name": "Draft Reply Bubble",
+      "kind": "custom",
+      "description": "An unsent reply awaiting approval: dashed cobalt edge, never mistaken for a sent message.",
+      "html": "<div class=\"ds-draft\"><div class=\"ds-draft-label\">Draft reply</div><div>Thanks for getting back to me. Would Thursday at 10 work for a 15-minute call?</div></div>",
+      "css": ".ds-draft{width:min(78%,64ch);padding:10px 14px 12px;border-radius:14px;border:1.5px dashed #CCDBFC;background:#EBF1FE;font:400 13px/1.55 Geist,sans-serif;color:#111113}.ds-draft-label{font-size:11px;font-weight:600;color:#1D4ED8;margin-bottom:4px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Control Room",
+    "overview": "Sellbird's dashboard is where a part-time operator checks on a machine that has been working without them. The room is calm by default: cool neutral paper, white surfaces, one typeface, almost no colour. When something needs a decision, it is the only thing that speaks. Cobalt marks where to act; five status hues mark what state things are in; everything else stays grey on purpose, so colour always carries meaning.\n\nDensity is that of a working tool, not a brochure: a fixed 236px sidebar, content capped at 1180px, 13\u201314px interface text on a small, strict scale, and tabular numbers so columns line up and changing counts never shift the layout. Surfaces are lifted with hairline shadows rather than outlined; space groups things, shadows lift surfaces, lines only divide. Motion is feedback only: buttons press, hovers exist only on real pointers, and nothing animates on a tab switch.\n\nLight and dark are the same design re-tokenised. Only the token layer changes between them; no component has a theme-specific rule.",
+    "keyCharacteristics": [
+      "One cobalt accent on a cool neutral ground; colour is reserved for action and status.",
+      "A single sans family (Geist) on a tight 12\u201328px scale, with Geist Mono for codes and keys.",
+      "Concentric radii: 6px controls inside 14px cards.",
+      "Hairline ring shadows instead of borders for every lifted surface.",
+      "Feedback-only motion with a fast ease-out; no decorative animation."
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "Cobalt marks the primary action, the current page and the main chart series. Nothing else is blue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Colour Means Something Rule",
+        "body": "Status hues appear only on status: badges, tags, result banners and their icons. Never as decoration, section colour or illustration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "All numbers render with tabular figures, set once on the body.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Typeface Rule",
+        "body": "Geist for everything, Geist Mono for codes and keys. No display or serif face is part of the dashboard.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lines Only Divide Rule",
+        "body": "Space groups things, shadows lift surfaces, lines only divide. Never outline a card with a border.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "reserve Cobalt for the primary action, the current page and the main chart series.",
+      "use the five status pairs only for state, always as foreground + tint + hairline together.",
+      "lift surfaces with the ring shadows and keep borders for dividers and inputs.",
+      "keep controls at 6px inside 14px cards, and pill shapes for badges and counts.",
+      "keep numbers tabular and zero values in Ink Tertiary.",
+      "gate hover styles behind `(hover: hover)` and keep motion to 120\u2013150ms feedback (400ms for bar and progress fills).",
+      "change only tokens between light and dark."
+    ],
+    "donts": [
+      "introduce a second accent hue, gradients or decorative colour.",
+      "outline cards or panels with borders.",
+      "add a second typeface or a display face to the dashboard.",
+      "animate on tab switches or page changes.",
+      "use a red filled button; destructive actions are red text on a neutral button.",
+      "style an unsent draft like a sent message."
+    ]
+  }
+}
