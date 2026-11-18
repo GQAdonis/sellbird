@@ -39,6 +39,20 @@ sequence, so Claude calls and sends go to the best matches first.
 
 If `sellbird.local.yaml` exists it wins. It's gitignored, so a fork can carry real product configuration while the tracked `sellbird.yaml` stays a template — nobody publishes their positioning and pricing by accident.
 
+### Hosted settings (environment variables)
+
+These are only for a hosted install; see [Hosting Sellbird](hosting.md). A local
+install sets none of them.
+
+| Variable | Meaning |
+|---|---|
+| `SELLBIRD_DATABASE_URL` | A `postgresql://` string for the runtime role. Set, state lives in Postgres; unset, in `data/sellbird.db`. Needs `pip install 'sellbird[postgres]'`. |
+| `SELLBIRD_MIGRATE_DATABASE_URL` | The migration role's string, read by `sellbird storage migrate` (which falls back to `SELLBIRD_DATABASE_URL`). |
+| `SELLBIRD_DASHBOARD_MODE` | `gateway` to run behind flint-gate. Unset or `local` (the default) keeps the token link. |
+| `SELLBIRD_PUBLIC_HOST`, `SELLBIRD_GATE_ISSUER`, `SELLBIRD_GATE_AUDIENCE`, `SELLBIRD_GATE_JWKS_URL`, `SELLBIRD_GATE_ALLOWED_SUBS` | Gateway mode's hostname, token issuer, audience, signing-key location and allowed identities. All required in gateway mode. |
+| `SELLBIRD_HOME` | Where Sellbird keeps its files (`/data` in the container). |
+| `CLAUDE_CODE_OAUTH_TOKEN` | The brain's credential in a container, from `claude setup-token`. |
+
 ### Commands
 
 ```bash
@@ -63,6 +77,7 @@ sellbird mcp install [claude|codex]  # let your coding agent read Sellbird and p
 sellbird warmup [domain]       # is the sending domain ready? (SPF/DKIM/DMARC, age, blocklists, warmup)
 sellbird trulyinbox connect    # connect TrulyInbox so Sellbird reads the mailbox's warmup
 sellbird retry-writes          # retry prospects the Writer gave up on
+sellbird storage migrate|status|down|move  # Postgres schema and the SQLite move (docs/hosting.md)
 sellbird gmail auth            # one-time Gmail OAuth
 sellbird microsoft auth|test  # one-time Microsoft 365 sign-in (docs/microsoft365.md)
 ```
