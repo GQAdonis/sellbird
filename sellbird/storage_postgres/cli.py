@@ -36,6 +36,11 @@ def cmd_storage(args) -> None:
     from sellbird.storage_postgres import migrate
 
     action = args.storage_action or "status"
+    if action == "move":
+        from sellbird.storage_postgres.move import cmd_move
+
+        cmd_move(args)
+        return
     name, dsn = _dsn(args)
     try:
         if action == "migrate":
@@ -63,9 +68,15 @@ def cmd_storage(args) -> None:
 
 def register(subparsers) -> None:
     sub = subparsers.add_parser(
-        "storage", help="Postgres schema: migrate (migration role), status, down")
+        "storage", help="Postgres schema: migrate (migration role), status, down; "
+                        "move a sellbird.db into an empty Postgres")
     sub.add_argument("storage_action", nargs="?", default="status",
-                     choices=["migrate", "status", "down"])
+                     choices=["migrate", "status", "down", "move"])
+    sub.add_argument("--from", dest="from_path", default="",
+                     help="move: the SQLite database to copy (e.g. data/sellbird.db)")
+    sub.add_argument("--to-env", dest="to_env", default="",
+                     help="move: the variable holding the target's postgresql:// "
+                          "connection string (never printed)")
     sub.add_argument("--to", type=int, default=None,
                      help="migrate: stop at this version; down: go back to this version")
     sub.add_argument("--yes", action="store_true", help="down: confirm dropping tables")
