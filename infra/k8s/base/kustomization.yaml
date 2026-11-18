@@ -1,0 +1,24 @@
+# Sellbird's hostname-free Kubernetes base (platform contract v1).
+#
+# The platform repository's production overlay references this directory as a
+# remote base pinned to a commit SHA and supplies, on its side:
+#   - the `images` pin for the logical image name `sellbird` (newName, newTag,
+#     digest), written by the deploy bot;
+#   - ConfigMap `sellbird-gateway` (the six SELLBIRD_* gateway keys);
+#   - any patch for its own cluster (for example extra egress `except` ranges).
+#
+# Secrets (`sellbird-db-app`, `sellbird-db-migrate`, `sellbird-claude`) are
+# created by the operator in namespace `sellbird` and are only referenced here,
+# by name and key, through `secretKeyRef`. No Secret, Namespace, Ingress,
+# HTTPRoute or PersistentVolumeClaim is created by this base: the AppProject
+# allows only Deployment, Service, ServiceAccount, ConfigMap, NetworkPolicy and
+# Job, in namespace `sellbird`.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sellbird
+resources:
+  - serviceaccount.yaml
+  - service.yaml
+  - networkpolicy.yaml
+  - migrate-job.yaml
+  - deployment.yaml

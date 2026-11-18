@@ -1,0 +1,140 @@
+# Network policy for namespace `sellbird` (platform contract v1, "NetworkPolicy").
+#
+# 1. default deny, ingress and egress, for every pod in the namespace;
+# 2. ingress to the app on TCP 5555 from flint-gate pods only;
+# 3. egress for every Sellbird pod (app and migration Job) to kube-dns and to
+#    flint-forge Postgres only;
+# 4. extra egress for the app only: flint-gate JWKS (TCP 4456) and the public
+#    internet on the ports the model API and email providers use, never to
+#    cluster, private, shared-address or link-local ranges (so not the metadata
+#    server either).
+#
+# Peers are selected by the namespace's `kubernetes.io/metadata.name` label and
+# the pods' contract labels. Kubelet probes are not subject to these rules.
+#
+# If the cluster's pod or service ranges are outside the `except` list below,
+# the platform overlay patches the extra ranges in (they are cluster-specific
+# and do not belong in this public base).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sellbird-default-deny
+  labels:
+    app.kubernetes.io/name: sellbird
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sellbird-app-ingress-from-flint-gate
+  labels:
+    app.kubernetes.io/name: sellbird
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: sellbird
+      app.kubernetes.io/component: app
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        # One peer with both selectors: pods labelled flint-gate AND in the
+        # flint-gate namespace (two list items would mean OR).
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flint-gate
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: flint-gate
+      ports:
+        - protocol: TCP
+          port: 5555
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sellbird-egress-dns-and-postgres
+  labels:
+    app.kubernetes.io/name: sellbird
+spec:
+  # Every Sellbird pod: the app and the migration Job.
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: sellbird
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flint-forge
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: flint-forge-postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sellbird-app-egress
+  labels:
+    app.kubernetes.io/name: sellbird
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: sellbird
+      app.kubernetes.io/component: app
+  policyTypes:
+    - Egress
+  egress:
+    # flint-gate JWKS (SELLBIRD_GATE_JWKS_URL).
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flint-gate
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: flint-gate
+      ports:
+        - protocol: TCP
+          port: 4456
+    # Model API, email providers (SMTP submission, IMAPS), prospecting.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8        # RFC 1918 (and typical GKE pod/service ranges)
+              - 172.16.0.0/12     # RFC 1918
+              - 192.168.0.0/16    # RFC 1918
+              - 100.64.0.0/10     # RFC 6598 shared address space (some cluster ranges)
+              - 169.254.0.0/16    # link-local, including the metadata server
+              - 127.0.0.0/8       # loopback
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 465
+        - protocol: TCP
+          port: 587
+        - protocol: TCP
+          port: 993

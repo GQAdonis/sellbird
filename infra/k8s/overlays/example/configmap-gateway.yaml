@@ -1,0 +1,18 @@
+# Non-secret gateway settings (platform contract v1, "Gateway configuration
+# values"). Placeholder values only; the real ones live in the platform
+# repository's production overlay. Kept as a plain resource (not a generator)
+# so the name stays exactly `sellbird-gateway`.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sellbird-gateway
+  namespace: sellbird
+  labels:
+    app.kubernetes.io/name: sellbird
+data:
+  SELLBIRD_DASHBOARD_MODE: gateway
+  SELLBIRD_PUBLIC_HOST: sellbird.example.test
+  SELLBIRD_GATE_ISSUER: https://gate.example.test
+  SELLBIRD_GATE_AUDIENCE: sellbird
+  SELLBIRD_GATE_JWKS_URL: http://flint-gate.flint-gate.svc.cluster.local:4456/.well-known/jwks.json
+  SELLBIRD_GATE_ALLOWED_SUBS: 00000000-0000-4000-8000-000000000001

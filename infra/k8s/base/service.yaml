@@ -1,0 +1,20 @@
+# In-cluster only. flint-gate's site upstream is
+# http://sellbird.sellbird.svc.cluster.local:5555 (contract "Route ownership");
+# the NetworkPolicy lets only flint-gate pods reach this port.
+apiVersion: v1
+kind: Service
+metadata:
+  name: sellbird
+  labels:
+    app.kubernetes.io/name: sellbird
+    app.kubernetes.io/component: app
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: sellbird
+    app.kubernetes.io/component: app
+  ports:
+    - name: http
+      port: 5555
+      targetPort: http
+      protocol: TCP

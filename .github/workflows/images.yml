@@ -377,3 +377,144 @@ jobs:
           path: ${{ runner.temp }}/image-digest.env
           retention-days: 90
           if-no-files-found: error
+
+  # Pin the published image into the platform repository's production overlay
+  # (OpenSpec change gitops-deploy-sellbird; docs/platform-interface.md,
+  # "Overlay location and pin format"). Argo CD syncs that overlay.
+  #
+  # - Runs only on main, after `images` published and verified the digest.
+  # - environment: production holds the deploy GitHub App's private key; its
+  #   deployment branch policy is main only, so no branch or PR workflow can
+  #   read it.
+  # - Fails safely before minting any token if the App or the platform
+  #   repository is not configured (nothing is pushed). Once configured, re-run
+  #   only this job: `gh run rerun <run id> --failed`.
+  # - The guard is scripts/deploy/pin_overlay.sh: regexes first, the images
+  #   entry in the fixed line order name, newName, newTag, digest, never
+  #   backwards against this repository's history, and only the newTag and
+  #   digest lines change. This job pushes the one commit it makes, retrying by
+  #   resetting to the new remote main and pinning again.
+  deploy:
+    name: pin production overlay
+    needs: images
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      TAG: ${{ needs.images.outputs.tag }}
+      DIGEST: ${{ needs.images.outputs.digest }}
+      IMAGE: ${{ needs.images.outputs.image }}
+      OVERLAY_FILE: apps/sellbird/overlays/production/kustomization.yaml
+    steps:
+      - name: Require the deploy App and platform repository configuration
+        id: config
+        env:
+          CLIENT_ID: ${{ vars.SELLBIRD_DEPLOY_APP_CLIENT_ID }}
+          HAS_KEY: ${{ secrets.SELLBIRD_DEPLOY_APP_PRIVATE_KEY != '' }}
+          PLATFORM_REPO: ${{ vars.SELLBIRD_PLATFORM_REPO }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -n "$CLIENT_ID" ] || missing="$missing variable SELLBIRD_DEPLOY_APP_CLIENT_ID;"
+          [ "$HAS_KEY" = "true" ] || missing="$missing production environment secret SELLBIRD_DEPLOY_APP_PRIVATE_KEY;"
+          [ -n "$PLATFORM_REPO" ] || missing="$missing variable SELLBIRD_PLATFORM_REPO;"
+          if [ -n "$missing" ]; then
+            echo "::error::deploy is not configured, nothing pushed. Missing:$missing see infra/github/README.md"
+            exit 1
+          fi
+          [[ "$PLATFORM_REPO" =~ ^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$ ]] \
+            || { echo "::error::SELLBIRD_PLATFORM_REPO must be <owner>/<repo>"; exit 1; }
+          [[ "$TAG" =~ ^[0-9a-f]{40}$ ]] && [ "$TAG" = "$SHA" ] \
+            || { echo "::error::images output tag is not this commit's SHA"; exit 1; }
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] \
+            || { echo "::error::images output digest is malformed"; exit 1; }
+          [[ "$IMAGE" =~ ^ghcr\.io/[a-z0-9]([a-z0-9-]*[a-z0-9])?/sellbird$ ]] \
+            || { echo "::error::images output image name is malformed"; exit 1; }
+          {
+            echo "owner=${PLATFORM_REPO%%/*}"
+            echo "repo=${PLATFORM_REPO#*/}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check out this repository (full history for the ancestry check)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Mint a deploy App token for the platform repository only
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.SELLBIRD_DEPLOY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SELLBIRD_DEPLOY_APP_PRIVATE_KEY }}
+          owner: ${{ steps.config.outputs.owner }}
+          repositories: ${{ steps.config.outputs.repo }}
+          permission-contents: write
+
+      - name: Check out the platform repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ vars.SELLBIRD_PLATFORM_REPO }}
+          ref: main
+          path: platform
+          fetch-depth: 1
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Author commits as the App bot
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          set -euo pipefail
+          [[ "$APP_SLUG" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "::error::unexpected app slug"; exit 1; }
+          bot_id="$(gh api "/users/${APP_SLUG}%5Bbot%5D" --jq .id)"
+          [[ "$bot_id" =~ ^[0-9]+$ ]] || { echo "::error::could not resolve the bot user id"; exit 1; }
+          git -C platform config user.name "${APP_SLUG}[bot]"
+          git -C platform config user.email "${bot_id}+${APP_SLUG}[bot]@users.noreply.github.com"
+
+      - name: Pin newTag and digest, push with retry
+        run: |
+          set -euo pipefail
+          # pin_overlay.sh: 0 = one local pin commit; 3 = already pinned
+          # (success, nothing to push); anything else = refused, nothing written.
+          run_pin() {
+            local status=0
+            bash "$GITHUB_WORKSPACE/source/scripts/deploy/pin_overlay.sh" \
+              --overlay-repo "$GITHUB_WORKSPACE/platform" \
+              --source-repo "$GITHUB_WORKSPACE/source" \
+              --file "$OVERLAY_FILE" \
+              --tag "$TAG" --digest "$DIGEST" --image "$IMAGE" || status=$?
+            case "$status" in
+              0) return 0 ;;
+              3) echo "Already pinned to $TAG; nothing to deploy."; exit 0 ;;
+              *) echo "::error::pin refused (exit $status); nothing pushed"; exit 1 ;;
+            esac
+          }
+          run_pin
+          for attempt in 1 2 3 4; do
+            if git -C platform push -q origin HEAD:main; then
+              echo "Pushed pin $TAG $DIGEST (attempt $attempt)."
+              {
+                echo "### Pinned production overlay"
+                echo
+                echo "\`$IMAGE:$TAG@$DIGEST\`"
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "::warning::push rejected (attempt $attempt); re-pinning on the new main"
+            sleep $((attempt * 5))
+            git -C platform fetch -q --depth=50 origin main
+            git -C platform reset -q --hard origin/main
+            run_pin
+          done
+          echo "::error::could not push the pin after 4 attempts"
+          exit 1
