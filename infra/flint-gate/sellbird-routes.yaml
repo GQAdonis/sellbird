@@ -1,0 +1,84 @@
+# Sellbird's flint-gate site and routes (platform contract v1, "Route ownership").
+#
+# This file holds ONLY Sellbird's `sites` and `routes` entries, in flint-gate's
+# own config schema (crates/flint-gate-core/src/config/types.rs: SiteConfig,
+# RouteConfig, PreRequestHook::ClaimsEnhancement, MintJwtConfig). The platform
+# merges these two lists into its flint-gate config.yaml and overrides only
+# `sites[].domains` with the real hostname. Everything else in config.yaml is
+# platform-owned and deliberately absent here:
+#
+#   - auth_providers.kratos_session (type: kratos, Kratos `GET /sessions/whoami`,
+#     session_cookie: ory_kratos_session);
+#   - the `jwt` block: signing_algorithm RS256, signing_key_id, issuer
+#     https://gate.example.test, default_ttl_seconds <= 300 (applies to every
+#     route; this hook cannot lower it, so the TTL bound is a platform MUST);
+#   - the auth host's routes (Kratos self-service passthrough, login UI);
+#   - server.admin_listen (4457): never exposed, never routed. No route below
+#     points at an admin API, Kratos's or flint-gate's.
+#
+# Behaviour (every path, every method, one upstream):
+#   1. flint-gate authenticates the request with `kratos_session`. With Kratos
+#      `session.whoami.required_aal: highest_available`, a password-only session
+#      of an identity that has TOTP gets no identity, so it is refused here.
+#      A refused request is never forwarded to Sellbird.
+#   2. The claims_enhancement hook mints one RS256 token per request:
+#      iss = jwt.issuer, sub = Kratos identity id, iat, exp = iat + TTL, jti,
+#      kid header = the signing key's id, plus the additional_claims below
+#      (aud is a single string, overriding anything a trait might carry).
+#      flint-gate replaces any client `Authorization` header with
+#      `Bearer <minted token>` and strips client `x-flint-*` headers.
+#   3. The client's Host header is forwarded unchanged, so Sellbird sees its
+#      public host (SELLBIRD_PUBLIC_HOST).
+#
+# No anonymous or passthrough route exists on this site. No Cedar `authorize`
+# hook is attached: the contract places authorization in Sellbird itself (the
+# `sub` allowlist, SELLBIRD_GATE_ALLOWED_SUBS); adding a gate-side policy would
+# be a contract change (see infra/flint-gate/README.md).
+#
+# Placeholders only: sellbird.example.test is not a real host.
+
+sites:
+  - id: "sellbird"
+    domains: ["sellbird.example.test"]
+    default_auth: kratos_session
+    default_upstream: "http://sellbird.sellbird.svc.cluster.local:5555"
+
+routes:
+  # The dashboard's JSON API. Listed separately (higher priority) so logs and
+  # metrics name API traffic; behaviour is identical to the catch-all.
+  - id: "sellbird-api"
+    site: "sellbird"
+    match:
+      path: "/api/**"
+      methods: []          # empty list = every method
+    auth: kratos_session
+    priority: 20
+    enabled: true
+    hooks:
+      pre_request:
+        - type: claims_enhancement
+          config:
+            mint_jwt:
+              enabled: true
+              additional_claims:
+                aud: "sellbird"
+                aal: "{{ identity.aal }}"
+
+  # Everything else: the dashboard's HTML, CSS and JS.
+  - id: "sellbird-dashboard"
+    site: "sellbird"
+    match:
+      path: "/**"
+      methods: []          # empty list = every method
+    auth: kratos_session
+    priority: 10
+    enabled: true
+    hooks:
+      pre_request:
+        - type: claims_enhancement
+          config:
+            mint_jwt:
+              enabled: true
+              additional_claims:
+                aud: "sellbird"
+                aal: "{{ identity.aal }}"
