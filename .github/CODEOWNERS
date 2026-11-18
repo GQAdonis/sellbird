@@ -1,0 +1,12 @@
+# Code owners for the delivery path. Whoever can edit these can weaken the
+# deploy guard, the manifests or the ruleset, so every change needs a code
+# owner's review (infra/github/main-ruleset.json, require_code_owner_review).
+#
+# @REPLACE_WITH_OWNER is a placeholder: the operator replaces it with the real
+# owner handle in a reviewed pull request before applying the ruleset
+# (infra/github/README.md, step 6). Until then GitHub reports this file as
+# invalid and no code-owner review can be satisfied.
+/infra/           @REPLACE_WITH_OWNER
+/.github/         @REPLACE_WITH_OWNER
+/scripts/deploy/  @REPLACE_WITH_OWNER
+/Dockerfile       @REPLACE_WITH_OWNER

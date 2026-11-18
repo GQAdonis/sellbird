@@ -1,0 +1,21 @@
+# Example overlay: placeholders only (example.test, example-owner, a made-up
+# SHA and digest that merely have the right shape). It shows what the platform
+# repository's production overlay (apps/sellbird/overlays/production) supplies
+# and is what scripts/boundary/check_manifests.sh renders. It is never synced.
+#
+# The production overlay differs only in: the base is a remote URL pinned to a
+# commit SHA of this repository, the image pin is real (written by the deploy
+# bot), and the ConfigMap holds the real hostname, issuer and allowed subjects.
+#
+# The `images` entry keeps a fixed line order, which the deploy bot's guard
+# (scripts/deploy/pin_overlay.sh) relies on: name, newName, newTag, digest.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - configmap-gateway.yaml
+images:
+  - name: sellbird
+    newName: ghcr.io/example-owner/sellbird
+    newTag: "0123456789abcdef0123456789abcdef01234567"
+    digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
