@@ -176,7 +176,7 @@ database, the logs and the dashboard token.
 | [Using a ChatGPT plan (Codex)](docs/codex.md) | Running on Codex instead of Claude |
 | [Legal and deliverability](docs/deliverability.md) | The rules you're sending under, and warmup |
 | [Microsoft 365](docs/microsoft365.md) · [Precleared](docs/precleared.md) | Provider setup guides |
-| [Docker](docs/docker.md) · [Troubleshooting](docs/troubleshooting.md) · [Roadmap](docs/roadmap.md) | Running, fixing and what's next |
+| [Docker](docs/docker.md) · [Hosting](docs/hosting.md) · [Troubleshooting](docs/troubleshooting.md) · [Roadmap](docs/roadmap.md) | Running, fixing and what's next |
 
 ## Contributing
 

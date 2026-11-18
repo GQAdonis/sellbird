@@ -9,6 +9,39 @@ minor versions can still change behaviour.
 
 ### Added
 
+- **Sellbird can keep its state in Postgres 18.** Set `SELLBIRD_DATABASE_URL`
+  to a `postgresql://` string (and `pip install 'sellbird[postgres]'`) and every
+  store runs on Postgres instead of `data/sellbird.db`. Unset, nothing changes.
+  The schema belongs to numbered, reversible migrations run by a separate
+  migration role (`sellbird storage migrate|status|down`); the runtime role can't
+  change tables, and Sellbird refuses to start on a schema version it doesn't
+  expect. `infra/postgres/provision.sql` creates the two roles.
+- **`sellbird storage move` copies an existing `data/sellbird.db` into
+  Postgres.** It reads the SQLite file read-only, writes in one transaction, and
+  compares every table (row counts and a checksum) before committing, so any
+  difference rolls the whole move back. It refuses a target that already holds
+  any row, and a source or target on the wrong schema.
+- **Hosted gateway mode.** With `SELLBIRD_DASHBOARD_MODE=gateway`, the dashboard
+  runs behind flint-gate on a public hostname. Sellbird accepts only a short-lived
+  RS256 token for audience `sellbird`, verified against a pinned JWKS and an
+  allowlist of Kratos identity ids; cookies and forwarded headers are ignored,
+  and the local dashboard and agent tokens aren't used. Local token mode stays
+  the default and still refuses non-loopback binds.
+- **One container image for Docker and Kubernetes.** The Dockerfile now builds
+  an image that runs non-root on a read-only filesystem with state under `/data`,
+  a pinned and checksum-verified Claude CLI, and the brain credential read only
+  from `CLAUDE_CODE_OAUTH_TOKEN`. Kubernetes manifests (`infra/k8s/base`, with
+  a migration Job) and a placeholder example overlay are included.
+- **A GitOps deploy pipeline.** A merge to `main` builds and scans the image,
+  pushes it to GHCR by digest, and pins it in the platform repository's overlay,
+  where Argo CD runs the migration and rolls the Deployment. The CI matrix gains
+  a `postgres` job against a real Postgres 18. The GitHub-side setup (ruleset,
+  deploy App, environment) is an operator runbook in `infra/github/README.md`.
+- **A local stand-in for the hosted stack** (`infra/local/compose.yaml`,
+  `scripts/local/`): Postgres 18, Kratos, flint-gate with Sellbird's route file,
+  and Sellbird in gateway mode, all on `127.0.0.1`. [Hosting
+  Sellbird](docs/hosting.md) walks through all of it.
+
 - **`writer.require_tip: true` skips prospects with nothing to build a tip
   on.** A first email is meant to name one concrete thing the sender would
   change; with no finding about the company, the draft could only say it had no

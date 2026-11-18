@@ -55,9 +55,21 @@ you need the Codex provider.
 
 ## Hosted image (Kubernetes)
 
-The same image runs in the hosted deployment with a read-only root filesystem:
-state under the `/data` volume, a writable tmpfs at `/tmp`, a non-root user,
-gateway mode selected only by `SELLBIRD_DASHBOARD_MODE=gateway`, and the AI
-credential read only from the `CLAUDE_CODE_OAUTH_TOKEN` environment variable.
+The same image runs in the hosted deployment, with a read-only root filesystem,
+a non-root user, working files under the `/data` volume (`SELLBIRD_HOME=/data`)
+and a writable tmpfs at `/tmp`. Three things differ from the Compose setup above:
+
+- **Gateway mode.** The dashboard runs behind flint-gate only when
+  `SELLBIRD_DASHBOARD_MODE=gateway` is set, together with `SELLBIRD_PUBLIC_HOST`
+  and the `SELLBIRD_GATE_*` settings. Without it the image refuses
+  `--host 0.0.0.0`, and inside a container local mode never prints the unlock link.
+- **State in Postgres.** `SELLBIRD_DATABASE_URL` points at the database. The
+  schema is applied by `sellbird storage migrate`; the image carries the
+  migrations and sets `SELLBIRD_MIGRATIONS_DIR` for it.
+- **The AI credential** is read only from the `CLAUDE_CODE_OAUTH_TOKEN`
+  environment variable. There's no credentials file.
+
+[Hosting Sellbird](hosting.md) covers the settings, the Secrets, the deploy
+pipeline and a local stand-in you can run with Compose.
 `openspec/changes/cluster-ready-container-image/design.md` lists the runtime
 contract; `scripts/boundary/check_container.sh <image>` checks it.
