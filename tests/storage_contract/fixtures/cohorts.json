@@ -1,0 +1,73 @@
+{
+  "about": [
+    "Hand-authored expected results for cohorts over observations. Written from the",
+    "documented rules in StateManager._CURRENT_CTE, not produced by running either",
+    "backend: a boolean signal counts when its newest reading is not 0; a text signal",
+    "(value_num null) counts by existing; a rank signal counts per search phrase by the",
+    "newest reading of that phrase, and a later 0 means the company dropped out.",
+    "All companies, agencies and phrases are fictional (example.test)."
+  ],
+  "signals": [
+    {"code": "HAS_BOOKING", "value_type": "bool"},
+    {"code": "RUNS_ADS", "value_type": "bool"},
+    {"code": "INCUMBENT_AGENCY", "value_type": "text"},
+    {"code": "SERP_RANK", "value_type": "number"}
+  ],
+  "companies": [
+    {"key": "alpha", "name": "Alpha Example Dental", "domain": "alpha.example.test"},
+    {"key": "beta", "name": "Beta Example Dental", "domain": "beta.example.test"},
+    {"key": "gamma", "name": "Gamma Example Dental", "domain": "gamma.example.test"},
+    {"key": "delta", "name": "Delta Example Dental", "domain": "delta.example.test"},
+    {"key": "epsilon", "name": "Epsilon Example Dental", "domain": "epsilon.example.test"}
+  ],
+  "observations": [
+    {"company": "alpha", "code": "HAS_BOOKING", "value_num": 0, "at": "2026-01-01 09:00:00"},
+    {"company": "alpha", "code": "HAS_BOOKING", "value_num": 1, "at": "2026-02-01 09:00:00"},
+    {"company": "alpha", "code": "RUNS_ADS", "value_num": 1, "at": "2026-01-15 09:00:00"},
+
+    {"company": "beta", "code": "HAS_BOOKING", "value_num": 1, "at": "2026-01-01 09:00:00"},
+    {"company": "beta", "code": "HAS_BOOKING", "value_num": 0, "at": "2026-02-01 09:00:00"},
+    {"company": "beta", "code": "RUNS_ADS", "value_num": 1, "at": "2026-01-15 09:00:00"},
+
+    {"company": "gamma", "code": "HAS_BOOKING", "value_num": 1, "at": "2026-02-01 09:00:00"},
+    {"company": "gamma", "code": "RUNS_ADS", "value_num": 0, "at": "2026-02-01 09:00:00"},
+    {"company": "gamma", "code": "INCUMBENT_AGENCY", "value_num": null, "value_text": "Example Agency One", "at": "2026-02-01 09:00:00"},
+
+    {"company": "delta", "code": "RUNS_ADS", "value_num": 1, "at": "2026-01-20 09:00:00"},
+    {"company": "delta", "code": "INCUMBENT_AGENCY", "value_num": null, "value_text": "Example Agency Two", "at": "2026-01-20 09:00:00"},
+    {"company": "delta", "code": "SERP_RANK", "value_num": 14, "value_text": "dentist near me", "at": "2026-01-10 09:00:00"},
+    {"company": "delta", "code": "SERP_RANK", "value_num": 0, "value_text": "dentist near me", "at": "2026-02-10 09:00:00"},
+    {"company": "delta", "code": "SERP_RANK", "value_num": 18, "value_text": "teeth whitening", "at": "2026-02-10 09:00:00"},
+
+    {"company": "epsilon", "code": "SERP_RANK", "value_num": 22, "value_text": "dentist near me", "at": "2026-02-10 09:00:00"},
+    {"company": "epsilon", "code": "HAS_BOOKING", "value_num": 1, "confidence": 0.4, "at": "2026-02-10 09:00:00"}
+  ],
+  "cohorts": [
+    {"why": "newest booking reading is yes (alpha flipped to yes, beta flipped to no)",
+     "require": ["HAS_BOOKING"], "exclude": [], "min_confidence": 0.0,
+     "expected": ["alpha", "gamma", "epsilon"]},
+    {"why": "both signals currently true",
+     "require": ["HAS_BOOKING", "RUNS_ADS"], "exclude": [], "min_confidence": 0.0,
+     "expected": ["alpha"]},
+    {"why": "running ads, with no incumbent agency recorded",
+     "require": ["RUNS_ADS"], "exclude": ["INCUMBENT_AGENCY"], "min_confidence": 0.0,
+     "expected": ["alpha", "beta"]},
+    {"why": "epsilon's booking reading is below the confidence asked for",
+     "require": ["HAS_BOOKING"], "exclude": [], "min_confidence": 0.5,
+     "expected": ["alpha", "gamma"]},
+    {"why": "ranked for at least one phrase now (delta dropped out of one, still ranks for the other)",
+     "require": ["SERP_RANK"], "exclude": [], "min_confidence": 0.0,
+     "expected": ["delta", "epsilon"]},
+    {"why": "a text signal counts by existing",
+     "require": ["INCUMBENT_AGENCY"], "exclude": [], "min_confidence": 0.0,
+     "expected": ["gamma", "delta"]},
+    {"why": "no requirement is no cohort, never everyone",
+     "require": [], "exclude": [], "min_confidence": 0.0,
+     "expected": []}
+  ],
+  "ranked_for_phrase": [
+    {"code": "SERP_RANK", "phrase": "dentist near me", "expected": ["epsilon"]},
+    {"code": "SERP_RANK", "phrase": "teeth whitening", "expected": ["delta"]}
+  ],
+  "signal_counts": {"HAS_BOOKING": 3, "RUNS_ADS": 3, "INCUMBENT_AGENCY": 2, "SERP_RANK": 2}
+}
