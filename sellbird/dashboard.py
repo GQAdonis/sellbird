@@ -825,25 +825,11 @@ async def add_feedback(request: Request):
     comment = str(data.get("comment", "") or "").strip()[:4000]
     if not comment:
         return {"success": False, "message": "Comment is required."}
-    feedback_id = uuid.uuid4().hex[:12]
     try:
-        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-        async with storage.connect(str(DB_PATH)) as db:
-            # Ensure the table exists so feedback works even on a fresh install
-            await db.execute(
-                """CREATE TABLE IF NOT EXISTS feedback (
-                    id TEXT PRIMARY KEY,
-                    entity_type TEXT,
-                    entity_id TEXT,
-                    comment TEXT,
-                    created_at TEXT DEFAULT (datetime('now'))
-                )"""
-            )
-            await db.execute(
-                "INSERT INTO feedback (id, entity_type, entity_id, comment) VALUES (?, ?, ?, ?)",
-                (feedback_id, entity_type, entity_id, comment),
-            )
-            await db.commit()
+        # The feedback table comes from the migrations (init_db), never from here.
+        state = _state()
+        await state.init_db()
+        feedback_id = await state.add_feedback(entity_type, entity_id, comment)
     except Exception as e:
         logger.warning("Failed to save feedback: %s", e)
         return {"success": False, "message": "Could not save feedback."}
@@ -1487,13 +1473,12 @@ def _sellbird_can_send() -> bool:
 def _extra_inboxes_connected() -> bool:
     """Whether an inbox besides the main one is connected (sellbird inboxes):
     Sellbird sends from it even while the main mailbox isn't signed in."""
-    import sqlite3
-    if not Path(DB_PATH).exists():
+    locator = str(DB_PATH)
+    if not storage.exists(locator):
         return False
     try:
-        with sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True) as db:
-            row = db.execute("SELECT 1 FROM mailboxes WHERE state != 'retired' LIMIT 1").fetchone()
-    except sqlite3.Error:
+        row = storage.read_one(locator, "SELECT 1 FROM mailboxes WHERE state != 'retired' LIMIT 1")
+    except storage.ERRORS:
         return False   # no table yet: no extra inbox
     return row is not None
 

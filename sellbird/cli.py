@@ -1329,6 +1329,9 @@ def main():
     from sellbird.inbox_cli import register as register_inboxes
     register_inboxes(subparsers)
 
+    from sellbird.storage_postgres.cli import register as register_storage
+    register_storage(subparsers)
+
     from sellbird import desktop_cli
     desktop_cli.register_desktop_commands(subparsers)
     desktop_cli.register(subparsers)

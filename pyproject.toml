@@ -40,6 +40,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Keep state in Postgres 18 instead of SQLite (SELLBIRD_DATABASE_URL); see
+# infra/postgres/README.md. Not needed for a local install.
+postgres = [
+    "psycopg[binary]>=3.2,<4",
+]
 dev = [
     "pytest>=8.0,<9",
     "pytest-asyncio>=0.23,<1",
