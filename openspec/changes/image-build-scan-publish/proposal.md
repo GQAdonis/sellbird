@@ -2,11 +2,11 @@
 
 ## Why
 
-Add .github/workflows/images.yml following the github-argocd-continuous-deployment reference pattern: build with buildx, a non-root check, a vulnerability scan with a fail threshold on CRITICAL, an artifact secret scan with a planted-secret negative control that must fail, refuse to push if the SHA tag already exists, push ghcr.io/gqadonis/sellbird:<sha>, and expose the digest as a job output. This change serves phase goal G3 of KBD phase `postgres-gke-deployment`.
+Add .github/workflows/images.yml following the github-argocd-continuous-deployment reference pattern: build with buildx, a non-root check, a vulnerability scan with a fail threshold on CRITICAL, an artifact secret scan with a planted-secret negative control that must fail, refuse to push if the SHA tag already exists, push ghcr.io/<owner>/sellbird (owner resolved at run time):<sha>, and expose the digest as a job output. This change serves phase goal G3 of KBD phase `postgres-gke-deployment`.
 
 ## What Changes
 
-Add .github/workflows/images.yml following the github-argocd-continuous-deployment reference pattern: build with buildx, a non-root check, a vulnerability scan with a fail threshold on CRITICAL, an artifact secret scan with a planted-secret negative control that must fail, refuse to push if the SHA tag already exists, push ghcr.io/gqadonis/sellbird:<sha>, and expose the digest as a job output. paths-ignore the overlay so the bot's pin commit does not rebuild.
+Add .github/workflows/images.yml following the github-argocd-continuous-deployment reference pattern: build with buildx, a non-root check, a vulnerability scan with a fail threshold on CRITICAL, an artifact secret scan with a planted-secret negative control that must fail, refuse to push if the SHA tag already exists, push ghcr.io/<owner>/sellbird (owner resolved at run time):<sha>, and expose the digest as a job output. paths-ignore the overlay so the bot's pin commit does not rebuild.
 
 ## Capabilities
 
