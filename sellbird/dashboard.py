@@ -104,16 +104,25 @@ _env_lock = asyncio.Lock()
 # ── Helpers ──
 
 
+def _db_locator() -> str:
+    """Where the dashboard reads state: SELLBIRD_DATABASE_URL (Postgres) when
+    set, else the SQLite file at DB_PATH (tests and self-hosted installs)."""
+    from sellbird.state import DATABASE_URL_ENV
+    url = os.environ.get(DATABASE_URL_ENV, "").strip()
+    return url or str(DB_PATH)
+
+
 async def query_db(sql: str, params: tuple = ()) -> list[dict]:
     """Run a query and return results as list of dicts.
 
     Never raises: a missing DB file, missing table, or malformed schema
     returns [] so no dashboard route can 500 on an empty install.
     """
-    if not DB_PATH.exists():
+    locator = _db_locator()
+    if not storage.exists(locator):
         return []
     try:
-        async with storage.connect(str(DB_PATH)) as db:
+        async with storage.connect(locator) as db:
             db.row_factory = aiosqlite.Row
             async with db.execute(sql, params) as cursor:
                 rows = await cursor.fetchall()
@@ -1186,7 +1195,7 @@ async def get_prospects():
 
 def _state():
     from sellbird.state import StateManager
-    return StateManager(db_path=str(DB_PATH))
+    return StateManager(db_path=_db_locator())
 
 
 # What a reviewer needs next to a draft to check its claims against the facts.
@@ -1473,7 +1482,7 @@ def _sellbird_can_send() -> bool:
 def _extra_inboxes_connected() -> bool:
     """Whether an inbox besides the main one is connected (sellbird inboxes):
     Sellbird sends from it even while the main mailbox isn't signed in."""
-    locator = str(DB_PATH)
+    locator = _db_locator()
     if not storage.exists(locator):
         return False
     try:
@@ -1671,7 +1680,7 @@ async def export_prospects(all: bool = False, min_score: int = 0, email_status: 
     from sellbird.state import StateManager
     from sellbird.export import export_prospects_csv
 
-    state = StateManager(db_path=str(DB_PATH))
+    state = StateManager(db_path=_db_locator())
     try:
         await state.init_db()
         statuses = [s.strip() for s in email_status.split(",") if s.strip()] or None

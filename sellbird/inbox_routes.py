@@ -39,7 +39,7 @@ def _refuse(message: str, code: int = 400):
 
 def _store() -> MailboxStore:
     from sellbird import dashboard
-    return MailboxStore(db_path=str(dashboard.DB_PATH))
+    return MailboxStore(db_path=dashboard._db_locator())
 
 
 def _secrets() -> SecretStore:
