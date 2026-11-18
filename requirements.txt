@@ -17,3 +17,5 @@ pytz>=2024.1
 fastapi>=0.115,<1
 uvicorn>=0.34,<1
 mcp>=2.3,<3
+# Hosted gateway mode ([project.optional-dependencies] hosted); Docker images are hosted.
+pyjwt[crypto]>=2.10.1,<3
