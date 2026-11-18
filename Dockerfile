@@ -133,6 +133,10 @@ print("\n".join(extras["hosted"] + extras["postgres"]))' > /tmp/extras.txt; \
     pip install --no-cache-dir -r requirements.txt -r /tmp/extras.txt; \
     rm -f /tmp/extras.txt; \
     python -c "import jwt, psycopg; print('hosted and postgres extras ok')"; \
+    # Playwright's bundled Node needs libatomic on arm64, before --with-deps
+    # can install anything else; it is a no-op on amd64.
+    apt-get update; \
+    apt-get install -y --no-install-recommends libatomic1; \
     playwright install --with-deps chromium; \
     rm -rf /var/lib/apt/lists/* /root/.cache
 
