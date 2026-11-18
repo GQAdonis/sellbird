@@ -33,8 +33,8 @@ Write infra/flint-gate/sellbird-routes.yaml: kratos_session auth, a claims_enhan
 ### Stand-in (7.3)
 
 - Images, pinned by digest (resolved 2026-11-18 with `docker buildx imagetools inspect`):
-  - flint-forge Postgres 18: `tribehealth/flint-forge-pg@sha256:a0acdaa591095c6169d22a357d3b18f230eb7985c83688ab13e6afbe1b329f05` (tag `18`, multi-arch index; published by flint-forge's `postgres-image.yml`). It pulled, so the `postgres:18` fallback was not needed (`postgres:18` was `sha256:2ea8630df176ad090ec92136dee850397c5af8781e4bcf2e4162593691c61bbc`, recorded only).
-  - flint-gate: `ghcr.io/know-me-tools/flint-gate@sha256:e67abd80b024cd85dd1cbb2615ab940510aa3b48b48c86454b32c5a646398511` (flint-gate `k8s/overlays/ssr/PROVENANCE.md`; linux/amd64 only, so `platform: linux/amd64`).
+  - flint-forge Postgres 18: the image and digest pinned in `infra/local/compose.yaml` (tag `18`, multi-arch index; published by flint-forge's `postgres-image.yml`). It pulled, so the `postgres:18` fallback was not needed (`postgres:18` was `sha256:2ea8630df176ad090ec92136dee850397c5af8781e4bcf2e4162593691c61bbc`, recorded only).
+  - flint-gate: the image and digest pinned in `infra/local/compose.yaml` (flint-gate `k8s/overlays/ssr/PROVENANCE.md`; linux/amd64 only, so `platform: linux/amd64`).
   - Kratos: `oryd/kratos@sha256:fe2428f103a6240c064b6ea77d3088610865c55fcebccb30355857eccdc25b4b` (v1.3.1).
   - Admin client tool: `curlimages/curl@sha256:935d9100e9ba842cdb060de42472c7ca90cfe9a7c96e4dacb55e79e560b3ff40` (8.17.0).
   - Sellbird: local `sellbird:boundary`, `pull_policy: never`.

@@ -5,7 +5,9 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+from sellbird import storage
 from sellbird.state import StateManager
+from sellbird.workspace_home import current_home
 
 logger = logging.getLogger("sellbird.analyst")
 
@@ -18,6 +20,14 @@ class Analyst:
 
     def __init__(self, state: StateManager):
         self.state = state
+
+    def _data_dir(self) -> Path:
+        """The folder the report goes in. A SQLite database's own folder; for
+        a backend locator (a postgresql:// URL carrying the runtime password)
+        the workspace's data folder, never anything derived from the URL."""
+        if storage.manages_schema(self.state.db_path):
+            return current_home().data_dir
+        return Path(self.state.db_path).parent
 
     async def run(self):
         """Generate analytics report from current pipeline data."""
@@ -37,16 +47,18 @@ class Analyst:
 
         # Write report atomically (temp file + rename) so a crash mid-write
         # never leaves a corrupt analytics.json for the dashboard to choke on.
-        data_dir = Path(self.state.db_path).parent
-        report_path = data_dir / "analytics.json"
+        report_path = self._data_dir() / "analytics.json"
         try:
+            report_path.parent.mkdir(parents=True, exist_ok=True)
             tmp_path = report_path.with_suffix(".json.tmp")
             with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(report, f, indent=2)
             tmp_path.replace(report_path)
             logger.info(f"Analyst: Report written to {report_path}")
         except OSError as e:
-            logger.error(f"Analyst: Failed to write report: {e}")
+            # The type only: an OSError's text carries the path it failed on,
+            # and this log is served by the dashboard.
+            logger.error(f"Analyst: Failed to write report ({type(e).__name__})")
 
         # Log key metrics
         pipeline = report["pipeline"]

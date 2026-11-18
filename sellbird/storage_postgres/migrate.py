@@ -138,10 +138,16 @@ def discover(directory: Path | None = None) -> list[Migration]:
     return migrations
 
 
+# Seconds to wait for the server before giving up, so a migration Job against
+# an unreachable database fails instead of hanging until it is killed.
+CONNECT_TIMEOUT_SECONDS = 10
+
+
 def _connect(dsn: str):
     import psycopg
 
-    return psycopg.connect(dsn, autocommit=True, application_name="sellbird-migrate")
+    return psycopg.connect(dsn, autocommit=True, application_name="sellbird-migrate",
+                           connect_timeout=CONNECT_TIMEOUT_SECONDS)
 
 
 def _require_migration_role(conn) -> None:
@@ -186,6 +192,10 @@ class _Session:
             self.conn = _connect(self.dsn)
         except psycopg.OperationalError:
             raise MigrationError("could not reach the Postgres database") from None
+        except psycopg.Error as e:
+            # The type only: never the server's text, which can echo the DSN.
+            raise MigrationError(
+                f"could not open the migration connection ({type(e).__name__})") from None
         try:
             _require_migration_role(self.conn)
             self.conn.execute("SELECT pg_advisory_lock(%s)", (ADVISORY_LOCK_KEY,))

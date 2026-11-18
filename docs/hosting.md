@@ -35,13 +35,17 @@ Install the extra and point Sellbird at a database:
 
 ```bash
 pip install 'sellbird[postgres]'
-export SELLBIRD_DATABASE_URL='postgresql://sellbird_app:...@db.example.test:5432/sellbird?sslmode=require'
+export SELLBIRD_DATABASE_URL='postgresql://sellbird_app:...@db.example.test:5432/sellbird?sslmode=verify-full'
 ```
 
 With `SELLBIRD_DATABASE_URL` set to a `postgresql://` string, every store
 (companies, prospects, the Outbox, signals, usage) lives in Postgres. Unset,
 Sellbird uses `data/sellbird.db` as always. The string carries a password: keep it
 in a Secret or your shell, never in a file in Git. Sellbird doesn't print it.
+
+Use `sslmode=verify-full` wherever the server has a certificate you can check (add
+`sslrootcert=` when its CA isn't in the system store). `require` encrypts but
+doesn't check who answers, so anyone on the path could pose as the database.
 
 The string is for the **runtime role**, `sellbird_app`. That role reads and writes
 rows and nothing else. It can't create, alter or drop tables, and Sellbird refuses
@@ -64,7 +68,7 @@ superuser and supply the two passwords yourself. More in
 Then apply the schema as the migration role:
 
 ```bash
-export SELLBIRD_MIGRATE_DATABASE_URL='postgresql://sellbird_migrate:...@db.example.test:5432/sellbird?sslmode=require'
+export SELLBIRD_MIGRATE_DATABASE_URL='postgresql://sellbird_migrate:...@db.example.test:5432/sellbird?sslmode=verify-full'
 sellbird storage migrate     # apply pending migrations
 sellbird storage status      # where the schema is, and how many are pending
 ```
@@ -214,7 +218,12 @@ referenced from manifests by name only:
 | `sellbird-db-migrate` | `SELLBIRD_DATABASE_URL` | the migration Job only |
 | `sellbird-db-app` | `SELLBIRD_DATABASE_URL` | the app only |
 | `sellbird-claude` | `CLAUDE_CODE_OAUTH_TOKEN` | the app only |
-| `sellbird-providers` | your email, verifier and discovery keys, as named in `.env.example` | the app only |
+| `sellbird-providers` | your email, verifier and discovery keys, as named in `.env.example` | the app only, once your overlay wires it |
+
+The base Deployment wires only the first three. Which provider keys you use varies,
+so `sellbird-providers` reaches the app only through your platform overlay, which
+adds one optional `secretKeyRef` per key it needs. Until it does, the app has none
+of them, and Sellbird reports the missing provider as it does locally.
 
 The migration Job never sees the app's Secrets, and the app never sees the
 migration role's.

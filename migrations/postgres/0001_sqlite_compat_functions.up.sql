@@ -12,10 +12,15 @@
 -- Known differences (none used by Sellbird): Julian-day numbers as input, the
 -- 'localtime'/'unixepoch' modifiers, and month arithmetic past a month's end
 -- (SQLite normalises 2026-01-31 +1 month to 2026-03-03; Postgres to 2026-02-28).
+--
+-- Each function pins its search_path (pg_catalog, then the public schema it
+-- lives in, pg_temp last) so a caller's search_path or a same-named object in
+-- another schema can never change what a function resolves to.
 
 -- CURRENT_TIMESTAMP: 'YYYY-MM-DD HH:MM:SS', UTC, fixed for the statement.
 CREATE FUNCTION sb_now() RETURNS text
 LANGUAGE sql STABLE PARALLEL SAFE
+SET search_path = pg_catalog, public, pg_temp
 AS $$ SELECT pg_catalog.to_char(pg_catalog.timezone('UTC', pg_catalog.statement_timestamp()),
                                 'YYYY-MM-DD HH24:MI:SS') $$;
 
@@ -24,6 +29,7 @@ AS $$ SELECT pg_catalog.to_char(pg_catalog.timezone('UTC', pg_catalog.statement_
 -- space, and an optional 'Z' or '+HH:MM' offset (converted to UTC).
 CREATE FUNCTION sb_parse_time(value text) RETURNS timestamp
 LANGUAGE plpgsql STABLE STRICT PARALLEL SAFE
+SET search_path = pg_catalog, public, pg_temp
 AS $$
 DECLARE
     v text := pg_catalog.btrim(value);
@@ -50,6 +56,7 @@ $$;
 -- Anything else gives NULL, as SQLite does for a modifier it doesn't know.
 CREATE FUNCTION sb_apply_modifiers(ts timestamp, mods text[]) RETURNS timestamp
 LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE
+SET search_path = pg_catalog, public, pg_temp
 AS $$
 DECLARE
     m text;
@@ -81,41 +88,49 @@ $$;
 -- datetime(value [, modifier ...]): 'YYYY-MM-DD HH:MM:SS' or NULL.
 CREATE FUNCTION sb_datetime(value text) RETURNS text
 LANGUAGE sql STABLE PARALLEL SAFE
+SET search_path = pg_catalog, public, pg_temp
 AS $$ SELECT pg_catalog.to_char(sb_parse_time(value), 'YYYY-MM-DD HH24:MI:SS') $$;
 
 CREATE FUNCTION sb_datetime(value text, VARIADIC mods text[]) RETURNS text
 LANGUAGE sql STABLE PARALLEL SAFE
+SET search_path = pg_catalog, public, pg_temp
 AS $$ SELECT pg_catalog.to_char(sb_apply_modifiers(sb_parse_time(value), mods),
                                 'YYYY-MM-DD HH24:MI:SS') $$;
 
 -- date(value [, modifier ...]): 'YYYY-MM-DD' or NULL.
 CREATE FUNCTION sb_date(value text) RETURNS text
 LANGUAGE sql STABLE PARALLEL SAFE
+SET search_path = pg_catalog, public, pg_temp
 AS $$ SELECT pg_catalog.to_char(sb_parse_time(value), 'YYYY-MM-DD') $$;
 
 CREATE FUNCTION sb_date(value text, VARIADIC mods text[]) RETURNS text
 LANGUAGE sql STABLE PARALLEL SAFE
+SET search_path = pg_catalog, public, pg_temp
 AS $$ SELECT pg_catalog.to_char(sb_apply_modifiers(sb_parse_time(value), mods), 'YYYY-MM-DD') $$;
 
 -- julianday(value [, modifier ...]): days since noon, 24 November 4714 BC (UTC).
 CREATE FUNCTION sb_julianday(value text) RETURNS double precision
 LANGUAGE sql STABLE PARALLEL SAFE
+SET search_path = pg_catalog, public, pg_temp
 AS $$ SELECT pg_catalog.date_part('epoch', sb_parse_time(value)) / 86400.0 + 2440587.5 $$;
 
 CREATE FUNCTION sb_julianday(value text, VARIADIC mods text[]) RETURNS double precision
 LANGUAGE sql STABLE PARALLEL SAFE
+SET search_path = pg_catalog, public, pg_temp
 AS $$ SELECT pg_catalog.date_part('epoch', sb_apply_modifiers(sb_parse_time(value), mods))
              / 86400.0 + 2440587.5 $$;
 
 -- json_valid(text): whether it is well-formed JSON (boolean; SQLite's 1/0).
 CREATE FUNCTION sb_json_valid(value text) RETURNS boolean
 LANGUAGE sql IMMUTABLE PARALLEL SAFE
+SET search_path = pg_catalog, public, pg_temp
 AS $$ SELECT value IS JSON $$;
 
 -- A SQLite JSON path ('$', '$.a.b', '$."a.b"', '$.list[0]') as a jsonb path
 -- array, or NULL for a path this doesn't support.
 CREATE FUNCTION sb_json_path(path text) RETURNS text[]
 LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE
+SET search_path = pg_catalog, public, pg_temp
 AS $$
 DECLARE
     rest text;
@@ -158,6 +173,7 @@ $$;
 -- conditions of a WHERE clause in.
 CREATE FUNCTION sb_json_extract(doc text, path text) RETURNS text
 LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE
+SET search_path = pg_catalog, public, pg_temp
 AS $$
 DECLARE
     keys text[];

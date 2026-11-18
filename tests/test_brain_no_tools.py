@@ -301,3 +301,14 @@ def test_capability_check_is_cached_per_executable(monkeypatch, tmp_path):
     exe.write_text("v2 is longer")  # an update: checked again
     claude_runtime.check_cli()
     assert len(probes) == 2
+
+
+@pytest.mark.asyncio
+async def test_claude_env_never_carries_database_urls(state, monkeypatch):
+    for key in claude_runtime.SECRET_ENV:
+        monkeypatch.setenv(key, "postgresql://role:pw@db.example.test/sellbird")
+    captured = _capture(monkeypatch)
+    await Brain(state).think("hi")
+    env = captured["kwargs"]["env"]
+    for key in claude_runtime.SECRET_ENV:
+        assert key not in env, key
