@@ -1,11 +1,15 @@
-# Only files required by COPY enter the build context. Never send user data,
-# credentials, Git history, environments, or browser artifacts to the builder.
+# Only files required by COPY (or RUN --mount) enter the build context. Never
+# send user data, credentials, Git history, environments, or browser artifacts
+# to the builder.
 **
 !Dockerfile
 !requirements.txt
+!pyproject.toml
 !sellbird.yaml
 !sellbird/
 !sellbird/**
+!migrations/
+!migrations/**
 !prompts/
 !prompts/**
 !skills/
