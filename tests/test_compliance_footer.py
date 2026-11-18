@@ -866,11 +866,28 @@ def test_french_that_is_not_an_opt_out(reply):
 
 
 def test_a_long_french_reply_is_quick():
+    # Guards against super-linear (pathological) matching without depending on
+    # how fast the disk or CPU is: quadrupling the input must not cost much more
+    # than four times as much. A linear scan lands near 4x, a quadratic one near
+    # 16x; the bound sits between them. Each size is timed best-of-three so a
+    # single scheduling hiccup on slow storage cannot decide the result.
     import time
-    text = "ne pas retirez-moi " * 20000
-    started = time.monotonic()
-    _opt_out_reason(text, text)
-    assert time.monotonic() - started < 2
+
+    def best_time(repeats):
+        text = "ne pas retirez-moi " * repeats
+        runs = []
+        for _ in range(3):
+            started = time.perf_counter()
+            _opt_out_reason(text, text)
+            runs.append(time.perf_counter() - started)
+        return min(runs)
+
+    small_repeats, growth, max_ratio, floor = 5000, 4, 8.0, 0.001
+    small = max(best_time(small_repeats), floor)
+    large = best_time(small_repeats * growth)
+    assert large / small < max_ratio, (
+        f"x{growth} input took x{large / small:.1f} longer (limit x{max_ratio})"
+    )
 
 
 @pytest.mark.asyncio

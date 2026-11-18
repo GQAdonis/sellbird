@@ -405,12 +405,30 @@ def test_address_scan_is_linear_on_adversarial_pages(kind):
 
 
 def test_nested_testimonials_are_bounded():
+    # Guards against super-linear (pathological) scanning of deeply nested
+    # testimonial markup without depending on disk or CPU speed: quadrupling the
+    # nesting depth must not cost much more than four times as much. A linear
+    # scan lands near 4x, a quadratic one near 16x; the bound sits between them.
+    # Each depth is timed best-of-three so one scheduling hiccup on slow storage
+    # cannot decide the result.
     import time
-    html = "<div class='testimonial'>" * 2000 + "x" + "</div>" * 2000
-    start = time.monotonic()
-    people.drop_quoted(html)
-    people.find_people([("https://acme.com", html)], "acme.com")
-    assert time.monotonic() - start < 1.0
+
+    def best_time(depth):
+        html = "<div class='testimonial'>" * depth + "x" + "</div>" * depth
+        runs = []
+        for _ in range(3):
+            start = time.perf_counter()
+            people.drop_quoted(html)
+            people.find_people([("https://acme.com", html)], "acme.com")
+            runs.append(time.perf_counter() - start)
+        return min(runs)
+
+    small_depth, growth, max_ratio, floor = 500, 4, 8.0, 0.001
+    small = max(best_time(small_depth), floor)
+    large = best_time(small_depth * growth)
+    assert large / small < max_ratio, (
+        f"x{growth} depth took x{large / small:.1f} longer (limit x{max_ratio})"
+    )
 
 
 def test_whole_page_is_scanned_not_just_the_top():
