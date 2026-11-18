@@ -22,3 +22,17 @@ Changed baseline test files (justified): none yet.
 ## Open Questions
 
 None that change what gets built; the platform contract's operator agreement is tracked as a boundary receipt.
+
+## Required checks
+
+Exact check names for the branch ruleset (change 9), from `.github/workflows/tests.yml` (workflow `tests`):
+
+- `test (ubuntu-latest, 3.11)`
+- `test (ubuntu-latest, 3.12)`
+- `test (macos-latest, 3.11)`
+- `test (macos-latest, 3.12)`
+- `test (windows-latest, 3.11)`
+- `test (windows-latest, 3.12)`
+- `postgres` (Postgres 18 service container; fails on any skipped Postgres test)
+
+The image workflow (`images.yml`) adds its own required check names, listed by the platform engineer.
