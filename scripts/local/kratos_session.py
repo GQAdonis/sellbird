@@ -8,8 +8,10 @@ auth-host passthrough (or any base URL given), using Kratos's browser flows with
 1. login flow, method ``password`` -> an aal1 session cookie;
 2. settings flow, method ``totp``: read the TOTP secret Kratos offers and enrol
    it with a code computed here (RFC 6238, SHA-1, 6 digits, 30 s);
-3. wait for the next TOTP time step, then login flow with ``aal=aal2``, method
-   ``totp`` -> the same session upgraded to aal2;
+3. in a fresh cookie jar (enrolment alone already raises the first session to
+   aal2), password login again for an aal1 session, wait for the next TOTP time
+   step, then login flow with ``aal=aal2``, method ``totp`` -> that session
+   upgraded to aal2;
 4. ``GET /sessions/whoami`` must answer 200 with ``aal2``.
 
 Input, from the environment only (nothing secret on the command line):
@@ -218,10 +220,17 @@ def main() -> int:
     except KeyError as missing:
         print(f"kratos_session: {missing.args[0]} is not set", file=sys.stderr)
         return 2
-    b = Browser(base, os.environ.get("KRATOS_HOST_HEADER") or None)
+    host = os.environ.get("KRATOS_HOST_HEADER") or None
     try:
+        # Enrolling TOTP in a settings flow raises that session to aal2 on its
+        # own, so a second-factor login on it is refused with
+        # session_already_available. Enrol in one browser, then sign in from a
+        # fresh one (no cookies) with password and code, as the operator would.
+        enroller = Browser(base, host)
+        password_login(enroller, email, password)
+        secret = enrol_totp(enroller)
+        b = Browser(base, host)
         password_login(b, email, password)
-        secret = enrol_totp(b)
         _wait_for_next_step()
         totp_login(b, secret)
         check_whoami(b)
