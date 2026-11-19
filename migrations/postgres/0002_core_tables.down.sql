@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS runs;
+DROP TABLE IF EXISTS settings;
+DROP TABLE IF EXISTS email_patterns;
+DROP TABLE IF EXISTS usage_events;
+DROP TABLE IF EXISTS processed_replies;
+DROP TABLE IF EXISTS usage_log;
+DROP TABLE IF EXISTS actions;
+DROP TABLE IF EXISTS conversations;
+DROP TABLE IF EXISTS campaigns;
+DROP TABLE IF EXISTS prospects;
+DROP TABLE IF EXISTS companies;

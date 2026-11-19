@@ -1,0 +1,2 @@
+check_manifests: rendered infra/k8s/overlays/example (9 objects)
+check_manifests: 97 checks, 0 failed

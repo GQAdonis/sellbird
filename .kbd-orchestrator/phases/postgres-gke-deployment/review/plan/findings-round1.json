@@ -1,0 +1,100 @@
+{
+  "mode": "artifact",
+  "verdict": "BLOCK",
+  "judge_model": "mimo-v2.6-pro",
+  "producer_model": "claude-opus-5-5",
+  "isolation_mode": "rest-gateway:http://localhost:4000/v1",
+  "cross_model_check": "unverified-producer-unknown",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "The plan forbids running any test or build before the boundary, which makes change 1 (baseline-test-green) impossible to implement or validate and leaves the blocking tests-pass constraint unverifiable until all 10 changes are done.",
+      "evidence": "Execution round order states: \"No task runs product tests or builds before the boundary: generated code executes only in the single boundary packet (B4) after every change's implementation is complete (VLBV). Tests are authored during the changes and run once at the boundary.\" Yet change 1 is \"Make the configured test command runnable and the baseline suite green\" with details \"make the two timing-bounded tests deterministic (they failed at baseline, likely from slow I/O on the external volume) without weakening what they assert\" \u2014 work that can only be known green by running pytest, and constraint `tests-pass` (\".venv/bin/python -m pytest -q\") is blocking.",
+      "suggested_fix": "Permit the owning task of change 1 (and only it) to run the configured test command for its own scope, or move baseline-green verification into its own early boundary gate; otherwise change 1 cannot be declared complete before B4."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "The boundary packet's oracles for SCN-SHIP-001 and SCN-CONTRACT-001 are scripts that no change creates and that do not exist, so those scenarios have no executable oracle at all.",
+      "evidence": "Boundary packet: \"scenario \u2014 `kubectl kustomize infra/k8s/overlays/production` + `scripts/boundary/check_manifests.sh`\" and \"scenario \u2014 `scripts/boundary/check_platform_contract.sh`\", plus `scripts/boundary/check_container.sh sellbird:boundary`. No change in the CHANGE LIST has \"scripts/boundary/\" in scope (changes 8, 9 and 10 mention workflows, manifests and docs only), and the packet's own cited_paths reports \"MISSING scripts/boundary/check_manifests.sh\" and \"MISSING scripts/boundary/check_platform_contract.sh\".",
+      "suggested_fix": "Add explicit deliverables for scripts/boundary/check_container.sh, check_manifests.sh and check_platform_contract.sh to the owning changes (or a dedicated change), with the exact assertions they must make, before the boundary run is declared."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "Several scenario oracles are exit-status-only and are judged by tests authored or edited by the same changes they verify, so weakened or deleted assertions still produce a PASS.",
+      "evidence": "\"scenario \u2014 `.venv/bin/python -m pytest -q` (SCN-BASE-001, SCN-STORE-001)\" and \"scenario \u2014 `.venv/bin/python -m pytest -q tests/test_gateway_mode.py` (SCN-AUTH-001, SCN-AUTH-002)\" are the oracles, while the same section states \"Tests are authored during the changes\". False results that would still pass: SCN-STORE-001 (\"Local SQLite behaviour unchanged after the backend split\") passes if change 3 drops or alters a SQLite-only behaviour whose test was edited or removed; SCN-BASE-001 passes if change 1 turns the two failing tests into no-ops; SCN-AUTH-001 passes if change 4/6 tests assert only that a 200 was returned and never that the principal is the allowlisted Kratos sub.",
+      "suggested_fix": "Bind each oracle to pre-change assertions (record the current test IDs/behaviour covered by SCN-STORE-001 and SCN-BASE-001 in the contract and diff the test list at the boundary), and require the auth tests to assert the resolved principal and the negative cases, not just HTTP status."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "Five scenarios have no negative-control command, and the global negative-control list omits the failure cases the scenarios themselves promise.",
+      "evidence": "The negative-control list is: \"forged `x-flint-user-id` without JWT, JWT with wrong `aud`, unknown signal code insert, second claimer on a claimed outbox item, move into a non-empty target, planted secret in the image, token string grep in logs\". Nothing corresponds to SCN-BASE-001 or SCN-STORE-001; nothing exercises SCN-AUTH-002's \"still refuses non-loopback binds\" as a command that must fail; nothing feeds a `latest`/wrong-digest manifest to the SCN-SHIP-001 guard to prove the guard fails; SCN-CONTRACT-001 has no negative case at all (and \"token string grep in logs\" is a must-find-nothing check, not a must-fail command).",
+      "suggested_fix": "Add a named negative control per scenario with an expected non-zero/expected-refusal result recorded in boundary-results.json (non-loopback bind must refuse; unpinned manifest must fail check_manifests.sh; a deliberately wrong/absent platform contract must fail check_platform_contract.sh; a known-diverging SQLite case must fail if the backend split regresses)."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "SCN-CONTRACT-001 and SCN-SHIP-001 claim outcomes their oracles cannot observe, so the boundary can report success while the stated goals are unmet.",
+      "evidence": "SCN-CONTRACT-001 is \"Platform interface contract published and agreed\", evidenced by \"2.1+2.2+2.3\" and the oracle `scripts/boundary/check_platform_contract.sh` \u2014 a script cannot observe the operator and the platform repository agreeing. SCN-SHIP-001 is parenthetically limited to \"rendered and validated locally; live run gated\", while the goal requires \"A harmless change merged to main reaches the cluster end to end through the real pipeline, verified (VLBV boundary)\".",
+      "suggested_fix": "Split each into what the boundary can prove (files exist and validate; manifests pin image@digest) and what requires an operator receipt (contract agreement, live Argo CD sync, E2E merge), and mark the latter BLOCKED with the receipt recorded rather than PASS from a script."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "No change covers how the AI brain authenticates inside a pod, although a goal decision requires it and the deployed image/manifests depend on it.",
+      "evidence": "Goal: \"Decide and record, before any build work: ... (4) how the AI brain authenticates in a pod (Claude/Codex credentials, provider choice)\". The plan's Inputs section records no such decision (only \"decisions D1\u2013D12\" by reference), the scope cut excludes only \"Codex in the cluster\", change 7 covers \"Pin the Claude CLI to an exact version with checksum verification\" and change 9 covers \"Secret references by name only\" without naming any Claude/Codex credential secret, and no scenario covers the brain running in the cluster. A deployed Sellbird therefore has no defined credential source for Claude, and no test would notice.",
+      "suggested_fix": "Record the decision explicitly in the plan, add the credential provisioning (operator-set secret name, mount/env contract, setup-token handling per dashboard-token-private and no-hardcoded-secrets) to changes 2/7/9, and add a scenario covering a pod-credential-resolved brain call."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The plan's delivered scope does not satisfy goals 4\u20136 as stated in the packet, and no follow-up work is recorded for the deferred parts.",
+      "evidence": "Goals require the overlay and Argo CD Applications to \"deploy Sellbird, Postgres, Ory Kratos and flint-gate to the GKE cluster\", that \"https://sellbird.know-me.tools resolves, serves TLS, and requires a Kratos session enforced by flint-gate before the dashboard loads\", and that a merged change \"reaches the cluster end to end\". The plan states the shared platform \"is **not** built here; it is a prior phase in a new repository\" and that \"Live Argo CD sync and the live sign-in check ... are not claimed by this one\", with change 9 covering only Sellbird's own overlay. The restatement is attributed to the operator but the goal text in this packet is unchanged and no follow-up phase/waypoint is named.",
+      "suggested_fix": "Record the restated G4\u2013G6 text in the plan alongside the originals and register the gated platform phase as an explicit follow-up dependency so closure cannot mark the original goals done."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "Change 6's local stand-in runs the container whose runtime contract change 7 defines, but 6 does not depend on 7 and both are scheduled in parallel in Round 3.",
+      "evidence": "Change 6 details: \"Add a local stand-in (compose file under infra/local/) running the flint-forge PG18 image, Kratos ..., flint-gate with the route, and Sellbird in gateway mode\"; change 6 \"Depends on: platform-interface-contract, hosted-gateway-mode\"; Round 3 runs \"sqlite-to-postgres-move-tool, sellbird-gateway-route-config, cluster-ready-container-image\" in parallel, while change 7 changes \"writable state to a /data volume so the root filesystem can be read-only\" and adds the Service health endpoint the compose entrypoint must satisfy.",
+      "suggested_fix": "Add cluster-ready-container-image to change 6's dependencies, or pin the stand-in's Sellbird service to the same build spec change 7 owns and have change 7 update the compose file."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "Two goal-2 requirements \u2014 reversible migrations and least-privilege database roles \u2014 have no scenario or boundary command.",
+      "evidence": "Goal 2 requires \"versioned reversible migrations, least-privilege roles\". The scenario table covers SQLite parity, the Postgres contract suite, concurrency and the move tool only; the boundary packet runs pytest and the container/manifest checks, with no `migrate down`/re-apply exercise and no assertion that the runtime app role lacks DDL (change 3 states \"The app role has no DDL rights at runtime\" with no test named).",
+      "suggested_fix": "Add a scenario or boundary command that applies then reverses each migration and re-applies it, and one that connects as the app role and proves CREATE/ALTER are refused."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "Change 1's acceptance target is ambiguous: the two tests it must fix are unnamed and the stated non-weakening requirement has no verification.",
+      "evidence": "Change 1 details: \"make the two timing-bounded tests deterministic (they failed at baseline, likely from slow I/O on the external volume) without weakening what they assert\" \u2014 no test paths or IDs are given, and the only oracle is \"scenario \u2014 `.venv/bin/python -m pytest -q` (SCN-BASE-001)\", whose exit status passes equally if the tests are weakened.",
+      "suggested_fix": "Name the two test files/IDs from the baseline run in the change, and record the pre-change assertions (expected values, timing bounds) in the contract so the boundary can compare."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The VLBV contract binding references files that are absent from the repository, so the method reference and adoption digest cannot be reproduced or checked.",
+      "evidence": "CONTRACT BINDING: \"`method.referenceSha256` binds the installed `skills/kbd-process-orchestrator/references/boundaries.md`\" and \"stamped by `kbd-contract-adopt.sh` at adoption\"; cited_paths reports \"MISSING kbd-contract-adopt.sh\" and \"MISSING skills/kbd-process-orchestrator/references/boundaries.md\".",
+      "suggested_fix": "State the external location and expected digest of the boundaries reference and of kbd-contract-adopt.sh, or vendor them, so the stamped contractDigest can be re-derived independently."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "plan.md",
+      "claim": "The boundary run sequence has undeclared nondeterminism: containers are started without a readiness gate and image references are unpinned.",
+      "evidence": "Boundary \"run \u2014 `docker compose -f infra/local/compose.yaml up -d` (PG18, Kratos, flint-gate, Sellbird gateway mode)\" is immediately followed by scenario commands (including `tests/test_gateway_mode.py` against \"the running stand-in\"), with no wait/health step, and no image tag or digest is specified for the flint-forge PG18 or flint-gate images.",
+      "suggested_fix": "Add a readiness wait (health-gated) as a boundary step and pin the flint-forge/flint-gate image references in infra/local/compose.yaml by digest."
+    }
+  ],
+  "judge_identity": {
+    "providerConnectionId": "xiaomi-token-plan",
+    "providerId": "xiaomi",
+    "modelId": "mimo-v2.6-pro"
+  },
+  "checked_classes": []
+}

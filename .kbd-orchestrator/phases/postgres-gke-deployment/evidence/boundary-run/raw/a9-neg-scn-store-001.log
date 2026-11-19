@@ -1,0 +1,2 @@
+NEGATIVE-CONTROL SCN-STORE-001 PASS: contract test test_a_company_is_recorded_once_per_normalised_domain (company dedup, add_company) fails with the domain no longer normalised
+SCN-STORE-001 exit 0

@@ -202,6 +202,17 @@ def cmd_dashboard(args):
 
     try:
         if getattr(args, "url", False):
+            from sellbird.auth.config import GatewayConfigError, dashboard_mode, running_in_container
+            try:
+                gateway = dashboard_mode() == "gateway"
+            except GatewayConfigError as e:
+                raise DashboardSetupError(str(e)) from e
+            if gateway:
+                raise DashboardSetupError(
+                    "gateway mode has no unlock link; sign in through the gateway.")
+            if running_in_container():
+                raise DashboardSetupError(
+                    "the unlock link is not printed inside a container.")
             # The unlock link for an already-running dashboard.
             print(dashboard_url(host=args.host, port=args.port))
             return
@@ -1165,7 +1176,8 @@ def main():
     sub = subparsers.add_parser("dashboard", help="Open the web dashboard")
     sub.add_argument("--host", default="127.0.0.1",
                      help="Loopback address to listen on (default: 127.0.0.1; "
-                          "other addresses are refused)")
+                          "other addresses are refused unless SELLBIRD_DASHBOARD_MODE=gateway "
+                          "is set in the environment)")
     sub.add_argument("--port", type=int, default=5555, help="Port (default: 5555)")
     sub.add_argument("--url", action="store_true",
                      help="Print the unlock link (with its token) and exit")
@@ -1316,6 +1328,9 @@ def main():
 
     from sellbird.inbox_cli import register as register_inboxes
     register_inboxes(subparsers)
+
+    from sellbird.storage_postgres.cli import register as register_storage
+    register_storage(subparsers)
 
     from sellbird import desktop_cli
     desktop_cli.register_desktop_commands(subparsers)

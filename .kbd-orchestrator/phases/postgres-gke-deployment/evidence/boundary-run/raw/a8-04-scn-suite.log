@@ -1,0 +1,96 @@
+........................................................................ [  1%]
+........................................................................ [  3%]
+........................................................................ [  5%]
+........................................................................ [  7%]
+........................................................................ [  9%]
+........................................................................ [ 10%]
+...............................................................sss...... [ 12%]
+........................................................................ [ 14%]
+....................................sssssssssssssssssssss............... [ 16%]
+........................................................................ [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 23%]
+........................................................................ [ 25%]
+........................................................................ [ 27%]
+........................................................................ [ 28%]
+........................................................................ [ 30%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+........................................................................ [ 36%]
+........................................................................ [ 37%]
+........................................................................ [ 39%]
+........................................................................ [ 41%]
+........................................................................ [ 43%]
+........................................................................ [ 45%]
+........................................................................ [ 46%]
+........................................................................ [ 48%]
+......ssssssssssss...................................................... [ 50%]
+........................................................................ [ 52%]
+........................................................................ [ 54%]
+........................................................................ [ 55%]
+........................................................s............... [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 61%]
+........................................................................ [ 63%]
+........................................................................ [ 64%]
+......s................................................................. [ 66%]
+........................................................................ [ 68%]
+.......................................................................s [ 70%]
+........................................................................ [ 72%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+........................................................................ [ 77%]
+........................................................................ [ 79%]
+........................................................................ [ 81%]
+........................................................................ [ 82%]
+........................................................................ [ 84%]
+........................................................................ [ 86%]
+........................................................................ [ 88%]
+........................................................................ [ 90%]
+........................................................................ [ 91%]
+........................................................................ [ 93%]
+........................................................................ [ 95%]
+........................................................................ [ 97%]
+........................................................................ [ 99%]
+..................................                                       [100%]
+=============================== warnings summary ===============================
+tests/test_analyst_hosted.py: 2 warnings
+tests/test_codex_e2e.py: 37 warnings
+tests/test_gmail_history.py: 2 warnings
+tests/test_gmail_inbox.py: 3 warnings
+tests/test_gmail_send_outcomes.py: 4 warnings
+  /Volumes/T7/Projects/references/sellbird/sellbird/agents/analyst.py:37: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "generated_at": datetime.utcnow().isoformat(),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_claude_cli_isolation.py:155: set SELLBIRD_CLAUDE_CLI_TESTS=1 (runs the installed Claude CLI against a localhost stand-in; no credentials or network)
+SKIPPED [1] tests/test_claude_cli_isolation.py:178: set SELLBIRD_CLAUDE_CLI_TESTS=1 (runs the installed Claude CLI against a localhost stand-in; no credentials or network)
+SKIPPED [1] tests/test_claude_cli_isolation.py:199: set SELLBIRD_CLAUDE_CLI_TESTS=1 (runs the installed Claude CLI against a localhost stand-in; no credentials or network)
+SKIPPED [1] tests/test_codex_cli_surface.py:185: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_codex_cli_surface.py:202: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_codex_cli_surface.py:213: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [4] tests/test_codex_cli_surface.py:229: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [10] tests/test_codex_cli_surface.py:340: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_codex_cli_surface.py:362: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_codex_cli_surface.py:374: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_codex_cli_surface.py:401: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_codex_cli_surface.py:431: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_gateway_mode_e2e.py:121: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:127: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:140: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:146: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:150: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:158: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:164: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:168: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:174: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:179: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:184: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:191: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_login_item.py:380: real shortcut needs Windows
+SKIPPED [1] tests/test_packaging.py:121: set SELLBIRD_PACKAGE_TESTS=1 (needs setuptools); Codex runs on macOS/Linux only
+SKIPPED [1] tests/test_pidfile.py:70: real kernel32 query
+3955 passed, 39 skipped, 48 warnings in 267.80s (0:04:27)
+scn-suite exit 0

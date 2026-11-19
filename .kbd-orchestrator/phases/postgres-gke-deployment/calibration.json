@@ -1,0 +1,60 @@
+{
+  "phase": "postgres-gke-deployment",
+  "purpose": "Owner-reviewed examples that calibrate what counts as useful, out of scope, and rare-but-critical for this phase's acceptance. Bound into the adopted contract by SHA-256.",
+  "positive": [
+    {
+      "id": "CAL-POS-1",
+      "example": "A local user who never configures a backend upgrades Sellbird and keeps working on SQLite with the token link exactly as before.",
+      "why": "Upstream promise; D1 keeps SQLite as the default."
+    },
+    {
+      "id": "CAL-POS-2",
+      "example": "With the Postgres backend configured, approving a drafted email in the Outbox sends it once, inside the daily limit and outside quiet hours, exactly as on SQLite.",
+      "why": "Sending safety is the product's core trust promise."
+    },
+    {
+      "id": "CAL-POS-3",
+      "example": "Behind local Kratos and flint-gate, the operator signs in with password and second factor and reaches the dashboard; nobody else can.",
+      "why": "D3 operator-only sign-in; proves the hosted auth path before the platform exists."
+    },
+    {
+      "id": "CAL-POS-4",
+      "example": "A merge to main produces a scanned image and a guarded digest pin for the platform overlay, with no real hostname in this public fork.",
+      "why": "G3/G6 restated; operator decision to keep real names in the platform repo."
+    }
+  ],
+  "rejectedOrDeferred": [
+    {
+      "id": "CAL-REJ-1",
+      "example": "Live sign-in at the public hostname and Argo CD syncing the pod in this phase.",
+      "why": "Gated on the platform phase (carried goals CG-1, CG-2)."
+    },
+    {
+      "id": "CAL-REJ-2",
+      "example": "Several people sharing one hosted Sellbird, or per-workspace row-level security.",
+      "why": "Multi-user excluded; single tenant with RLS deferred."
+    },
+    {
+      "id": "CAL-REJ-3",
+      "example": "Automated backups, high availability, Codex in the cluster, or moving the operator's real local data.",
+      "why": "D12 exclusions."
+    }
+  ],
+  "rareCritical": [
+    {
+      "id": "CAL-CRIT-1",
+      "example": "The heartbeat and the dashboard claim the same approved outbox item at the same moment on Postgres; the prospect must receive the email once.",
+      "why": "A double send damages the sender's reputation and the prospect's trust; SQLite's writer serialisation no longer protects it."
+    },
+    {
+      "id": "CAL-CRIT-2",
+      "example": "A request reaches Sellbird with a forged x-flint-user-id header but no valid gate JWT; it must get nothing.",
+      "why": "flint-gate forwards client headers; a trusted header without a verified token would hand over the pipeline and mailbox."
+    },
+    {
+      "id": "CAL-CRIT-3",
+      "example": "The dashboard token or the Claude credential appears in container logs collected by the cluster.",
+      "why": "Logs are retained and widely readable; either value grants control."
+    }
+  ]
+}

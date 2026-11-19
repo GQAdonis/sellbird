@@ -1,0 +1,3 @@
+check_manifests: rendered infra/k8s/overlays/example (9 objects)
+FAIL: ingress rule without a 'from' (allows every source): sellbird-app-egress sellbird-app-ingress-from-flint-gate sellbird-default-deny sellbird-egress-dns-and-postgres
+check_manifests: 97 checks, 1 failed

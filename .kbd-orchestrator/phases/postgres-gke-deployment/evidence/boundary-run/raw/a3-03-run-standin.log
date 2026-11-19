@@ -1,0 +1,77 @@
+make-env: removing any previous stand-in containers and volumes
+make-env: starting postgres, kratos and flint-gate (health-gated)
+ Network sellbird-local_default Creating 
+ Network sellbird-local_default Creating 
+ Volume sellbird-local_pg-data Creating 
+ Volume sellbird-local_pg-data Creating 
+ Volume sellbird-local_pg-data Created 
+ Volume sellbird-local_pg-data Created 
+ Network sellbird-local_default Created 
+ Network sellbird-local_default Created 
+ Container sellbird-local-postgres-1 Creating 
+ Container sellbird-local-postgres-1 Created 
+ Container sellbird-local-kratos-1 Creating 
+ Container sellbird-local-kratos-1 Created 
+ Container sellbird-local-flint-gate-1 Creating 
+ Container sellbird-local-flint-gate-1 Created 
+ Container sellbird-local-postgres-1 Starting 
+ Container sellbird-local-postgres-1 Started 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-kratos-1 Starting 
+ Container sellbird-local-kratos-1 Started 
+ Container sellbird-local-kratos-1 Waiting 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-kratos-1 Healthy 
+ Container sellbird-local-flint-gate-1 Starting 
+ Container sellbird-local-flint-gate-1 Started 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-kratos-1 Waiting 
+ Container sellbird-local-flint-gate-1 Waiting 
+ Container sellbird-local-kratos-1 Healthy 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-flint-gate-1 Healthy 
+make-env: creating the operator and a non-allowlisted identity in Kratos
+ Image curlimages/curl@sha256:935d9100e9ba842cdb060de42472c7ca90cfe9a7c96e4dacb55e79e560b3ff40 Pulling 
+ 6b59a28fa201 Already exists 0B
+ 7d7cbd9aa3f2 Pulling fs layer 0B
+ bd9ddc54bea9 Pulling fs layer 0B
+ bd9ddc54bea9 Downloading 34B
+ bd9ddc54bea9 Verifying Checksum 0B
+ bd9ddc54bea9 Download complete 0B
+ 7d7cbd9aa3f2 Downloading 64.89kB
+ 7d7cbd9aa3f2 Downloading 1.206MB
+ 7d7cbd9aa3f2 Verifying Checksum 0B
+ 7d7cbd9aa3f2 Download complete 0B
+ 7d7cbd9aa3f2 Extracting 65.54kB
+ 7d7cbd9aa3f2 Extracting 131.1kB
+ 7d7cbd9aa3f2 Extracting 262.1kB
+ 7d7cbd9aa3f2 Extracting 458.8kB
+ 7d7cbd9aa3f2 Extracting 589.8kB
+ 7d7cbd9aa3f2 Extracting 720.9kB
+ 7d7cbd9aa3f2 Extracting 786.4kB
+ 7d7cbd9aa3f2 Extracting 1.18MB
+ 7d7cbd9aa3f2 Extracting 2.228MB
+ 7d7cbd9aa3f2 Extracting 2.621MB
+ 7d7cbd9aa3f2 Extracting 2.949MB
+ 7d7cbd9aa3f2 Extracting 3.408MB
+ 7d7cbd9aa3f2 Extracting 3.736MB
+ 7d7cbd9aa3f2 Extracting 3.932MB
+ 7d7cbd9aa3f2 Extracting 4.391MB
+ 7d7cbd9aa3f2 Extracting 4.85MB
+ 7d7cbd9aa3f2 Extracting 5.177MB
+ 7d7cbd9aa3f2 Extracting 5.571MB
+ 7d7cbd9aa3f2 Extracting 5.964MB
+ 7d7cbd9aa3f2 Extracting 6.043MB
+ 7d7cbd9aa3f2 Pull complete 0B
+ bd9ddc54bea9 Extracting 34B
+ bd9ddc54bea9 Extracting 34B
+ bd9ddc54bea9 Pull complete 0B
+ Image curlimages/curl@sha256:935d9100e9ba842cdb060de42472c7ca90cfe9a7c96e4dacb55e79e560b3ff40 Pulled 
+ Container sellbird-local-kratos-admin-client-run-3988af875c76 Creating 
+ Container sellbird-local-kratos-admin-client-run-3988af875c76 Created 
+ Container sellbird-local-kratos-admin-client-run-9637e6898b98 Creating 
+ Container sellbird-local-kratos-admin-client-run-9637e6898b98 Created 
+make-env: signing in both identities with password + TOTP (about a minute)
+ERROR: Use `uv run python -I /Volumes/T7/Projects/references/sellbird/scripts/local/kratos_session.py` instead of `python3 -I /Volumes/T7/Projects/references/sellbird/scripts/local/kratos_session.py`

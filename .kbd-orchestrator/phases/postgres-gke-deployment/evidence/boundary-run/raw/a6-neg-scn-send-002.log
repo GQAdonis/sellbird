@@ -1,0 +1,13 @@
+      |            ^^^^^^^^^^^^^^^^^^
+      | tests/storage_contract/backends.py:73: in fresh_pg_locator
+      |     migrate_to_latest(migrate_dsn)
+      | tests/storage_contract/backends.py:53: in migrate_to_latest
+      |     migrate.migrate_up(migrate_dsn)
+      | sellbird/storage_postgres/migrate.py:232: in migrate_up
+      |     with _Session(dsn) as conn:
+      |          ^^^^^^^^^^^^^
+      | sellbird/storage_postgres/migrate.py:189: in __enter__
+      |     import psycopg
+      | E   ModuleNotFoundError: No module named 'psycopg'
+      | 4 failed, 4 passed, 10 deselected in 1.16s
+NEGATIVE-CONTROL SCN-SEND-002 FAIL: the four refusal scenarios did not all pass on both backends (exit 1)

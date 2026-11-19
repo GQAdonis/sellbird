@@ -1,0 +1,12 @@
+DROP FUNCTION IF EXISTS sb_json_extract(text, text);
+DROP FUNCTION IF EXISTS sb_json_path(text);
+DROP FUNCTION IF EXISTS sb_json_valid(text);
+DROP FUNCTION IF EXISTS sb_julianday(text, VARIADIC text[]);
+DROP FUNCTION IF EXISTS sb_julianday(text);
+DROP FUNCTION IF EXISTS sb_date(text, VARIADIC text[]);
+DROP FUNCTION IF EXISTS sb_date(text);
+DROP FUNCTION IF EXISTS sb_datetime(text, VARIADIC text[]);
+DROP FUNCTION IF EXISTS sb_datetime(text);
+DROP FUNCTION IF EXISTS sb_apply_modifiers(timestamp, text[]);
+DROP FUNCTION IF EXISTS sb_parse_time(text);
+DROP FUNCTION IF EXISTS sb_now();

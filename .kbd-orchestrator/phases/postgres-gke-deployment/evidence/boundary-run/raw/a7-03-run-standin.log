@@ -1,0 +1,87 @@
+make-env: removing any previous stand-in containers and volumes
+make-env: starting postgres, kratos and flint-gate (health-gated)
+ Network sellbird-local_default Creating 
+ Volume sellbird-local_pg-data Creating 
+ Network sellbird-local_default Creating 
+ Volume sellbird-local_pg-data Creating 
+ Volume sellbird-local_pg-data Created 
+ Volume sellbird-local_pg-data Created 
+ Network sellbird-local_default Created 
+ Network sellbird-local_default Created 
+ Container sellbird-local-postgres-1 Creating 
+ Container sellbird-local-postgres-1 Created 
+ Container sellbird-local-kratos-1 Creating 
+ Container sellbird-local-kratos-1 Created 
+ Container sellbird-local-flint-gate-1 Creating 
+ Container sellbird-local-flint-gate-1 Created 
+ Container sellbird-local-postgres-1 Starting 
+ Container sellbird-local-postgres-1 Started 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-kratos-1 Starting 
+ Container sellbird-local-kratos-1 Started 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-kratos-1 Waiting 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-kratos-1 Healthy 
+ Container sellbird-local-flint-gate-1 Starting 
+ Container sellbird-local-flint-gate-1 Started 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-kratos-1 Waiting 
+ Container sellbird-local-flint-gate-1 Waiting 
+ Container sellbird-local-kratos-1 Healthy 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-flint-gate-1 Healthy 
+make-env: creating the operator and a non-allowlisted identity in Kratos
+ Container sellbird-local-kratos-admin-client-run-601a2327d512 Creating 
+ Container sellbird-local-kratos-admin-client-run-601a2327d512 Created 
+ Container sellbird-local-kratos-admin-client-run-0b7b0b10c2c6 Creating 
+ Container sellbird-local-kratos-admin-client-run-0b7b0b10c2c6 Created 
+make-env: signing in both identities with password + TOTP (about a minute)
+make-env: ready. Wrote infra/local/.env and infra/local/.env.generated/ (uncommitted).
+  next:  docker compose -f infra/local/compose.yaml up -d --wait
+  DSNs:  scripts/local/dsn.sh migrate|app
+  e2e:   SELLBIRD_GATEWAY_URL=http://localhost:4456 \
+           scripts/local/e2e-env.sh .venv/bin/python -m pytest -q tests/test_gateway_mode_e2e.py
+  clean: docker compose -f infra/local/compose.yaml down -v
+ Container sellbird-local-postgres-1 Running 
+ Container sellbird-local-kratos-1 Running 
+ Container sellbird-local-flint-gate-1 Running 
+ Volume sellbird-local_sellbird-data Creating 
+ Volume sellbird-local_sellbird-data Creating 
+ Volume sellbird-local_sellbird-migrate-data Creating 
+ Volume sellbird-local_sellbird-migrate-data Creating 
+ Volume sellbird-local_sellbird-data Created 
+ Volume sellbird-local_sellbird-data Created 
+ Volume sellbird-local_sellbird-migrate-data Created 
+ Volume sellbird-local_sellbird-migrate-data Created 
+ Container sellbird-local-sellbird-migrate-1 Creating 
+ Container sellbird-local-sellbird-migrate-1 Created 
+ Container sellbird-local-sellbird-1 Creating 
+ Container sellbird-local-sellbird-1 Created 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-kratos-1 Waiting 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-sellbird-migrate-1 Starting 
+ Container sellbird-local-sellbird-migrate-1 Started 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-kratos-1 Healthy 
+ Container sellbird-local-flint-gate-1 Waiting 
+ Container sellbird-local-sellbird-migrate-1 Waiting 
+ Container sellbird-local-flint-gate-1 Healthy 
+ Container sellbird-local-sellbird-migrate-1 Exited 
+ Container sellbird-local-sellbird-1 Starting 
+ Container sellbird-local-sellbird-1 Started 
+ Container sellbird-local-sellbird-migrate-1 Waiting 
+ Container sellbird-local-sellbird-1 Waiting 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-kratos-1 Waiting 
+ Container sellbird-local-flint-gate-1 Waiting 
+ Container sellbird-local-sellbird-migrate-1 Exited 
+ Container sellbird-local-kratos-1 Healthy 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-flint-gate-1 Healthy 
+ Container sellbird-local-sellbird-1 Healthy 

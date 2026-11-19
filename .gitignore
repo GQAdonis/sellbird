@@ -58,3 +58,7 @@ sellbird.yaml.*
 harvey.local.yaml
 harvey.local.yaml.*
 harvey.yaml.*
+infra/local/.env.generated/
+
+# KBD runtime lock files
+.kbd-orchestrator/**/*.lock

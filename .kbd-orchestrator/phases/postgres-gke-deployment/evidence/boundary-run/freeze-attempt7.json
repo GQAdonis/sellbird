@@ -1,0 +1,15 @@
+{
+  "attempt": 7,
+  "boundary": "B5",
+  "repair": 4,
+  "authorizedAt": "2026-11-19T14:51:14.145Z",
+  "contract": "fd8ba0479d45d75569d040969f08fb4415707d1b57d7dd0617dcdf8019cf19fb",
+  "reason": "final repair 4 under signed amendment 5: brain stdout auth error, check_manifests SB_ROOT, ALLOWED_SUB hex, test_home /data, psycopg in venv + preflight check (1890b98); image rebuilt",
+  "environment": "modern-python plugin shim removed from PATH as the owner directed; postgres extra installed into .venv with uv; commands unchanged",
+  "frozenAt": "2026-11-19T14:53:33.510621+00:00",
+  "commit": "1890b98bdfe21bc1380bf08ec3925026043841f1",
+  "tree": "ef46034094c76bc03b5a8aa55007aecb36a7e0a4",
+  "trackedChanges": "",
+  "brain.py": "d3aac4e58381346028755f6b81ef61dd8463f1864f45781770c696168a8a5eb4",
+  "image": "sha256:417bad158f4c34cb587fa6005f8225b8d581842d0e47717fa3b82aac47421a45"
+}

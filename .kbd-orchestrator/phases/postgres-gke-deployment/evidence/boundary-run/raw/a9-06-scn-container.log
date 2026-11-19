@@ -1,0 +1,35 @@
+== image sellbird:boundary
+PASS  image user is non-root (Config.User='sellbird')
+PASS  label org.opencontainers.image.source=https://github.com/ethanplusai/sellbird
+PASS  label org.opencontainers.image.revision=unknown
+PASS  label org.opencontainers.image.version=0.4.0
+== local mode (default command)
+PASS  HEALTHCHECK healthy in local mode
+PASS  running container has ReadonlyRootfs=true
+PASS  process uid is 1000
+PASS  /app is not writable
+PASS  /data is writable
+PASS  defaults seeded into /data
+PASS  local mode generated a dashboard token file
+PASS  dashboard token absent from local-mode logs
+PASS  no unlock link in local-mode logs
+PASS  dummy credential absent from local-mode logs
+PASS  dummy credential in no file under /data, $HOME, /tmp
+PASS  no Claude credentials file
+PASS  dashboard --url prints no link inside the container
+== gateway mode (selected by environment only)
+PASS  HEALTHCHECK (TCP) healthy in gateway mode
+PASS  gateway mode answers a request without the public Host with 400 (use tcpSocket probes)
+PASS  gateway mode created no dashboard token file
+PASS  dummy credential absent from gateway-mode logs
+PASS  no unlock link in gateway-mode logs
+PASS  dummy credential in no file (gateway mode)
+PASS  dashboard --host 0.0.0.0 refused without SELLBIRD_DASHBOARD_MODE=gateway
+== brain credential (--brain)
+PASS  claude subprocess received CLAUDE_CODE_OAUTH_TOKEN from the brain
+PASS  dummy credential absent from brain output
+PASS  unset token: brain reports the documented missing-login error
+PASS  unset token: no credential file to fall back to
+
+check_container: all checks passed
+scn-container exit 0

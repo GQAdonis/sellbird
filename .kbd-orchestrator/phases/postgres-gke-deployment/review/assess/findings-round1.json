@@ -1,0 +1,78 @@
+{
+  "mode": "artifact",
+  "verdict": "BLOCK",
+  "judge_model": "mimo-v2.6-pro",
+  "producer_model": "claude-opus-5-5",
+  "isolation_mode": "rest-gateway:http://localhost:4000/v1",
+  "cross_model_check": "unverified-producer-unknown",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "file": "assessment.md",
+      "claim": "The adopted-outcome contract declares an observable result that the same document declares unachievable in this phase, so downstream VLBV will build and run acceptance scenarios for a state that cannot exist.",
+      "evidence": "'The plan stage should restate goals 4\u20135 accordingly; the platform phase is a hard prerequisite for goals 5 and 6.' vs 'Desired observable result: ... (d) an unauthenticated request to the hostname is redirected to Kratos sign-in, and an authenticated operator reaches the dashboard' listed with no blocked/deferred marker, while operator action 2 is still 'Create the new shared platform repository (name and owner to be confirmed).'",
+      "suggested_fix": "Split the desired observable results into in-scope results and conditionally-deferred results, and mark (c) and (d) as gated on the platform phase's delivery; otherwise the contract cannot be turned into an executable scenario matrix."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "claim": "Goal G6 is declared blocked on an external phase but is never restated for this phase, unlike G4\u2013G5.",
+      "evidence": "'The plan stage should restate goals 4\u20135 accordingly; the platform phase is a hard prerequisite for goals 5 and 6.' \u2014 only goals 4\u20135 are told to be restated, and GOAL PROGRESS says 'G6 End-to-end proof with independent review: NOT MET \u2014 depends on G2\u2013G5' without defining what end-to-end proof means if the platform never lands.",
+      "suggested_fix": "State the G6 definition for this phase (e.g. merge \u2192 scan \u2192 digest \u2192 deploy-bot pin \u2192 Argo CD Application synced, with the Kratos path exercised in a stubbed/local harness) or explicitly move G6 out of this phase's goal set."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "claim": "CONSTRAINT CHECK reports no blocking-constraint violations while the `tests-pass` blocking constraint is already red at baseline and its command cannot even run in this checkout.",
+      "evidence": "'CONSTRAINT CHECK - ... constraints.md violations: NONE observed in existing code.' vs 'tests: FAIL (2 of 3,729)' and 'known violations: the project virtualenv cannot run the test command in `project.json` (`.venv/bin/python -m pytest`) because dev extras are not installed'. The constraints list `tests-pass` and `build-passes` as severity: blocking.",
+      "suggested_fix": "List `tests-pass` (and the unrunnable `.venv` command) as an already-unsatisfied blocking constraint so the plan carries a 'make the baseline green' change instead of assuming a clean archive."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "claim": "Baseline status of the blocking `build-passes` constraint is left UNKNOWN, so the plan cannot tell whether the starting tree compiles.",
+      "evidence": "'BUILD HEALTH - build check: UNKNOWN \u2014 `build_health_command` not run this stage; it executes no generated code but was not needed for fact-finding.'",
+      "suggested_fix": "Run `.venv/bin/python -m compileall -q sellbird && .venv/bin/python -c \"import sellbird.cli\"` before dispatch and record PASS/FAIL, exactly as the test run was recorded."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "claim": "Line-precise citations to external-repository files are presented as fact although the packet's cited_paths records them MISSING, and `Dockerfile:139` resolves to this repo's Python image Dockerfile rather than the flint-forge image it is used to describe.",
+      "evidence": "'docs/postgres-extensions.md is stale (says no pg_graphql, but `Dockerfile:139` installs it)' \u2014 cited_paths says 'MISSING  docs/postgres-extensions.md' and the file tree's `./Dockerfile` is the one this artifact describes as 'python:3.12-slim, Playwright Chromium, non-root uid 1000'; likewise 'flint-gate's minted JWT has no default `aud` (auth/jwt_mint.rs:262-293)' and '(middleware/pipeline.rs:1079-1120)' with cited_paths 'MISSING  auth/jwt_mint.rs' and 'MISSING  middleware/pipeline.rs'.",
+      "suggested_fix": "Namespace every external citation (e.g. `flint-gate@auth/jwt_mint.rs:262`, `flint-forge@Dockerfile:139`) and carry the same UNVERIFIED label used for the cluster facts, so the plan does not treat unverifiable line numbers as repo evidence."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "claim": "CI and GitHub-state claims are unsupported by anything in the packet, including the file tree, which contains no `.github` entry at all.",
+      "evidence": "'CI image pipeline: MISSING \u2014 only `.github/workflows/tests.yml`', 'Actions enabled, 0 workflow runs ever on this fork, no rulesets, environments, secrets, variables or CODEOWNERS', and 'local: macOS, Linux, Windows with SQLite (existing CI matrix)' \u2014 the packet's file_tree lists `./.codex`, `./.claude`, `./.dockerignore`, `./.env.example`, `./.impeccable` but no `./.github` path, so the asserted workflow file and the 'existing CI matrix' cannot be located.",
+      "suggested_fix": "Record where CI configuration actually lives (path or external system) and re-state the workflow/rule-set facts with that source, or mark them UNVERIFIED like the cluster facts."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "claim": "A mandatory work item (the platform interface contract) has no goal or decision attached to it, so the plan has no legitimate scope anchor for it.",
+      "evidence": "'Calibration inputs unresolved: no owner-reviewed examples exist yet; the platform interface contract (database provisioning, JWKS URL, gateway listener) must be defined before SCN-AUTH-001 and SCN-SHIP-001 can be made executable.' while SCN-AUTH-001 and SCN-SHIP-001 are both marked 'Mandatory: yes' and no goal G1\u2013G6 or decision D1\u2013D12 covers authoring that interface.",
+      "suggested_fix": "Add an explicit phase goal (or an operator decision) to author and agree the platform interface contract, with the new platform repository as counterparty, before G4\u2013G6 work is dispatched."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "assessment.md",
+      "claim": "The goal requirement for 'versioned reversible migrations' is never gap-analysed; the assessment only reports the absence of down-migrations as a SQLite baseline fact.",
+      "evidence": "Goal G2 requires 'versioned reversible migrations', but the artifact states only 'SQLite has 16 forward-only idempotent scripts versioned by `PRAGMA user_version` ... no down-migrations' and 'Schema and migrations: MISSING for Postgres' \u2014 no statement of what reversibility discipline must be introduced or that none exists to inherit.",
+      "suggested_fix": "Add a migration-policy finding (reversible migration authoring, downgrade testing, and what happens to `PRAGMA user_version` bookkeeping on Postgres) to the implementation status."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "assessment.md",
+      "claim": "An unresolved tenancy/RLS decision is carried into the adopted contract while multi-user Sellbird is excluded, leaving the database tenancy model undetermined.",
+      "evidence": "Risk 8: 'workspace_home suggests multiple workspaces; whether Postgres row-level security applies inside the `sellbird` database is an open architect decision.' vs the adopted contract exclusions: 'multi-user Sellbird' out of scope.",
+      "suggested_fix": "Record the decision as single-tenant with RLS deferred (owner: the operator) or scope the decision into G2's least-privilege role design, so the plan does not have to guess."
+    }
+  ],
+  "judge_identity": {
+    "providerConnectionId": "xiaomi-token-plan",
+    "providerId": "xiaomi",
+    "modelId": "mimo-v2.6-pro"
+  }
+}

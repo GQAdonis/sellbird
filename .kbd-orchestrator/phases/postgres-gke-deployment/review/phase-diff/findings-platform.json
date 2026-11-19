@@ -1,0 +1,71 @@
+{
+  "mode": "diff",
+  "verdict": "BLOCK",
+  "judge_model": "mimo-v2.6-pro",
+  "producer_model": "claude-opus-5-5",
+  "isolation_mode": "rest-gateway:http://localhost:4000/v1",
+  "cross_model_check": "unverified-producer-unknown",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "file": "Dockerfile",
+      "line": 81,
+      "claim": "The Dockerfile hard-codes a real GitHub repository owner into the default OCI source label, violating the blocking no-real-personal-data constraint and the diff's own placeholder-only rule for the repository owner.",
+      "evidence": "Dockerfile:81 `ARG SOURCE_URL=https://github.com/ethanplusai/sellbird` -> LABEL org.opencontainers.image.source=\"${SOURCE_URL}\"; constraint `no-real-personal-data` ('No real person's or business's name ... in code'); acceptance criterion platform-interface 'Placeholders only in the public repository' ('use placeholders for every hostname, repository owner, platform repository name and identity id'); gitops-deploy-sellbird proposal ('No real hostname or registry literal appears in this repository'). Every other owner reference in this diff is a placeholder or runtime-resolved: .github/CODEOWNERS uses `@REPLACE_WITH_OWNER`, overlays/example/kustomization.yaml uses `ghcr.io/example-owner/sellbird`, and images.yml builds `SOURCE_URL=${{ github.server_url }}/${{ github.repository }}`.",
+      "suggested_fix": "Default SOURCE_URL to a placeholder (e.g. https://example.test/REPLACE_WITH_OWNER/sellbird) and fail the build when it is still the placeholder in CI, keeping the real value only as a run-time build-arg."
+    },
+    {
+      "severity": "WARNING",
+      "file": ".dockerignore",
+      "line": 15,
+      "claim": "The build-context allowlist re-includes every directory the Dockerfile COPYs with both `!dir/` and `!dir/**` except `skills/`, which gets only `!skills/`, so the skills tree silently never reaches the new `COPY skills/ /usr/local/share/sellbird/skills/` and the image ships an empty skills directory.",
+      "evidence": ".dockerignore lines 9-15: `!sellbird/` + `!sellbird/**`, `!migrations/` + `!migrations/**` (both added by this diff), `!prompts/` + `!prompts/**`, but only `!skills/` with no `!skills/**`; Dockerfile:169 `COPY skills/ /usr/local/share/sellbird/skills/` and Dockerfile:163-166 comment claiming these are 'Shipped defaults' that sellbird.home.seed_home seeds into SELLBIRD_HOME; images.yml lines 154-156 assume prompts/ and skills/ Markdown ships under /usr/local/share/sellbird.",
+      "suggested_fix": "Add `!skills/**` next to `!skills/`, matching the other three directory entries."
+    },
+    {
+      "severity": "WARNING",
+      "file": "infra/k8s/base/networkpolicy.yaml",
+      "line": 72,
+      "claim": "The DNS egress rule allows port 53 only to kube-dns pods, while the same base explicitly `except`s 169.254.0.0/16, so any cluster resolving through NodeLocal DNSCache (169.254.20.10, the GKE default for newer clusters) blackholes all DNS and with it Postgres, JWKS and model-API access.",
+      "evidence": "networkpolicy.yaml:71-82 the egress peer is namespaceSelector kube-system + podSelector k8s-app: kube-dns, ports 53 only; networkpolicy.yaml:128 `- 169.254.0.0/16    # link-local, including the metadata server`; networkpolicy.yaml:15-17 the overlay-patch escape hatch covers only 'pod or service ranges', not DNS.",
+      "suggested_fix": "Add a DNS egress peer for the node-local cache (an ipBlock for 169.254.20.10/32 on port 53, or a podSelector for k8s-app: node-local-dns) and extend the overlay-patch note to cover DNS topology."
+    },
+    {
+      "severity": "WARNING",
+      "file": "infra/k8s/base/migrate-job.yaml",
+      "line": 22,
+      "claim": "The migration Job is an Argo CD PreSync hook, so it runs before the base's NetworkPolicies are applied and on a first sync gets unrestricted egress despite the comment asserting it is limited to DNS and Postgres.",
+      "evidence": "migrate-job.yaml:22 `argocd.argoproj.io/hook: PreSync` plus line 3 'it runs before any other resource of the sync is applied'; migrate-job.yaml:13 'Network: DNS and Postgres only (see networkpolicy.yaml)'; networkpolicy.yaml is a non-hook resource in infra/k8s/base/kustomization.yaml, i.e. applied after PreSync completes; the Job holds the migration DSN from `sellbird-db-migrate`, the only role with DDL rights.",
+      "suggested_fix": "Also annotate the NetworkPolicies as PreSync hooks on an earlier sync wave (or a separate pre-hook wave) so the egress rules exist before the migration pod starts, and correct the comment."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "Dockerfile",
+      "line": 141,
+      "claim": "The layer cleanup `rm -rf /root/.cache` is a no-op because the same ENV block points HOME and XDG_CACHE_HOME elsewhere, so pip/playwright build caches are baked into the image layer.",
+      "evidence": "Dockerfile:141 `rm -rf /var/lib/apt/lists/* /root/.cache` runs in the same RUN as `pip install` and `playwright install --with-deps chromium`; Dockerfile:110 `HOME=/home/sellbird` and Dockerfile:112 `XDG_CACHE_HOME=/tmp/.cache` are set earlier at line 101, so neither tool writes to /root/.cache.",
+      "suggested_fix": "Clean the paths actually used, e.g. `rm -rf /var/lib/apt/lists/* /tmp/.cache /home/sellbird/.cache`, or unset HOME/XDG_CACHE_HOME for that RUN."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "infra/local/postgres/50-sellbird-local.sh",
+      "line": 28,
+      "claim": "The init script passes all four role passwords as psql `-v name=value` arguments, putting them in the container's argv, which contradicts the header of the very file it invokes.",
+      "evidence": "50-sellbird-local.sh:28-34 `psql -v migrate_password=\"$SELLBIRD_MIGRATE_PASSWORD\" ...` (also kratos_password/flintgate_password); infra/postgres/provision.sql:7-8 'never commit them, never put them on a shared command line history'.",
+      "suggested_fix": "Feed the variables to psql via a heredoc using `\\set` from the environment, or pass them through PGPASSWORD/`psql -f` with `\\getenv`, so they never appear in argv."
+    },
+    {
+      "severity": "WARNING",
+      "file": ".github/workflows/images.yml",
+      "line": 217,
+      "claim": "The mandated planted-secret negative control asserts Trivy's `Target` ends with an absolute image path, but Trivy reports image-layer files as tar-relative paths, so `found()` never matches and the control step always fails the workflow.",
+      "evidence": "images.yml:215-220 `found()` uses `select((.Target // \"\") | endswith($f))` with `$f` set to `/app/planted-control.env` and `/usr/local/share/sellbird/skills/zz-planted-control.md` (lines 221-225); Docker layer entries are relative (`app/planted-control.env`), so `endswith(\"/app/...\")` is false; acceptance criterion image-build 'Planted secret blocks publishing' depends on this control tripping.",
+      "suggested_fix": "Match both shapes, e.g. `select((.Target // \"\") | test(\"(^|/)app/planted-control\\.env$\"))`, or normalise the target with `ltrimstr(\"/\")` before matching."
+    }
+  ],
+  "judge_identity": {
+    "providerConnectionId": "xiaomi-token-plan",
+    "providerId": "xiaomi",
+    "modelId": "mimo-v2.6-pro"
+  }
+}

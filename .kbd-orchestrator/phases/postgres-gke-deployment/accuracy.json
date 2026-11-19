@@ -1,0 +1,18 @@
+{
+  "phase": "postgres-gke-deployment",
+  "source": "closure-packet.md, evidence/boundary-run/boundary-results.json, amendments/amend-1..7.json, review/phase-diff/",
+  "contractAmendmentsAfterAdoption": {"value": 7, "breakdown": {"specDelta": 1, "boundaryCommandFix": 1, "implementationComplete": 1, "repairBudgetRaise": 4}},
+  "blockedCausedByContract": {"value": 8, "breakdown": {"oracleDefectsAttempt6": 3, "oracleDefectsAttempt7": 4, "wrongEntryPointFixedBeforeRun": 1}},
+  "blockedCausedByEnvironment": {"value": 3, "items": ["host port conflict with another local stand-in", "python3 shim in driver PATH", "postgres extra missing from .venv"]},
+  "notExercisedScenarios": {"value": 0, "subChecksNotExercised": ["images.yml Trivy control end to end (GitHub Actions only)", "live Argo CD sync (CG-1)", "public hostname and TLS (CG-2)"]},
+  "boundaryAttempts": 9,
+  "repairAttempts": {"used": 6, "allowedAtAdoption": 2, "allowedAtClose": 6},
+  "productDefectsFoundAtBoundary": 2,
+  "harnessDefectsFoundAtBoundary": 3,
+  "postClosureEscapes": {"value": 0, "note": "none known at reflection time; CI and the live path have not run"},
+  "staticQaB4Step5": {"blockingViolations": 0, "warnings": 1},
+  "independentReviewB4Step5": {"critical": 4, "criticalSurvived": 0, "warning": 15, "warningConfirmedAndFixed": 3, "suggestion": 6},
+  "repairConfirmationReview": {"critical": 1, "criticalSurvived": 0, "warning": 1, "warningSurvived": 0, "suggestion": 1},
+  "finalVerdict": "CLOSED PASS 13/13 (evidence sha256:c5381fb8)",
+  "recurringConstraintViolations": [{"constraint": "changelog-and-docs", "file": "CHANGELOG.md", "note": "repair 6 behaviour change undocumented (F2)"}]
+}

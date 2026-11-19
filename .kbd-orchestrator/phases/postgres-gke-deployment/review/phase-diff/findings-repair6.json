@@ -1,0 +1,39 @@
+{
+  "mode": "diff",
+  "verdict": "BLOCK",
+  "judge_model": "mimo-v2.6-pro",
+  "producer_model": "claude-opus-5-5",
+  "isolation_mode": "rest-gateway:http://localhost:4000/v1",
+  "cross_model_check": "unverified-producer-unknown",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "file": "sellbird/storage_postgres/__init__.py",
+      "line": 96,
+      "claim": "The new `exists()` guard keys on `e.sqlstate`, but the diff never attaches a `sqlstate` to the errors it raises, so `_NOT_THERE` can never match and `exists()` re-raises for an absent or unmigrated database instead of returning False.",
+      "evidence": "errors.py hunk `@@ -78,4 +78,9 @@` builds the error as `storage.DatabaseError(f\"database error: {type(exc).__name__}\" + (f\" (SQLSTATE {sqlstate})\" if sqlstate else \"\"))` \u2014 a message string only; the SQLSTATE is embedded in text, not set on the exception object (and the `psycopg.OperationalError` branch above it returns `storage.OperationalError(\"could not reach the Postgres database\")` with no state at all, which is what a missing database (3D000) and a refused password both raise as). The `__init__.py` hunk then does `except storage.ERRORS as e: if getattr(e, \"sqlstate\", None) in _NOT_THERE: return False; raise`, so `getattr` returns `None` for every translated error and the function raises for `42P01`/`3D000`. Repair goal 3 requires \"return False only when the database is absent or unmigrated\"; this instead raises on an unmigrated database, regressing every caller that treats `exists() == False` as \"not set up yet\" (including `storage.exists`'s stated contract).",
+      "suggested_fix": "Carry the SQLSTATE on the translated error (e.g. `err = storage.DatabaseError(msg); err.sqlstate = sqlstate` in `errors.py`, or a `sqlstate` argument on `storage.DatabaseError`) and keep `_NOT_THERE` in sync with the branch that actually handles connection-time 3D000, so `exists()` can see it."
+    },
+    {
+      "severity": "WARNING",
+      "file": "tests/storage_contract/test_pg_failures.py",
+      "line": 38,
+      "claim": "The new test asserts `getattr(raised.value, \"sqlstate\", None) == \"22P02\"` on a translated storage error that the diff never gives a `sqlstate` attribute, so the assertion fails wherever the test runs (and the whole module skips without test DSNs, so `tests-pass` would never notice).",
+      "evidence": "test line 38 `assert getattr(raised.value, \"sqlstate\", None) == \"22P02\"` vs errors.py hunk, which returns `storage.DatabaseError(f\"database error: {type(exc).__name__}\" + ...)` passing only the message; scope note requires judging \"whether the new tests would fail on the old code\" \u2014 this one instead fails on the *new* code (or never runs), so it does not validate the fix it is meant to protect.",
+      "suggested_fix": "Assert on the message contract the fix actually implements (no value leak, plus a fixed `SQLSTATE 22P02` substring), or set `sqlstate` on the raised error and assert that."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "CHANGELOG.md",
+      "line": 0,
+      "claim": "The diff changes user-visible error wording and `PostgresBackend.exists` semantics with no CHANGELOG.md or docs/*.md entry.",
+      "evidence": "Warning constraint `changelog-and-docs`: \"CHANGELOG.md and the relevant docs/*.md are updated when behaviour changes.\" The diff replaces `message_primary`-based messages with `database error: <Class> (SQLSTATE \u2026)`, changes `exists()` from returning False to raising, and moves the dashboard's `storage.exists` call into the error path; no changelog or docs file appears in the diff.",
+      "suggested_fix": "Add a CHANGELOG.md entry noting the new value-free error strings and the stricter `exists()` behaviour."
+    }
+  ],
+  "judge_identity": {
+    "providerConnectionId": "xiaomi-token-plan",
+    "providerId": "xiaomi",
+    "modelId": "mimo-v2.6-pro"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "attempt": 5,
+  "boundary": "B5",
+  "repair": 2,
+  "authorizedAt": "2026-11-19T00:15:02.981Z",
+  "reason": "repair 2: kratos_session.py signs in from a fresh session after TOTP enrolment (bf40883); image unchanged because it does not contain scripts/",
+  "environment": "modern-python plugin shim removed from PATH as the owner directed; commands unchanged",
+  "frozenAt": "2026-11-19T00:16:18.781410+00:00",
+  "commit": "bf40883bf3653e3af733fe7ca5aee1f0d48b6d5f",
+  "tree": "a5cdfd158a8c2ede2fd4d9c25d43e028c78f9a51",
+  "trackedChanges": "",
+  "Dockerfile": "229eba07ba0f027c3f8687fc65921d0a9a50d9d852d3c60576f99603698b8ebf",
+  "kratos_session.py": "01e43743772322c0b861fded299ea820179ff33c9bf3eeb82aecafeb491c0fcf",
+  "image": "sha256:764bb477ab1114eb3f4dcc2a34c3cd36ceb035a88445f4aa7fc57b2c251a661c"
+}

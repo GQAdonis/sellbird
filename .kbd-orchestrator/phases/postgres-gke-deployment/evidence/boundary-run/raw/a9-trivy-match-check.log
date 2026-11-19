@@ -1,0 +1,6 @@
+/app/planted-control.env -> match
+app/planted-control.env -> match
+/other/app/planted-control.env -> match
+/app/planted-control.env.bak -> no-match
+/myapp/planted-control.env -> no-match
+wrong rule -> no-match

@@ -1,0 +1,186 @@
+{
+  "schemaVersion": "2",
+  "generatedBy": "kbd-runtime",
+  "projectionContractVersion": 2,
+  "sourceRevision": 273,
+  "derivedRevision": 273,
+  "frontier": {
+    "6a8a0899-8ef7-41ad-b20f-dc28120196cf": 273
+  },
+  "conflictCount": 0,
+  "phase": "postgres-gke-deployment",
+  "phaseId": "postgres-gke-deployment",
+  "parentPhase": null,
+  "last_updated": "2026-11-19T18:59:27.344083Z",
+  "last_updated_by": "kbd-runtime",
+  "changes_total": 10,
+  "changes_completed": 10,
+  "implementation_total": 10,
+  "implementation_completed": 10,
+  "completion": {
+    "primaryCounter": "implementation",
+    "implementation": {
+      "completed": 10,
+      "total": 10,
+      "status": "COMPLETE"
+    },
+    "evidence": {
+      "status": "NOT_TRACKED",
+      "summary": null,
+      "blockers": []
+    },
+    "certification": {
+      "status": "NOT_TRACKED",
+      "summary": null,
+      "blockers": []
+    },
+    "publication": {
+      "status": "NOT_TRACKED",
+      "summary": null,
+      "blockers": []
+    }
+  },
+  "completionScopes": {
+    "completion": "phase",
+    "runCompletion": "run"
+  },
+  "runCompletion": {
+    "scope": "run",
+    "runId": "postgres-gke-deployment-20261118T052720Z",
+    "primaryCounter": "implementation",
+    "implementation": {
+      "completed": 10,
+      "total": 10,
+      "status": "COMPLETE"
+    },
+    "evidence": {
+      "status": "PENDING",
+      "summary": null,
+      "blockers": []
+    },
+    "certification": {
+      "status": "PENDING",
+      "summary": null,
+      "blockers": []
+    },
+    "publication": {
+      "status": "PENDING",
+      "summary": null,
+      "blockers": []
+    }
+  },
+  "changes": [
+    {
+      "id": "baseline-test-green",
+      "title": "Make the configured test command runnable and the baseline suite green",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 4,
+      "tasks_done": 4,
+      "last_task_completed": "1.4 Write scripts/boundary/preflight.sh that runs pinned, containerized actionlint, kustomize, yq and the Postgres 18 client so the boundary needs no host installs",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "platform-interface-contract",
+      "title": "Agree the interface between Sellbird and the shared platform (G7)",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 4,
+      "tasks_done": 4,
+      "last_task_completed": "2.4 Write scripts/boundary/check_platform_contract.sh validating the contract document's required sections and schema",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "postgres-storage-backend",
+      "title": "Add a Postgres 18 storage backend beside SQLite with reversible migrations",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 9,
+      "tasks_done": 9,
+      "last_task_completed": "3.9 Route the dashboard's remaining database access (query_db, _state, inbox_routes) through the storage seam so a hosted dashboard uses Postgres, and keep tests isolated from SELLBIRD_DATABASE_URL",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "hosted-gateway-mode",
+      "title": "Hosted gateway mode: trust a flint-gate JWT, keep local token mode unchanged",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 5,
+      "tasks_done": 5,
+      "last_task_completed": "4.5 Write gateway-mode and local-mode auth tests asserting the resolved principal, forged-header, wrong-aud, expired and non-loopback negatives",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "sqlite-to-postgres-move-tool",
+      "title": "A tested tool that moves a sellbird.db into the Postgres backend",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 2,
+      "tasks_done": 2,
+      "last_task_completed": "5.2 Build a fictional fixture sellbird.db and tests comparing row counts and invariants after the move",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "cluster-ready-container-image",
+      "title": "Make the Sellbird image reproducible and runnable in Kubernetes",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 4,
+      "tasks_done": 4,
+      "last_task_completed": "6.4 Write scripts/boundary/check_container.sh asserting non-root, read-only root, no token or credential in logs or filesystem",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "sellbird-gateway-route-config",
+      "title": "Sellbird's flint-gate route, claims and local Kratos/flint-gate stand-in",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 3,
+      "tasks_done": 3,
+      "last_task_completed": "7.3 Author infra/local compose stand-in wiring PG18, Kratos, flint-gate and Sellbird gateway mode",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "image-build-scan-publish",
+      "title": "Build, scan and publish the image to GHCR by digest on merge to main",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 3,
+      "tasks_done": 3,
+      "last_task_completed": "8.3 Add a Postgres 18 service-container job to tests.yml for the storage contract tests and name the required checks",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "gitops-deploy-sellbird",
+      "title": "Sellbird's generic manifests, migration job and the digest-pinning deploy bot targeting the platform repo",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 5,
+      "tasks_done": 5,
+      "last_task_completed": "9.5 Write scripts/boundary/check_manifests.sh asserting image@sha256 pinning, NetworkPolicy, read-only root, migration Job, secretKeyRef-only secrets and no real hostname literal",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "hosted-mode-docs-and-review",
+      "title": "Hosting documentation, changelog and the independent security review",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 4,
+      "tasks_done": 4,
+      "last_task_completed": "10.4 Write scripts/boundary/negative_controls.sh running each scenario's negative control and recording the expected refusal",
+      "next_task_pending": null,
+      "blockers": []
+    }
+  ],
+  "children": {},
+  "migrationStatus": null
+}

@@ -1,0 +1,55 @@
+{
+  "mode": "diff",
+  "verdict": "BLOCK",
+  "judge_model": "mimo-v2.6-pro",
+  "producer_model": "claude-opus-5-5",
+  "isolation_mode": "rest-gateway:http://localhost:4000/v1",
+  "cross_model_check": "unverified-producer-unknown",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "file": "infra/flint-gate/sellbird-routes.yaml",
+      "line": 15,
+      "claim": "sellbird-routes.yaml contains no passthrough route for Kratos self-service, although the change's own acceptance text names \"passthrough for Kratos self-service routes\" as content of that exact file.",
+      "evidence": "acceptance_criteria (sellbird-gateway-route-config/proposal.md, Why and What Changes): \"Write infra/flint-gate/sellbird-routes.yaml: kratos_session auth, a claims_enhancement hook minting an RS256 JWT with aud=sellbird and TTL of 300 s or less, passthrough for Kratos self-service routes, and no admin-port exposure.\" vs the file's own header, line 15: \"#   - the auth host's routes (Kratos self-service passthrough, login UI);\" listed under \"Everything else in config.yaml is platform-owned and deliberately absent here\". The file ships only sites:[sellbird] and routes:[sellbird-api, sellbird-dashboard], both of which require kratos_session plus a verified gate JWT, so no self-service path exists anywhere in the delivered config.",
+      "suggested_fix": "Either add the auth-host site and Kratos self-service passthrough routes to sellbird-routes.yaml as the proposal states, or change the proposal/acceptance wording to say the auth host is platform-owned and record that as an explicit contract dependency so the deliverable is not silently redefined in a README comment."
+    },
+    {
+      "severity": "WARNING",
+      "file": "infra/kratos/kratos.yml",
+      "line": 25,
+      "claim": "Kratos's public base_url is http:// while every other URL in the same file is https://, so the stand-in generates cleartext self-service flow URLs and a session cookie whose Secure flag follows a non-TLS scheme.",
+      "evidence": "kratos.yml line 25 `base_url: http://auth.example.test/` vs `default_browser_return_url: https://sellbird.example.test/`, `allowed_return_urls: - https://sellbird.example.test/`, `flows.error.ui_url: https://auth.example.test/error`, `flows.login.ui_url: https://auth.example.test/login`, `flows.settings.ui_url: https://auth.example.test/settings` (all https). Kratos derives absolute self-service URLs and cookie security from `serve.public.base_url`, and the file header claims it \"mirrors the settings the platform contract requires\" for a TLS-terminated Gateway.",
+      "suggested_fix": "Set `serve.public.base_url: https://auth.example.test/` so flow URLs and cookie flags match the https scheme used everywhere else in the file."
+    },
+    {
+      "severity": "WARNING",
+      "file": "sellbird/auth/config.py",
+      "line": 123,
+      "claim": "The \"pinned JWKS\" may be fetched over plain http, so an on-path attacker between Sellbird and flint-gate can substitute signing keys and forge tokens that pass every verification check.",
+      "evidence": "config.py `_jwks_url`: `if parts.scheme not in (\"http\", \"https\") or not parts.hostname:` \u2014 both schemes accepted, documented as \"the pinned JWKS location (http or https, no credentials)\". jwks.py `fetch_jwks` then does a plain `client.stream(\"GET\", url, ...)` with no TLS or key-pinning requirement. Acceptance criterion \"Gate token verification\" requires admission \"only with a flint-gate JWT that verifies against the pinned JWKS with the expected issuer, audience, key id and algorithm\"; a JWKS retrieved over an unauthenticated channel is not pinned against substitution, and `sellbird.auth.gate_token` trusts whatever `JwksCache` returns for `kid`.",
+      "suggested_fix": "Require https for SELLBIRD_GATE_JWKS_URL, or (if in-cluster http is deliberate) pin the JWKS response by an expected signing-key thumbprint and document the network-trust boundary in config.py rather than silently permitting cleartext."
+    },
+    {
+      "severity": "WARNING",
+      "file": "sellbird/dashboard.py",
+      "line": 838,
+      "claim": "add_feedback now runs the full schema initialisation on every dashboard POST and relies on StateManager.add_feedback's return value, replacing the previous lightweight create-table-if-missing plus id generation.",
+      "evidence": "dashboard.py hunk @@ -825,25 +834,11 @@: removed `feedback_id = uuid.uuid4().hex[:12]`, `CREATE TABLE IF NOT EXISTS feedback (...)` and the direct INSERT; added `state = _state()` / `await state.init_db()` / `feedback_id = await state.add_feedback(...)`. The removed comment said the inline DDL existed \"so feedback works even on a fresh install\"; that property now depends on `init_db()` succeeding, and the unchanged `except Exception as e: ... return {\"success\": False, \"message\": \"Could not save feedback.\"}` turns any missing/non-async `add_feedback` or migration failure into a generic client message with only a warning log (silent failure), while `init_db()` mutates the schema from a request path and is paid on every submission.",
+      "suggested_fix": "Keep schema creation out of the request path (run init_db at startup) and assert/return the id explicitly; if `add_feedback` can return None, generate the id before the call rather than assuming the return value is the new id."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "sellbird/dashboard.py",
+      "line": 3049,
+      "claim": "`del url` in the container branch is a fragile suppression that raises NameError if any later statement in start_dashboard references url, and it leaves the Windows footer printed after \"Press Ctrl+C to stop.\"",
+      "evidence": "dashboard.py hunk @@ -2990,9 +3044,16 @@: `if running_in_container(): ... del url ... print(\"  Press Ctrl+C to stop.\\n\")` followed by `if os.name == \"nt\": print(\"  Windows: ...\")` which runs in both branches, so the container path prints the stop message before the Windows note. The suppression only needs the value not to be printed, not deleted.",
+      "suggested_fix": "Drop `del url` and simply omit it from the container message (e.g. `del` nothing; keep `url` unused), and move the Windows note inside the non-container branch or before the stop message."
+    }
+  ],
+  "judge_identity": {
+    "providerConnectionId": "xiaomi-token-plan",
+    "providerId": "xiaomi",
+    "modelId": "mimo-v2.6-pro"
+  }
+}

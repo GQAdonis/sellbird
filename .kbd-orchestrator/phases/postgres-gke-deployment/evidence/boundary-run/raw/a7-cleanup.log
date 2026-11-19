@@ -1,0 +1,33 @@
+ Container sellbird-local-sellbird-1 Stopping 
+ Container sellbird-local-sellbird-1 Stopped 
+ Container sellbird-local-sellbird-1 Removing 
+ Container sellbird-local-sellbird-1 Removed 
+ Container sellbird-local-flint-gate-1 Stopping 
+ Container sellbird-local-sellbird-migrate-1 Stopping 
+ Container sellbird-local-sellbird-migrate-1 Stopped 
+ Container sellbird-local-sellbird-migrate-1 Removing 
+ Container sellbird-local-sellbird-migrate-1 Removed 
+ Container sellbird-local-flint-gate-1 Stopped 
+ Container sellbird-local-flint-gate-1 Removing 
+ Container sellbird-local-flint-gate-1 Removed 
+ Container sellbird-local-kratos-1 Stopping 
+ Container sellbird-local-kratos-1 Stopped 
+ Container sellbird-local-kratos-1 Removing 
+ Container sellbird-local-kratos-1 Removed 
+ Container sellbird-local-postgres-1 Stopping 
+ Container sellbird-local-postgres-1 Stopped 
+ Container sellbird-local-postgres-1 Removing 
+ Container sellbird-local-postgres-1 Removed 
+ Volume sellbird-local_sellbird-migrate-data Removing 
+ Volume sellbird-local_sellbird-data Removing 
+ Network sellbird-local_default Removing 
+ Volume sellbird-local_sellbird-migrate-data Removed 
+ Volume sellbird-local_pg-data Removing 
+ Volume sellbird-local_sellbird-data Removed 
+ Network sellbird-local_default Removed 
+ Volume sellbird-local_pg-data Removed 
+infra/local/.env deleted
+aso-prior-auth-demo-db-1
+aso-prior-auth-demo-flint-gate-1
+aso-prior-auth-demo-kratos-1
+image sellbird:boundary kept for the next repair run

@@ -1,4 +1,10 @@
-"""SQLite state manager. All of Sellbird's memory lives here.
+"""State manager. All of Sellbird's memory lives here.
+
+Where: a SQLite file by default (``data/sellbird.db``). With
+``SELLBIRD_DATABASE_URL`` set to a ``postgresql://`` connection string (a
+hosted install, running as the runtime role), the same stores run on Postgres
+18 through sellbird.storage; SQL here stays in SQLite's dialect and is
+rewritten for Postgres by sellbird.storage_postgres.dialect.
 
 Concurrency: the DB runs in WAL mode (set persistently at init) so the
 dashboard can read while the agent writes. Every connection gets a busy
@@ -6,10 +12,13 @@ timeout so concurrent writers wait instead of raising "database is locked".
 
 Migrations: schema changes are applied via a linear, idempotent migration
 list tracked with SQLite's ``PRAGMA user_version`` so existing user DBs
-upgrade cleanly in place.
+upgrade cleanly in place. On Postgres the schema belongs to the versioned
+migrations in ``migrations/postgres`` (``sellbird storage migrate``, migration
+role); ``init_db`` only checks the version there and never changes it.
 """
 
 import json
+import os
 import uuid
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
@@ -27,6 +36,15 @@ from sellbird.paths import PROJECT_ROOT
 from sellbird.startups import parse_funding
 
 DB_PATH = PROJECT_ROOT / "data" / "sellbird.db"
+# A postgresql:// connection string for the runtime role: when set, state lives
+# in Postgres instead of DB_PATH (docs/platform-interface.md, "Secrets").
+DATABASE_URL_ENV = "SELLBIRD_DATABASE_URL"
+
+
+def database_locator() -> str:
+    """Where this process keeps its state: SELLBIRD_DATABASE_URL, else DB_PATH."""
+    url = os.environ.get(DATABASE_URL_ENV, "").strip()
+    return url or str(DB_PATH)
 
 # How long (seconds) a connection waits on a locked database before failing.
 from sellbird import storage  # noqa: E402
@@ -594,7 +612,7 @@ class StateManager:
             # never the process default (a server's other workspaces).
             from sellbird.workspace_home import _HOME
             home = _HOME.get()
-            db_path = str(home.db_path) if home is not None else str(DB_PATH)
+            db_path = str(home.db_path) if home is not None else database_locator()
         self.db_path = db_path
 
     @asynccontextmanager
@@ -1257,6 +1275,12 @@ class StateManager:
         False when it is no longer approved and due (cancelled by a reply,
         bounce or hand send, rejected, rescheduled, or taken by another
         sender), so it must not go out now. Cancels never touch a claimed item: it is already on its way.
+
+        Exactly once under concurrent senders (heartbeat and dashboard are
+        separate processes): one conditional UPDATE, committed on its own.
+        SQLite serialises writers. Postgres (READ COMMITTED) row-locks the
+        item: a second claimer waits for the first to commit, re-reads the row,
+        finds it 'sending' and changes nothing, so only one rowcount is 1.
         """
         now = _utcnow().isoformat()
         async with self._connect() as db:
@@ -1832,7 +1856,16 @@ class StateManager:
         sql = "SELECT * FROM observations"
         if where:
             sql += " WHERE " + " AND ".join(where)
-        if latest_only:
+        if latest_only and storage.dialect(self.db_path) == "postgres":
+            # Postgres has no bare columns in GROUP BY: pick the newest row per
+            # (company, signal) explicitly, in the same group order SQLite gives,
+            # the row written last winning a tie on observed_at.
+            sql = (
+                "SELECT * FROM (SELECT DISTINCT ON (company_id, signal_code) * FROM ("
+                + sql + ") o ORDER BY company_id, signal_code, observed_at DESC, rowid DESC"
+                ") latest ORDER BY company_id, signal_code"
+            )
+        elif latest_only:
             # Newest observation per (company, signal) — the current view of
             # the world, with history still on disk underneath.
             sql = (
@@ -1911,7 +1944,7 @@ class StateManager:
                        COUNT(*) AS observations
                 FROM positive p
                 LEFT JOIN signal_codes sc ON sc.code = p.signal_code
-                GROUP BY p.signal_code
+                GROUP BY p.signal_code, sc.label, sc.status
                 ORDER BY companies DESC"""
             ) as cursor:
                 return [dict(r) for r in await cursor.fetchall()]
@@ -2625,7 +2658,7 @@ class StateManager:
             await db.execute(
                 f"""INSERT INTO usage_log (id, date, {column})
                    VALUES (?, ?, 1)
-                   ON CONFLICT(date) DO UPDATE SET {column} = {column} + 1""",
+                   ON CONFLICT(date) DO UPDATE SET {column} = usage_log.{column} + 1""",
                 (_new_id(), today),
             )
             await db.commit()

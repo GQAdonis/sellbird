@@ -8,6 +8,14 @@ services:
     # Supported on native Linux. Keep the dashboard's loopback-only bind.
     network_mode: host
     command: ["dashboard"]
+    environment:
+      # Local Compose keeps everything in the checkout mounted at /app; the
+      # image's default home (/data) is for the hosted deployment.
+      SELLBIRD_HOME: /app
+      SELLBIRD_MIGRATIONS_DIR: /app/migrations/postgres
+      # Use the host's Claude login mounted below, not the image's throwaway
+      # tmpfs config directory.
+      CLAUDE_CONFIG_DIR: /home/sellbird/.claude
     volumes:
       # Mount the checkout directory, not individual config files: setup and
       # training atomically replace files and create sellbird.local.yaml.

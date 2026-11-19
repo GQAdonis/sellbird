@@ -1,0 +1,18 @@
+{
+  "frozenAt": "2026-11-18T20:15:19.333102+00:00",
+  "branch": "kbd/postgres-gke-deployment",
+  "commit": "70b4ccb5380acb218f26455f55943fcddaa986bd",
+  "tree": "12b4741ae79444acf9dedd64ebfbffe16587f6ae",
+  "trackedChanges": "",
+  "contractSha256": "8eb0d8e56f133db6a60e2f7d3592c2a4c692eceb539410a57b7ecac8430a8d7b",
+  "files": {
+    "Dockerfile": "428463238b4f2163f96aa496e7e127ce573e0880d08dae5a567837a31e74047f",
+    "pyproject.toml": "7500aa42afe3283fc35dd8d826ea543f4b6aa7ba90b612e49394bd7be8eb586f",
+    "requirements.txt": "57cf56b89d1d115d8a4b1da1b3d26a710b6d4d2645521d32b5b5f4def5a28541",
+    "infra/local/compose.yaml": "170ed5c2492380e6e66f7037533836554d14d0c9cbb24c1438f277b34bf226aa",
+    "scripts/boundary/preflight.sh": "f8ede89c452a0de963931708bafd13055cfbfdf5b63e6f02a258306157f8d2ff",
+    "scripts/boundary/negative_controls.sh": "c4067f5b05448a26b2a8cf7396df4ec55663622a7dab0d21c917404acfbaf46d"
+  },
+  "python": "Python 3.13.1",
+  "docker": "Docker version 29.8.0, build 88096ef005"
+}

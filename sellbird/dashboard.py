@@ -104,16 +104,27 @@ _env_lock = asyncio.Lock()
 # ── Helpers ──
 
 
+def _db_locator() -> str:
+    """Where the dashboard reads state: SELLBIRD_DATABASE_URL (Postgres) when
+    set, else the SQLite file at DB_PATH (tests and self-hosted installs)."""
+    from sellbird.state import DATABASE_URL_ENV
+    url = os.environ.get(DATABASE_URL_ENV, "").strip()
+    return url or str(DB_PATH)
+
+
 async def query_db(sql: str, params: tuple = ()) -> list[dict]:
     """Run a query and return results as list of dicts.
 
     Never raises: a missing DB file, missing table, or malformed schema
     returns [] so no dashboard route can 500 on an empty install.
     """
-    if not DB_PATH.exists():
-        return []
+    locator = _db_locator()
     try:
-        async with storage.connect(str(DB_PATH)) as db:
+        # Inside the try: on Postgres an unreachable database raises here,
+        # and is logged below rather than shown as an empty install.
+        if not storage.exists(locator):
+            return []
+        async with storage.connect(locator) as db:
             db.row_factory = aiosqlite.Row
             async with db.execute(sql, params) as cursor:
                 rows = await cursor.fetchall()
@@ -825,25 +836,11 @@ async def add_feedback(request: Request):
     comment = str(data.get("comment", "") or "").strip()[:4000]
     if not comment:
         return {"success": False, "message": "Comment is required."}
-    feedback_id = uuid.uuid4().hex[:12]
     try:
-        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-        async with storage.connect(str(DB_PATH)) as db:
-            # Ensure the table exists so feedback works even on a fresh install
-            await db.execute(
-                """CREATE TABLE IF NOT EXISTS feedback (
-                    id TEXT PRIMARY KEY,
-                    entity_type TEXT,
-                    entity_id TEXT,
-                    comment TEXT,
-                    created_at TEXT DEFAULT (datetime('now'))
-                )"""
-            )
-            await db.execute(
-                "INSERT INTO feedback (id, entity_type, entity_id, comment) VALUES (?, ?, ?, ?)",
-                (feedback_id, entity_type, entity_id, comment),
-            )
-            await db.commit()
+        # The feedback table comes from the migrations (init_db), never from here.
+        state = _state()
+        await state.init_db()
+        feedback_id = await state.add_feedback(entity_type, entity_id, comment)
     except Exception as e:
         logger.warning("Failed to save feedback: %s", e)
         return {"success": False, "message": "Could not save feedback."}
@@ -1200,7 +1197,7 @@ async def get_prospects():
 
 def _state():
     from sellbird.state import StateManager
-    return StateManager(db_path=str(DB_PATH))
+    return StateManager(db_path=_db_locator())
 
 
 # What a reviewer needs next to a draft to check its claims against the facts.
@@ -1487,13 +1484,12 @@ def _sellbird_can_send() -> bool:
 def _extra_inboxes_connected() -> bool:
     """Whether an inbox besides the main one is connected (sellbird inboxes):
     Sellbird sends from it even while the main mailbox isn't signed in."""
-    import sqlite3
-    if not Path(DB_PATH).exists():
+    locator = _db_locator()
+    if not storage.exists(locator):
         return False
     try:
-        with sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True) as db:
-            row = db.execute("SELECT 1 FROM mailboxes WHERE state != 'retired' LIMIT 1").fetchone()
-    except sqlite3.Error:
+        row = storage.read_one(locator, "SELECT 1 FROM mailboxes WHERE state != 'retired' LIMIT 1")
+    except storage.ERRORS:
         return False   # no table yet: no extra inbox
     return row is not None
 
@@ -1686,7 +1682,7 @@ async def export_prospects(all: bool = False, min_score: int = 0, email_status: 
     from sellbird.state import StateManager
     from sellbird.export import export_prospects_csv
 
-    state = StateManager(db_path=str(DB_PATH))
+    state = StateManager(db_path=_db_locator())
     try:
         await state.init_db()
         statuses = [s.strip() for s in email_status.split(",") if s.strip()] or None
@@ -2980,9 +2976,69 @@ def build_app(*, guard: Middleware | None = None, routers: Sequence[APIRouter] =
     return new
 
 
-def start_dashboard(host: str = "127.0.0.1", port: int = 5555):
-    """Start the dashboard server (loopback only, token required)."""
+def build_gateway_app(config, *, fetch=None) -> FastAPI:
+    """The app gateway mode serves: every built-in route, behind
+    ``GatewayGuard`` instead of the token guard, plus ``/api/auth/whoami``.
+    ``config`` is a validated ``sellbird.auth.config.GatewayConfig``;
+    ``fetch`` replaces the JWKS download (tests)."""
+    from sellbird.auth.gate_token import GateTokenVerifier
+    from sellbird.auth.gateway_guard import GatewayGuard, whoami_router
+    from sellbird.auth.jwks import JwksCache
+
+    verifier = GateTokenVerifier(config, JwksCache(config.jwks_url, fetch=fetch))
+    return build_app(guard=Middleware(GatewayGuard, config=config, verifier=verifier),
+                     routers=[whoami_router])
+
+
+def _bind_for_gateway(host: str) -> str:
+    """Gateway mode may listen on any interface (in a pod: 0.0.0.0), but the
+    value must be an IP address or localhost, never a name to resolve."""
+    name = (host or "").strip().lower()
+    if name.startswith("[") and name.endswith("]"):
+        name = name[1:-1]
+    if name == "localhost":
+        return name
+    try:
+        ipaddress.ip_address(name)
+    except ValueError:
+        raise DashboardSetupError(
+            f"Refusing to listen on {host!r}: in gateway mode the address must be an IP "
+            "address such as 0.0.0.0.") from None
+    return name
+
+
+def _start_gateway_dashboard(host: str, port: int) -> None:
+    """Gateway mode: behind flint-gate, no token link, nothing secret printed."""
     import uvicorn
+    from sellbird.auth.config import GatewayConfigError, load_gateway_config
+
+    try:
+        config = load_gateway_config()
+    except GatewayConfigError as e:
+        raise DashboardSetupError(str(e)) from e
+    bind = _bind_for_gateway(host)
+    gateway_app = build_gateway_app(config)
+    print(f"\n  Sellbird Dashboard running in gateway mode on {bind}:{port}.")
+    print(f"  Sign in through the gateway at {config.public_origin}/ "
+          f"({len(config.allowed_subs)} allowlisted identity id(s)).\n")
+    # No dashboard_instance file: it exists for the local MCP agent, which
+    # gateway mode does not serve. Access logs stay off (log_level warning).
+    uvicorn.run(gateway_app, host=bind, port=port, log_level="warning",
+                proxy_headers=False, server_header=False, date_header=False)
+
+
+def start_dashboard(host: str = "127.0.0.1", port: int = 5555):
+    """Start the dashboard server (loopback only, token required), or, with
+    SELLBIRD_DASHBOARD_MODE=gateway, the hosted gateway-mode server."""
+    import uvicorn
+    from sellbird.auth.config import GatewayConfigError, dashboard_mode, running_in_container
+
+    try:
+        mode = dashboard_mode()
+    except GatewayConfigError as e:
+        raise DashboardSetupError(str(e)) from e
+    if mode == "gateway":
+        return _start_gateway_dashboard(host, port)
 
     try:
         bind = _check_loopback_bind(host)
@@ -2990,9 +3046,16 @@ def start_dashboard(host: str = "127.0.0.1", port: int = 5555):
     except (DashboardSetupError, auth.TokenError) as e:
         raise DashboardSetupError(str(e)) from e
 
-    print(f"\n  Sellbird Dashboard running. Open this link to unlock it:\n\n    {url}\n")
-    print(f"  The token is stored in {token_store.path} (owner-only). Keep the link")
-    print("  private; anyone with it can use the dashboard. Press Ctrl+C to stop.\n")
+    if running_in_container():
+        # Container logs are often widely readable: never print the token there.
+        del url
+        print("\n  Sellbird Dashboard running. The unlock link is not printed inside a")
+        print(f"  container; the token is in {token_store.path} (owner-only).")
+        print("  Press Ctrl+C to stop.\n")
+    else:
+        print(f"\n  Sellbird Dashboard running. Open this link to unlock it:\n\n    {url}\n")
+        print(f"  The token is stored in {token_store.path} (owner-only). Keep the link")
+        print("  private; anyone with it can use the dashboard. Press Ctrl+C to stop.\n")
     if os.name == "nt":
         print("  Windows: the token file is protected by your folder's permissions,")
         print("  not POSIX file modes.\n")

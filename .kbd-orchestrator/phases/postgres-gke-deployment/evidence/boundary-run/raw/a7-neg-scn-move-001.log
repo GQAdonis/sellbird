@@ -1,0 +1,1 @@
+NEGATIVE-CONTROL SCN-MOVE-001 PASS: move refused with 'already holds Sellbird rows (in settings)'; every table unchanged

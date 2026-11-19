@@ -1,0 +1,139 @@
+{
+  "about": [
+    "Hand-authored expected results for sending safety, written from the rules in",
+    "sellbird/agents/sender.py (Sender._drain_due and Sender._blocked), not produced by",
+    "running either backend. Each scenario starts from an empty database; the Sender",
+    "drains once into a recording mailbox, so no email leaves the machine.",
+    "approval: 'pending' is left waiting for review, 'human' is approved by a person",
+    "(approve_outbox), 'rejected' is rejected. send_in_minutes is relative to now.",
+    "All people and addresses are fictional (example.test)."
+  ],
+  "defaults": {
+    "subject": "hello there",
+    "body": "A short, plain note. Question?",
+    "campaign_id": "camp-safety",
+    "max_daily_sends": 50
+  },
+  "scenarios": [
+    {
+      "name": "approval_ladder",
+      "why": "only an approved email goes out; one waiting for review stays waiting",
+      "prospects": [
+        {"key": "ana", "first_name": "Ana", "last_name": "Rivera", "email": "ana@alpha.example.test", "status": "queued"},
+        {"key": "ben", "first_name": "Ben", "last_name": "Okafor", "email": "ben@beta.example.test", "status": "queued"}
+      ],
+      "items": [
+        {"key": "waiting", "prospect": "ana", "kind": "sequence", "step": 1, "approval": "pending", "send_in_minutes": -5},
+        {"key": "approved", "prospect": "ben", "kind": "sequence", "step": 1, "approval": "human", "send_in_minutes": -5}
+      ],
+      "expected_sent": ["ben@beta.example.test"],
+      "expected_items": {
+        "waiting": {"status": "pending_review", "error": ""},
+        "approved": {"status": "sent"}
+      }
+    },
+    {
+      "name": "rejected_never_sends",
+      "why": "a rejected email is never sent",
+      "prospects": [
+        {"key": "cara", "first_name": "Cara", "last_name": "Lund", "email": "cara@gamma.example.test", "status": "queued"}
+      ],
+      "items": [
+        {"key": "rejected", "prospect": "cara", "kind": "sequence", "step": 1, "approval": "rejected", "send_in_minutes": -5}
+      ],
+      "expected_sent": [],
+      "expected_items": {"rejected": {"status": "rejected"}}
+    },
+    {
+      "name": "daily_limit",
+      "why": "with today's sends at max_daily_sends, nothing more goes out and the approved email keeps its place",
+      "max_daily_sends": 2,
+      "sent_today": 2,
+      "prospects": [
+        {"key": "dev", "first_name": "Dev", "last_name": "Patel", "email": "dev@delta.example.test", "status": "queued"}
+      ],
+      "items": [
+        {"key": "over_limit", "prospect": "dev", "kind": "sequence", "step": 1, "approval": "human", "send_in_minutes": -5}
+      ],
+      "expected_sent": [],
+      "expected_items": {"over_limit": {"status": "approved", "error": ""}}
+    },
+    {
+      "name": "under_daily_limit",
+      "why": "one send left today: the approved email goes out",
+      "max_daily_sends": 2,
+      "sent_today": 1,
+      "prospects": [
+        {"key": "eli", "first_name": "Eli", "last_name": "Moreau", "email": "eli@epsilon.example.test", "status": "queued"}
+      ],
+      "items": [
+        {"key": "last_slot", "prospect": "eli", "kind": "sequence", "step": 1, "approval": "human", "send_in_minutes": -5}
+      ],
+      "expected_sent": ["eli@epsilon.example.test"],
+      "expected_items": {"last_slot": {"status": "sent"}}
+    },
+    {
+      "name": "suppressed_address",
+      "why": "a suppressed address is never emailed, even when approved",
+      "prospects": [
+        {"key": "fay", "first_name": "Fay", "last_name": "Nakamura", "email": "fay@zeta.example.test", "status": "queued"}
+      ],
+      "suppressions": [{"kind": "address", "value": "fay@zeta.example.test"}],
+      "items": [
+        {"key": "to_suppressed", "prospect": "fay", "kind": "sequence", "step": 1, "approval": "human", "send_in_minutes": -5}
+      ],
+      "expected_sent": [],
+      "expected_items": {"to_suppressed": {"status": "cancelled", "error": "suppressed (manual)"}}
+    },
+    {
+      "name": "suppressed_domain",
+      "why": "a suppressed domain covers its subdomains",
+      "prospects": [
+        {"key": "gus", "first_name": "Gus", "last_name": "Achebe", "email": "gus@mail.eta.example.test", "status": "queued"}
+      ],
+      "suppressions": [{"kind": "domain", "value": "eta.example.test"}],
+      "items": [
+        {"key": "to_subdomain", "prospect": "gus", "kind": "sequence", "step": 1, "approval": "human", "send_in_minutes": -5}
+      ],
+      "expected_sent": [],
+      "expected_items": {"to_subdomain": {"status": "cancelled", "error": "suppressed (manual)"}}
+    },
+    {
+      "name": "opted_out",
+      "why": "no cold email to someone who opted out, even if it was approved before",
+      "prospects": [
+        {"key": "hana", "first_name": "Hana", "last_name": "Berg", "email": "hana@theta.example.test", "status": "opted_out"}
+      ],
+      "items": [
+        {"key": "after_opt_out", "prospect": "hana", "kind": "sequence", "step": 1, "approval": "human", "send_in_minutes": -5}
+      ],
+      "expected_sent": [],
+      "expected_items": {"after_opt_out": {"status": "cancelled", "error": "prospect status 'opted_out'"}}
+    },
+    {
+      "name": "quiet_hours_hold_replies",
+      "why": "in quiet hours (cold_only) an approved reply waits for the operator's hours",
+      "cold_only": true,
+      "prospects": [
+        {"key": "ivo", "first_name": "Ivo", "last_name": "Sato", "email": "ivo@iota.example.test", "status": "replied"}
+      ],
+      "items": [
+        {"key": "reply", "prospect": "ivo", "kind": "reply", "step": 1, "approval": "human", "send_in_minutes": -5}
+      ],
+      "expected_sent": [],
+      "expected_items": {"reply": {"status": "approved", "error": ""}}
+    },
+    {
+      "name": "not_yet_due",
+      "why": "an approved email scheduled for later is not sent early",
+      "prospects": [
+        {"key": "jon", "first_name": "Jon", "last_name": "Varga", "email": "jon@kappa.example.test", "status": "queued"}
+      ],
+      "items": [
+        {"key": "later", "prospect": "jon", "kind": "sequence", "step": 1, "approval": "human", "send_in_minutes": 180}
+      ],
+      "expected_sent": [],
+      "expected_items": {"later": {"status": "approved", "error": ""}}
+    }
+  ]
+}

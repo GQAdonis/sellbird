@@ -1,0 +1,217 @@
+# Sellbird's local stand-in for the hosted auth path (change
+# sellbird-gateway-route-config): Postgres 18 (flint-forge image), Ory Kratos,
+# flint-gate with Sellbird's route file, and the packaged Sellbird image in
+# gateway mode, all health-gated.
+#
+#   scripts/local/make-env.sh                         # fresh .env, keys, identities, cookies
+#   docker compose -f infra/local/compose.yaml up -d --wait
+#   docker compose -f infra/local/compose.yaml down -v   # cleanup
+#
+# Every credential comes from infra/local/.env and infra/local/.env.generated/,
+# both written per run by make-env.sh and never committed. Images are pinned by
+# digest; Sellbird is the locally built `sellbird:boundary`
+# (`docker build -t sellbird:boundary .`, Dockerfile owned by change
+# cluster-ready-container-image).
+#
+# Published on the host, loopback only:
+#   127.0.0.1:4456  flint-gate proxy (Host sellbird.example.test / auth.example.test)
+#   127.0.0.1:5555  Sellbird directly (the e2e test's negative controls)
+#   127.0.0.1:${SELLBIRD_LOCAL_PG_PORT}  Postgres (storage tests via scripts/local/dsn.sh)
+# Never published: Kratos admin (4434), Kratos public (4433, reached through
+# flint-gate's auth-host passthrough), flint-gate admin (4457, container loopback).
+#
+# Network aliases reproduce the in-cluster Service names of the platform
+# contract, so Sellbird's route file and JWKS URL are used verbatim.
+
+name: sellbird-local
+
+x-sellbird-hardening: &sellbird-hardening
+  image: sellbird:boundary
+  pull_policy: never
+  read_only: true
+  tmpfs:
+    - /tmp:rw,exec,nosuid,nodev
+  cap_drop: [ALL]
+  security_opt:
+    - no-new-privileges:true
+  init: true
+
+services:
+  postgres:
+    # flint-forge Postgres 18 (tribehealth/flint-forge-pg:18, multi-arch index,
+    # resolved 2026-11-18). Its own init scripts create the `flint` database's
+    # extensions; ours (50-*) then provisions Sellbird, Kratos and flint-gate.
+    image: tribehealth/flint-forge-pg@sha256:a0acdaa591095c6169d22a357d3b18f230eb7985c83688ab13e6afbe1b329f05
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?run scripts/local/make-env.sh}
+      # The image preloads pg_cron/pg_net for a database named `flint`.
+      POSTGRES_DB: flint
+      SELLBIRD_MIGRATE_PASSWORD: ${SELLBIRD_MIGRATE_PASSWORD:?run scripts/local/make-env.sh}
+      SELLBIRD_APP_PASSWORD: ${SELLBIRD_APP_PASSWORD:?run scripts/local/make-env.sh}
+      KRATOS_DB_PASSWORD: ${KRATOS_DB_PASSWORD:?run scripts/local/make-env.sh}
+      FLINTGATE_DB_PASSWORD: ${FLINTGATE_DB_PASSWORD:?run scripts/local/make-env.sh}
+    volumes:
+      - pg-data:/var/lib/postgresql
+      - ./postgres/50-sellbird-local.sh:/docker-entrypoint-initdb.d/50-sellbird-local.sh:ro
+      - ../postgres/provision.sql:/sellbird-local/provision.sql:ro
+      - ./postgres/sellbird-test-db.sql:/sellbird-local/sellbird-test-db.sql:ro
+      - ./postgres/platform-dbs.sql:/sellbird-local/platform-dbs.sql:ro
+    ports:
+      - "127.0.0.1:${SELLBIRD_LOCAL_PG_PORT:-55432}:5432"
+    healthcheck:
+      # TCP (not the init-time socket) and the last database provisioning makes.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d flintgate"]
+      interval: 3s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  kratos:
+    image: oryd/kratos@sha256:fe2428f103a6240c064b6ea77d3088610865c55fcebccb30355857eccdc25b4b  # v1.3.1
+    user: "${LOCAL_UID:?run scripts/local/make-env.sh}:${LOCAL_GID:?run scripts/local/make-env.sh}"
+    read_only: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DSN: postgres://kratos:${KRATOS_DB_PASSWORD}@postgres:5432/kratos?sslmode=disable&max_conns=10
+    # Migrations are idempotent, so they run on every start before serving.
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - >-
+        kratos migrate sql -e --yes
+        -c /etc/config/kratos/kratos.yml -c /etc/config/kratos-secrets/kratos-secrets.yml
+        && exec kratos serve
+        -c /etc/config/kratos/kratos.yml -c /etc/config/kratos-secrets/kratos-secrets.yml
+    volumes:
+      - ../kratos/kratos.yml:/etc/config/kratos/kratos.yml:ro
+      - ../kratos/identity.schema.json:/etc/config/kratos/identity.schema.json:ro
+      - ./.env.generated/kratos:/etc/config/kratos-secrets:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:4434/admin/health/ready"]
+      interval: 3s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+
+  flint-gate:
+    # ghcr.io/know-me-tools/flint-gate, the candidate digest recorded in
+    # flint-gate's k8s/overlays/ssr/PROVENANCE.md (linux/amd64 only; emulated on
+    # arm64 hosts).
+    image: ghcr.io/know-me-tools/flint-gate@sha256:e67abd80b024cd85dd1cbb2615ab940510aa3b48b48c86454b32c5a646398511
+    platform: linux/amd64
+    user: "${LOCAL_UID}:${LOCAL_GID}"
+    read_only: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kratos:
+        condition: service_healthy
+    environment:
+      FLINT_GATE_CONFIG: /app/config/config.yaml
+      DATABASE_URL: postgres://flintgate:${FLINTGATE_DB_PASSWORD}@postgres:5432/flintgate?sslmode=disable
+      FLINT_GATE_REQUIRE_DATABASE: "true"
+      FLINT_GATE_JWT_KEY_PATH: /run/flint-gate/private.pem
+      FLINT_GATE_JWT_PUBLIC_KEY_PATH: /run/flint-gate/public.pem
+      RUST_LOG: info
+    # Seed the per-run RS256 key into jwt_signing_keys (the JWKS is served from
+    # there; the upsert by kid is idempotent), then serve.
+    entrypoint: ["/bin/bash", "-ec"]
+    command: ["flint-gate --database-init-only && exec flint-gate"]
+    volumes:
+      - ./.env.generated/flint-gate.yaml:/app/config/config.yaml:ro
+      - ./.env.generated/gate-keys:/run/flint-gate:ro
+    ports:
+      - "127.0.0.1:4456:4456"
+    networks:
+      default:
+        aliases:
+          - flint-gate.flint-gate.svc.cluster.local
+    healthcheck:
+      # The slim image has no curl: fetch the JWKS over bash's /dev/tcp and
+      # require the per-run kid, so "healthy" means Sellbird can verify tokens.
+      test:
+        - CMD
+        - bash
+        - -c
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/4456 &&
+          printf 'GET /.well-known/jwks.json HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3 &&
+          grep -q '"kid":"sellbird-local-rs256"' <&3
+      interval: 3s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  sellbird-migrate:
+    <<: *sellbird-hardening
+    # One-shot: apply Sellbird's migrations as the migration role. This
+    # container never receives the app role's DSN, and the app never this one.
+    command: ["storage", "migrate"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SELLBIRD_MIGRATE_DATABASE_URL: postgresql://sellbird_migrate:${SELLBIRD_MIGRATE_PASSWORD}@postgres:5432/sellbird?sslmode=disable&application_name=sellbird-migrate
+    volumes:
+      - sellbird-migrate-data:/data
+
+  sellbird:
+    <<: *sellbird-hardening
+    command: ["dashboard", "--host", "0.0.0.0", "--port", "5555"]
+    restart: unless-stopped
+    depends_on:
+      sellbird-migrate:
+        condition: service_completed_successfully
+      flint-gate:
+        condition: service_healthy
+    environment:
+      # Gateway mode is selected here, inside the container only. It is never
+      # written to .env or the host shell (the baseline local-auth tests must
+      # not see it).
+      SELLBIRD_DASHBOARD_MODE: gateway
+      SELLBIRD_PUBLIC_HOST: sellbird.example.test
+      SELLBIRD_GATE_ISSUER: https://gate.example.test
+      SELLBIRD_GATE_AUDIENCE: sellbird
+      SELLBIRD_GATE_JWKS_URL: http://flint-gate.flint-gate.svc.cluster.local:4456/.well-known/jwks.json
+      SELLBIRD_GATE_ALLOWED_SUBS: ${SELLBIRD_GATE_ALLOWED_SUBS:?run scripts/local/make-env.sh}
+      SELLBIRD_DATABASE_URL: postgresql://sellbird_app:${SELLBIRD_APP_PASSWORD}@postgres:5432/sellbird?sslmode=disable&application_name=sellbird
+    volumes:
+      - sellbird-data:/data
+    ports:
+      - "127.0.0.1:${SELLBIRD_LOCAL_DIRECT_PORT:-5555}:5555"
+    networks:
+      default:
+        aliases:
+          - sellbird.sellbird.svc.cluster.local
+    healthcheck:
+      # TCP connect, as the image's own HEALTHCHECK (gateway mode answers 400 to
+      # any request without the public Host), but polled fast for --wait.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import socket; socket.create_connection(('127.0.0.1', 5555), timeout=3).close()"
+      interval: 3s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+
+  # Tool, not a service: the Kratos admin client used by
+  # infra/kratos/create-identities.sh through `docker compose run`. The admin
+  # API is only reachable from inside this network.
+  kratos-admin-client:
+    profiles: ["tools"]
+    image: curlimages/curl@sha256:935d9100e9ba842cdb060de42472c7ca90cfe9a7c96e4dacb55e79e560b3ff40  # 8.17.0
+    entrypoint: ["curl"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  pg-data:
+  sellbird-data:
+  sellbird-migrate-data:

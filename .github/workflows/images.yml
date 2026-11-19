@@ -1,0 +1,521 @@
+# Build, scan and publish the Sellbird image to GHCR by digest.
+#
+# Contract (OpenSpec change image-build-scan-publish; docs/platform-interface.md):
+#   - Build once with BuildKit (the Dockerfile needs RUN --mount and network
+#     access to downloads.claude.ai), linux/amd64, VCS_REF = the commit SHA.
+#   - Refuse to publish unless: the image config user is not root, the image's
+#     uid is not 0, the secret scanner trips on a planted-secret control image,
+#     the real image has no secret findings, and it has no fixable CRITICAL
+#     vulnerability.
+#   - Refuse to push if <image>:<sha> already exists (tags are immutable).
+#   - Push only the <sha> tag, from main only, and expose job outputs
+#     `tag` (^[0-9a-f]{40}$) and `digest` (^sha256:[0-9a-f]{64}$) of job `images`,
+#     plus an artifact `image-digest-<sha>` for a deploy workflow that cannot
+#     read job outputs across workflows.
+#
+# Privilege split: job `build` (scanners and other third-party code) runs with
+# a read-only token; only job `images`, which runs no third-party actions
+# besides artifact transfer, gets packages: write.
+#
+# Every action is pinned by full commit SHA (tag in the trailing comment).
+# Thresholds and the negative control are documented in
+# openspec/changes/image-build-scan-publish/design.md.
+name: images
+
+on:
+  push:
+    branches: [main]
+    # Only paths that cannot change the image. The build context is the
+    # .dockerignore allowlist (Dockerfile, requirements.txt, pyproject.toml,
+    # sellbird.yaml, sellbird/, migrations/, prompts/, skills/), so those, this
+    # workflow and scripts/ci/ always trigger a build. `*.md` matches root-level
+    # Markdown only: prompts/*.md and skills/*.md are shipped in the image and
+    # must keep triggering. infra/** covers the Kustomize base and any overlay
+    # pins, so a pin commit never rebuilds (the production overlay itself lives
+    # in the platform repository).
+    paths-ignore:
+      - "*.md"
+      - "docs/**"
+      - "openspec/**"
+      - "infra/**"
+      - "tests/**"
+      - "harvey/**"
+      - "scripts/boundary/**"
+      - "scripts/diagnose_overpass.py"
+      - ".kbd-orchestrator/**"
+      - ".agent-team/**"
+      - ".codex/**"
+      - ".impeccable/**"
+      - ".kimi-code/**"
+      - ".opencode/**"
+      - ".qwen/**"
+      - ".claude/**"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/pull_request_template.md"
+      - ".github/workflows/tests.yml"
+      - ".github/workflows/deploy.yml"
+      - "docker-compose.yml"
+      - ".env.example"
+      - ".gitignore"
+      - "LICENSE"
+      - "NOTICE"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  # One run per commit; never cancel a run that may be pushing.
+  group: images-${{ github.sha }}
+  cancel-in-progress: false
+
+env:
+  SCANNER_TRIVY_VERSION: v0.70.0
+
+jobs:
+  build:
+    name: build and scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    permissions:
+      contents: read
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+      image-id: ${{ steps.save.outputs.image-id }}
+      archive-sha256: ${{ steps.save.outputs.archive-sha256 }}
+    env:
+      # Scan only the image in the local Docker engine: never fall back to a
+      # registry copy that may be something else.
+      TRIVY_IMAGE_SRC: docker
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Image name and metadata
+        id: meta
+        env:
+          OWNER: ${{ github.repository_owner }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::unexpected commit SHA"; exit 1; }
+          image="ghcr.io/${OWNER,,}/sellbird"
+          [[ "$image" =~ ^ghcr\.io/[a-z0-9]([a-z0-9-]*[a-z0-9])?/sellbird$ ]] \
+            || { echo "::error::unexpected image name"; exit 1; }
+          version="$(python3 -I -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          [[ "$version" =~ ^[0-9A-Za-z.+-]+$ ]] || { echo "::error::unexpected project version"; exit 1; }
+          {
+            echo "image=$image"
+            echo "ref=$image:$SHA"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build (load into the local engine, no push)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          load: true
+          push: false
+          provenance: false
+          sbom: false
+          tags: ${{ steps.meta.outputs.ref }}
+          build-args: |
+            VCS_REF=${{ github.sha }}
+            SELLBIRD_VERSION=${{ steps.meta.outputs.version }}
+            SOURCE_URL=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha,scope=sellbird-image
+          cache-to: type=gha,mode=min,scope=sellbird-image
+
+      - name: Non-root check
+        env:
+          REF: ${{ steps.meta.outputs.ref }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          user="$(docker image inspect --format '{{.Config.User}}' "$REF")"
+          name="${user%%:*}"
+          case "$name" in
+            ""|root|0) echo "::error::image config user is '${user:-<unset>}' (root)"; exit 1 ;;
+          esac
+          uid="$(docker run --rm --network none --entrypoint id "$REF" -u)"
+          [[ "$uid" =~ ^[0-9]+$ ]] && [ "$uid" -gt 0 ] \
+            || { echo "::error::image runs as uid '$uid'"; exit 1; }
+          revision="$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$REF")"
+          [ "$revision" = "$SHA" ] || { echo "::error::revision label is '$revision'"; exit 1; }
+          echo "Image user: $user (uid $uid); revision label matches the commit."
+
+      - name: Secret scanner config
+        # Trivy's built-in allow rules skip every *.md file. prompts/ and skills/
+        # ship as Markdown under /usr/local/share/sellbird, so that rule is
+        # disabled; all other built-in rules and allow rules stay as shipped.
+        # The same file (outside the checkout) is passed to the negative control
+        # and to the real secret scan.
+        env:
+          TRIVY_SECRET_CONFIG: ${{ runner.temp }}/trivy-secret.yaml
+        run: |
+          set -euo pipefail
+          printf 'disable-allow-rules:\n  - markdown\n' > "$TRIVY_SECRET_CONFIG"
+
+      - name: Secret scan negative control (build a planted-secret derivative)
+        id: control
+        env:
+          REF: ${{ steps.meta.outputs.ref }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          ctx="$RUNNER_TEMP/secret-control"
+          rm -rf "$ctx" && mkdir -p "$ctx"
+          # A random value in GitHub PAT shape (ghp_ + 36 alphanumerics). It is
+          # generated here, so no secret-shaped literal is committed, and it is
+          # not a credential for anything.
+          planted="ghp_$(openssl rand -hex 18)"
+          echo "::add-mask::$planted"
+          printf 'SELLBIRD_PLANTED_CONTROL_TOKEN=%s\n' "$planted" > "$ctx/planted-control.env"
+          printf '# Planted control\n\ntoken: %s\n' "$planted" > "$ctx/zz-planted-control.md"
+          cat > "$ctx/Dockerfile" <<EOF
+          FROM $REF
+          COPY planted-control.env /app/planted-control.env
+          COPY zz-planted-control.md /usr/local/share/sellbird/skills/zz-planted-control.md
+          EOF
+          control_ref="sellbird-secret-control:$SHA"
+          # The docker-driver builder sees the locally loaded image; the Buildx
+          # container builder would try to pull it.
+          docker buildx build --builder default --load --pull=false -t "$control_ref" "$ctx"
+          echo "ref=$control_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Secret scan negative control (scan; must find the planted secret)
+        id: control_scan
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_SECRET_CONFIG: ${{ runner.temp }}/trivy-secret.yaml
+        with:
+          version: ${{ env.SCANNER_TRIVY_VERSION }}
+          scan-type: image
+          image-ref: ${{ steps.control.outputs.ref }}
+          scanners: secret
+          exit-code: "1"
+          format: json
+          output: ${{ runner.temp }}/secret-control.json
+          timeout: 20m0s
+
+      - name: Secret scan negative control (require it to trip)
+        env:
+          OUTCOME: ${{ steps.control_scan.outcome }}
+          REPORT: ${{ runner.temp }}/secret-control.json
+          CONTROL_REF: ${{ steps.control.outputs.ref }}
+        run: |
+          set -euo pipefail
+          found() {
+            jq -e --arg f "$1" \
+              '[.Results[]? | select((.Target // "" | ltrimstr("/")) as $t
+                  | $t == $f or ($t | endswith("/" + $f)))
+                | .Secrets[]? | select(.RuleID == "github-pat")] | length >= 1' \
+              "$REPORT" > /dev/null
+          }
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "::error::secret scanner did not fail on the planted-secret image (outcome: $OUTCOME)"
+            exit 1
+          fi
+          [ -s "$REPORT" ] || { echo "::error::no control report: the scan failed for another reason"; exit 1; }
+          found "app/planted-control.env" \
+            || { echo "::error::planted secret in /app not detected"; exit 1; }
+          found "usr/local/share/sellbird/skills/zz-planted-control.md" \
+            || { echo "::error::planted secret in shipped Markdown not detected"; exit 1; }
+          docker image rm "$CONTROL_REF" > /dev/null
+          echo "Negative control tripped: both planted secrets detected, scan exited non-zero."
+
+      - name: Secret scan (real image; any finding blocks publishing)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_SECRET_CONFIG: ${{ runner.temp }}/trivy-secret.yaml
+        with:
+          version: ${{ env.SCANNER_TRIVY_VERSION }}
+          scan-type: image
+          image-ref: ${{ steps.meta.outputs.ref }}
+          scanners: secret
+          exit-code: "1"
+          format: table
+          timeout: 20m0s
+
+      - name: Vulnerability scan (fixable CRITICAL blocks publishing)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: ${{ env.SCANNER_TRIVY_VERSION }}
+          scan-type: image
+          image-ref: ${{ steps.meta.outputs.ref }}
+          scanners: vuln
+          vuln-type: os,library
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+          timeout: 20m0s
+
+      - name: Save the scanned image
+        id: save
+        env:
+          REF: ${{ steps.meta.outputs.ref }}
+        run: |
+          set -euo pipefail
+          image_id="$(docker image inspect --format '{{.Id}}' "$REF")"
+          [[ "$image_id" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::unexpected image id"; exit 1; }
+          docker save "$REF" | gzip -1 > "$RUNNER_TEMP/sellbird-image.tar.gz"
+          archive_sha="$(sha256sum "$RUNNER_TEMP/sellbird-image.tar.gz" | cut -d' ' -f1)"
+          {
+            echo "image-id=$image_id"
+            echo "archive-sha256=$archive_sha"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload the scanned image for the publish job
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sellbird-image-${{ github.sha }}
+          path: ${{ runner.temp }}/sellbird-image.tar.gz
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+  images:
+    name: publish to GHCR
+    needs: build
+    # Publish only from main (push or a manual run on main). A manual run on
+    # another branch builds and scans but never pushes.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      packages: write
+    outputs:
+      image: ${{ steps.push.outputs.image }}
+      tag: ${{ steps.push.outputs.tag }}
+      digest: ${{ steps.push.outputs.digest }}
+    env:
+      IMAGE: ${{ needs.build.outputs.image }}
+      TAG: ${{ github.sha }}
+      IMAGE_ID: ${{ needs.build.outputs.image-id }}
+      ARCHIVE_SHA256: ${{ needs.build.outputs.archive-sha256 }}
+    steps:
+      - name: Download the scanned image
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: sellbird-image-${{ github.sha }}
+          path: ${{ runner.temp }}/image
+
+      - name: Load and confirm it is the scanned image
+        run: |
+          set -euo pipefail
+          [[ "$TAG" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::bad tag"; exit 1; }
+          [[ "$IMAGE" =~ ^ghcr\.io/[a-z0-9]([a-z0-9-]*[a-z0-9])?/sellbird$ ]] || { echo "::error::bad image name"; exit 1; }
+          [[ "$IMAGE_ID" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::bad image id"; exit 1; }
+          archive="$RUNNER_TEMP/image/sellbird-image.tar.gz"
+          echo "$ARCHIVE_SHA256  $archive" | sha256sum -c --quiet -
+          gunzip -c "$archive" | docker load
+          loaded_id="$(docker image inspect --format '{{.Id}}' "$IMAGE:$TAG")"
+          [ "$loaded_id" = "$IMAGE_ID" ] \
+            || { echo "::error::loaded image $loaded_id is not the scanned image $IMAGE_ID"; exit 1; }
+
+      - name: Log in to GHCR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+
+      - name: Refuse to overwrite an existing tag
+        run: |
+          set -euo pipefail
+          if out="$(docker buildx imagetools inspect "$IMAGE:$TAG" 2>&1)"; then
+            echo "::error::$IMAGE:$TAG already exists; tags are immutable, refusing to push"
+            exit 1
+          fi
+          # Only a clear "does not exist" answer allows the push; an auth or
+          # network error fails closed.
+          if ! grep -qiE 'not found|manifest unknown|name unknown' <<< "$out"; then
+            echo "::error::could not confirm that $IMAGE:$TAG is absent:"
+            echo "$out"
+            exit 1
+          fi
+          echo "$IMAGE:$TAG does not exist yet."
+
+      - name: Push the commit-SHA tag and record the digest
+        id: push
+        run: |
+          set -euo pipefail
+          docker push "$IMAGE:$TAG" | tee "$RUNNER_TEMP/push.log"
+          digest="$(grep -oE 'digest: sha256:[0-9a-f]{64}' "$RUNNER_TEMP/push.log" | tail -n 1 | cut -d' ' -f2)"
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::no valid digest in push output"; exit 1; }
+          # The registry must serve that digest, and the tag must resolve to it.
+          docker buildx imagetools inspect "$IMAGE@$digest" > /dev/null
+          remote="$(docker buildx imagetools inspect "$IMAGE:$TAG" --format '{{json .Manifest}}' | jq -r '.digest')"
+          [ "$remote" = "$digest" ] \
+            || { echo "::error::tag resolves to $remote, push reported $digest"; exit 1; }
+          {
+            echo "image=$IMAGE"
+            echo "tag=$TAG"
+            echo "digest=$digest"
+          } >> "$GITHUB_OUTPUT"
+          printf 'IMAGE=%s\nTAG=%s\nDIGEST=%s\n' "$IMAGE" "$TAG" "$digest" > "$RUNNER_TEMP/image-digest.env"
+          {
+            echo "### Published"
+            echo
+            echo "\`$IMAGE:$TAG@$digest\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Log out of GHCR
+        if: always()
+        run: docker logout ghcr.io
+
+      - name: Upload the digest record
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-digest-${{ github.sha }}
+          path: ${{ runner.temp }}/image-digest.env
+          retention-days: 90
+          if-no-files-found: error
+
+  # Pin the published image into the platform repository's production overlay
+  # (OpenSpec change gitops-deploy-sellbird; docs/platform-interface.md,
+  # "Overlay location and pin format"). Argo CD syncs that overlay.
+  #
+  # - Runs only on main, after `images` published and verified the digest.
+  # - environment: production holds the deploy GitHub App's private key; its
+  #   deployment branch policy is main only, so no branch or PR workflow can
+  #   read it.
+  # - Fails safely before minting any token if the App or the platform
+  #   repository is not configured (nothing is pushed). Once configured, re-run
+  #   only this job: `gh run rerun <run id> --failed`.
+  # - The guard is scripts/deploy/pin_overlay.sh: regexes first, the images
+  #   entry in the fixed line order name, newName, newTag, digest, never
+  #   backwards against this repository's history, and only the newTag and
+  #   digest lines change. This job pushes the one commit it makes, retrying by
+  #   resetting to the new remote main and pinning again.
+  deploy:
+    name: pin production overlay
+    needs: images
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      TAG: ${{ needs.images.outputs.tag }}
+      DIGEST: ${{ needs.images.outputs.digest }}
+      IMAGE: ${{ needs.images.outputs.image }}
+      OVERLAY_FILE: apps/sellbird/overlays/production/kustomization.yaml
+    steps:
+      - name: Require the deploy App and platform repository configuration
+        id: config
+        env:
+          CLIENT_ID: ${{ vars.SELLBIRD_DEPLOY_APP_CLIENT_ID }}
+          HAS_KEY: ${{ secrets.SELLBIRD_DEPLOY_APP_PRIVATE_KEY != '' }}
+          PLATFORM_REPO: ${{ vars.SELLBIRD_PLATFORM_REPO }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -n "$CLIENT_ID" ] || missing="$missing variable SELLBIRD_DEPLOY_APP_CLIENT_ID;"
+          [ "$HAS_KEY" = "true" ] || missing="$missing production environment secret SELLBIRD_DEPLOY_APP_PRIVATE_KEY;"
+          [ -n "$PLATFORM_REPO" ] || missing="$missing variable SELLBIRD_PLATFORM_REPO;"
+          if [ -n "$missing" ]; then
+            echo "::error::deploy is not configured, nothing pushed. Missing:$missing see infra/github/README.md"
+            exit 1
+          fi
+          [[ "$PLATFORM_REPO" =~ ^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$ ]] \
+            || { echo "::error::SELLBIRD_PLATFORM_REPO must be <owner>/<repo>"; exit 1; }
+          [[ "$TAG" =~ ^[0-9a-f]{40}$ ]] && [ "$TAG" = "$SHA" ] \
+            || { echo "::error::images output tag is not this commit's SHA"; exit 1; }
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] \
+            || { echo "::error::images output digest is malformed"; exit 1; }
+          [[ "$IMAGE" =~ ^ghcr\.io/[a-z0-9]([a-z0-9-]*[a-z0-9])?/sellbird$ ]] \
+            || { echo "::error::images output image name is malformed"; exit 1; }
+          {
+            echo "owner=${PLATFORM_REPO%%/*}"
+            echo "repo=${PLATFORM_REPO#*/}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check out this repository (full history for the ancestry check)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Mint a deploy App token for the platform repository only
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.SELLBIRD_DEPLOY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SELLBIRD_DEPLOY_APP_PRIVATE_KEY }}
+          owner: ${{ steps.config.outputs.owner }}
+          repositories: ${{ steps.config.outputs.repo }}
+          permission-contents: write
+
+      - name: Check out the platform repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ vars.SELLBIRD_PLATFORM_REPO }}
+          ref: main
+          path: platform
+          fetch-depth: 1
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Author commits as the App bot
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          set -euo pipefail
+          [[ "$APP_SLUG" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "::error::unexpected app slug"; exit 1; }
+          bot_id="$(gh api "/users/${APP_SLUG}%5Bbot%5D" --jq .id)"
+          [[ "$bot_id" =~ ^[0-9]+$ ]] || { echo "::error::could not resolve the bot user id"; exit 1; }
+          git -C platform config user.name "${APP_SLUG}[bot]"
+          git -C platform config user.email "${bot_id}+${APP_SLUG}[bot]@users.noreply.github.com"
+
+      - name: Pin newTag and digest, push with retry
+        run: |
+          set -euo pipefail
+          # pin_overlay.sh: 0 = one local pin commit; 3 = already pinned
+          # (success, nothing to push); anything else = refused, nothing written.
+          run_pin() {
+            local status=0
+            bash "$GITHUB_WORKSPACE/source/scripts/deploy/pin_overlay.sh" \
+              --overlay-repo "$GITHUB_WORKSPACE/platform" \
+              --source-repo "$GITHUB_WORKSPACE/source" \
+              --file "$OVERLAY_FILE" \
+              --tag "$TAG" --digest "$DIGEST" --image "$IMAGE" || status=$?
+            case "$status" in
+              0) return 0 ;;
+              3) echo "Already pinned to $TAG; nothing to deploy."; exit 0 ;;
+              *) echo "::error::pin refused (exit $status); nothing pushed"; exit 1 ;;
+            esac
+          }
+          run_pin
+          for attempt in 1 2 3 4; do
+            if git -C platform push -q origin HEAD:main; then
+              echo "Pushed pin $TAG $DIGEST (attempt $attempt)."
+              {
+                echo "### Pinned production overlay"
+                echo
+                echo "\`$IMAGE:$TAG@$DIGEST\`"
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "::warning::push rejected (attempt $attempt); re-pinning on the new main"
+            sleep $((attempt * 5))
+            git -C platform fetch -q --depth=50 origin main
+            git -C platform reset -q --hard origin/main
+            run_pin
+          done
+          echo "::error::could not push the pin after 4 attempts"
+          exit 1

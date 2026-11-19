@@ -1,0 +1,2 @@
+NEGATIVE-CONTROL SCN-SEND-002 PASS: daily limit, suppressed address, quiet hours and unapproved item each refused on sqlite and postgres (8 cases)
+SCN-SEND-002 exit 0

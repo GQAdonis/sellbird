@@ -68,6 +68,14 @@ STRIPPED_ENV = (
     "OLDPWD",
 )
 
+# Hosted-mode connection strings carry database passwords. The model call
+# never needs them, so they never reach the child (whose environment a
+# prompt-injected tool call could otherwise read).
+SECRET_ENV = (
+    "SELLBIRD_DATABASE_URL",
+    "SELLBIRD_MIGRATE_DATABASE_URL",
+)
+
 HELP_TIMEOUT_SECONDS = 30
 
 _capable: dict[tuple, bool] = {}
@@ -147,9 +155,10 @@ def find_claude(env: dict | None = None) -> str | None:
 
 
 def runtime_env(cwd: str, base: dict | None = None) -> dict:
-    """The child's environment: the operator's, minus instruction sources."""
+    """The child's environment: the operator's, minus instruction sources
+    and database connection strings."""
     env = dict(os.environ if base is None else base)
-    for key in STRIPPED_ENV:
+    for key in STRIPPED_ENV + SECRET_ENV:
         env.pop(key, None)
     env["PWD"] = cwd
     env["CLAUDE_CODE_SAFE_MODE"] = "1"

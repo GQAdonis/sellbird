@@ -1,0 +1,157 @@
+{
+  "mode": "artifact",
+  "verdict": "BLOCK",
+  "judge_model": "mimo-v2.6-pro",
+  "producer_model": "claude-opus-5-5",
+  "isolation_mode": "rest-gateway:http://localhost:4000/v1",
+  "cross_model_check": "unverified-producer-unknown",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "The boundary packet depends on check scripts and host tools that no change in the list delivers or provisions, so B4 cannot run as written.",
+      "evidence": "BOUNDARY PACKET invokes `scripts/boundary/check_container.sh`, `scripts/boundary/check_manifests.sh`, `scripts/boundary/check_platform_contract.sh`, `kubectl kustomize`, `actionlint .github/workflows/*.yml`, and `yq`, but no change's Scope/Details names any of these paths or tools (change 2 Scope is `docs | spec`, change 6 is `container`, change 8 is `ci`, change 9 is `infra | ci`); cited_paths records `scripts/boundary/check_manifests.sh` and `scripts/boundary/check_platform_contract.sh` as MISSING and the file tree contains no `scripts/boundary/`.",
+      "suggested_fix": "Add an explicit change (or explicit deliverable paths inside changes 2, 6, 9) that authors the three scripts/boundary/*.sh checks and a boundary preflight that installs/pins actionlint, kustomize, yq and pg_dump 18 before B4."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "SCN-BASE-001's oracle is bound to a baseline fixture that does not exist, yet the contract already fixes its digest.",
+      "evidence": "CONTRACT BINDING states \"Baseline fixture: `fixtures/baseline-test-ids.txt` sha256 cc4fdcce\u202634a6 at commit c74a172\" and SCN-BASE-001's oracle is \"collected IDs \u2287 fixtures/baseline-test-ids.txt and 0 failures\", while cited_paths reports MISSING and the file tree only contains `tests/fixtures`; change 1's Details say the IDs \"are recorded as fixtures\", i.e. created after the digest was fixed.",
+      "suggested_fix": "Create the fixture at one stated path in change 1, record its digest at that time, and move the digest binding out of the pre-change contract into the change 1 evidence."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "Nothing in the plan applies the Postgres migrations in the cluster, and the runtime role is forbidden to create the schema.",
+      "evidence": "Change 3 Details: \"The app role has no DDL rights at runtime\" with \"versioned up/down migrations under migrations/postgres with a schema_version table\"; change 9 Details lists only \"Deployment with read-only root, ServiceAccount, Service, NetworkPolicy \u2026, config, Secret references by name only\" \u2014 no initContainer, Job or CLI step that runs migrations as a migration role, and change 7's local stand-in has no migration step either.",
+      "suggested_fix": "Add a migration execution step (initContainer/Job using a migration-role DSN, or an explicit `sellbird storage migrate` run step) to change 9 and to the local compose, with a boundary assertion that the deployed schema matches migrations/postgres head."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "No workflow runs the test suite, so the blocking tests-pass constraint and the plan's own \"tests are green on main\" precondition for the ruleset have no enforcement.",
+      "evidence": "Change 8 Details enumerate only \"build with buildx, a non-root check, a vulnerability scan \u2026, an artifact secret scan \u2026, refuse to push if the SHA tag already exists, push \u2026, and expose the digest as a job output\"; change 9 adds `infra/github/main-ruleset.json` and an operator step \"Apply `infra/github/main-ruleset.json` only after tests are green on main and the deploy job is merged\"; the file tree has no `.github/` workflows and the method note forbids running product tests before B4, so no merge can show a green test check.",
+      "suggested_fix": "Add a test workflow (or a test job in images.yml) that the ruleset's required checks reference, and state how tests-pass is enforced on main after B4."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "The sending-safety blocking constraint has no boundary scenario for anything except the outbox claim, so a wrong Postgres port could silently weaken quiet hours, daily limits or opt-out.",
+      "evidence": "Constraint `sending-safety-preserved`: \"Approval-by-default, quiet hours, daily send limits, opt-out handling and the outbox approval ladder must not be weakened or bypassed\", while the coverage table's only sending scenario is SCN-SEND-001 (\"Concurrent claimers never send the same outbox item twice\"); S-02 itself says the port \"touches ~40 SQLite-only statements and the outbox claim that guards exactly-once sending\".",
+      "suggested_fix": "Add scenarios asserting quiet-hours, daily-limit, opt-out/do-not-contact and outbox-approval-ladder behaviour is identical on the Postgres backend to the recorded SQLite expectations."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "The plan commits a real business domain and real account identifiers into tracked files, violating the blocking no-real-personal-data constraint.",
+      "evidence": "Constraint `no-real-personal-data`: \"No real person's or business's name, email, phone, address or domain in code, tests, docs, commits or PR text\"; change 2 Details require the contract to fix \"the hostname listener and certificate ownership on the shared Gateway\" and SCN-CONTRACT-001's oracle is \"check_platform_contract.sh finds every required section, secret name, claim and hostname\", while the goals and the operator steps name `https://sellbird.know-me.tools`, `ghcr.io/gqadonis/sellbird` and `GQAdonis/sellbird#1` \u2014 all destined for docs/platform-interface.md, infra/ and the CHANGELOG.",
+      "suggested_fix": "Use a fictional example.test hostname and registry reference in committed artifacts, with the real hostname/registry supplied only through operator-set config or a Secret; otherwise record an explicit operator waiver of the constraint before archiving."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "The full-suite boundary run omits the Postgres DSN, so the Postgres contract tests either fail the run or skip silently inside a \"0 failures\" verdict.",
+      "evidence": "BOUNDARY PACKET runs \"`docker compose -f infra/local/compose.yaml up -d --wait`\" then \"`scenario \u2014 .venv/bin/python -m pytest -q` (SCN-BASE-001, SCN-STORE-001)\" and only the *next* command sets `SELLBIRD_TEST_PG_DSN=\u2026` for `tests/storage_contract`; SCN-BASE-001's oracle is \"collected IDs \u2287 fixtures/baseline-test-ids.txt and 0 failures\", and pytest reports skips as non-failures (the baseline itself has 27 skips), so unexercised Postgres tests still yield a green verdict.",
+      "suggested_fix": "Run the suite with the PG DSN set in one command and assert 0 failures AND 0 skips for the new Postgres tests, or split collection so skipped-by-default Postgres tests cannot satisfy SCN-BASE-001."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "SCN-LOG-001 asks an image check to prove a runtime property it cannot see, so a writable root filesystem would pass.",
+      "evidence": "SCN-LOG-001 oracle: \"check_container.sh: user id \u2260 0, root FS read-only, grep for the generated token and a dummy CLAUDE_CODE_OAUTH_TOKEN value finds nothing\", while the boundary command is `scripts/boundary/check_container.sh sellbird:boundary` \u2014 an image reference; read-only root is a run/Deployment property (compose `read_only:` / securityContext), and the plan's own change 9 puts `read-only root` in the Deployment.",
+      "suggested_fix": "Assert read-only root on the running compose container and on the rendered Deployment securityContext, not on the image; keep image checks to user, layers and env/file contents."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The Postgres DSN in the boundary command is an ellipsis and only one role is supplied, although SCN-STORE-003 requires two different principals.",
+      "evidence": "BOUNDARY PACKET: `SELLBIRD_TEST_PG_DSN=\u2026 .venv/bin/python -m pytest -q tests/storage_contract tests/test_outbox_concurrency.py tests/test_storage_move.py`; SCN-STORE-003's negative control is \"connecting as the app role, CREATE TABLE and ALTER TABLE are refused\" while its oracle is \"up \u2192 down \u2192 up leaves schema_version and catalog identical\", which needs the migration role \u2014 no second DSN variable is defined anywhere in the plan.",
+      "suggested_fix": "Define concrete DSN env vars (migration role and app role) with the values the compose file provisions, and make the refusal check use the app-role DSN."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "SCN-AUTH-001 does not say which binary is under test, contradicting the recalled lesson that boundary gates must launch the packaged artifact.",
+      "evidence": "The method note claims \"the boundary packet builds the Docker image and launches it in gateway mode\" and change 7's compose \"builds Sellbird from the same Dockerfile\", but the scenario command is `.venv/bin/python -m pytest -q tests/test_gateway_mode.py` \"against the running stand-in\" with no base-URL/endpoint variable, unlike the explicitly parameterised `SELLBIRD_TEST_PG_DSN` \u2014 so the test as specified runs the repo checkout, not the image.",
+      "suggested_fix": "Give test_gateway_mode.py an explicit target endpoint variable pointing at the compose service, and state that a failure of the packaged image is a scenario failure."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "SCN-STORE-002's oracle takes its truth from the system under test.",
+      "evidence": "SCN-STORE-002 oracle: \"same contract suite on a real flint-forge PG18 container; cohort results equal the SQLite run\" \u2014 the SQLite run is produced by the same refactored backend, so a divergence that both backends share (e.g. a mistranslated `json_extract` affecting cohort logic) passes; only the signal-code refusal is an independent negative control.",
+      "suggested_fix": "Record expected cohort rows as fixed fixture data produced before the backend split, and compare both backends against that fixture."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "SCN-BASE-001 can only prove tests were not deleted, not that they were not weakened.",
+      "evidence": "Oracle \"collected IDs \u2287 fixtures/baseline-test-ids.txt and 0 failures\" plus digests for only `tests/test_compliance_footer.py` and `tests/test_people_finder.py`; any other baseline test (e.g. tests/test_sending_held.py, tests/test_suppressions.py) could be reduced to a trivial assertion and the ID set and exit status would still match.",
+      "suggested_fix": "Record a digest over all 3,729 baseline test sources (or a manifest of per-file digests) as the fixture, and fail the boundary if any baseline file's digest changes without an authorised repair entry."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The contract binding is unverifiable and internally contradictory about what is already adopted.",
+      "evidence": "CONTRACT BINDING: \"`method.referenceSha256` binds the installed `skills/kbd-process-orchestrator/references/boundaries.md`\" and \"Commands are defined exactly in the contract's `boundaryPacket.commands`\", yet cited_paths reports `skills/kbd-process-orchestrator/references/boundaries.md` and `kbd-contract-adopt.sh` MISSING and the file tree's `skills/` holds only sales skill docs; the same section ends \"adoption waits for the operator's review\" for calibration while the document closes with \"PLAN COMPLETE\".",
+      "suggested_fix": "State the actual on-disk location of the bound method reference (or rebind to the ~/.prometheus path explicitly), and mark the plan as provisional until kbd-contract-adopt.sh stamps the digest."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "Dockerfile ownership is contradictory between change 6 and change 7.",
+      "evidence": "Change 6 Details: \"Pin the Claude CLI to an exact version \u2026, move writable state to a /data volume \u2026, keep the non-root user\" (Scope `container`), while change 7 Details say \"The compose file builds Sellbird from the same Dockerfile change 7 owns\" \u2014 the same file change 6 delivers.",
+      "suggested_fix": "Correct change 7 to \"the Dockerfile owned by change 6\" and keep change 6 as the single owner of the Dockerfile."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The unwritten remainder of G4\u2013G6 has no owner, no change and no tracking record, so nothing will ever close it.",
+      "evidence": "\"the original live-deployment parts of G4\u2013G6 are not marked done by this phase and carry to the platform phase (follow-up dependency: the new platform repository's phase must reach live Gateway, flint-forge Postgres, Kratos and flint-gate before they can close)\" \u2014 but \"creating the platform repository remain separately asked\", and SCN-SHIP-001's verdict source says \"live run, Argo CD sync and the end-to-end merge are NOT_EXERCISED here and carried to the platform phase\", i.e. the goal \"A harmless change merged to main reaches the cluster end to end through the real pipeline\" has no scenario here and no recorded dependency artifact elsewhere.",
+      "suggested_fix": "Emit an explicit carried-goal record (id, blocking dependency, owner phase) in the phase handoff so the remaining G4\u2013G6 acceptance cannot be silently dropped."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The plan never defines whether a BLOCKED scenario stops the boundary run, yet two scenarios can end BLOCKED.",
+      "evidence": "SCN-CONTRACT-001: \"operator agreement is an operator receipt (canonical decision) \u2014 without it the scenario is BLOCKED, never PASS\"; SCN-BRAIN-001: \"a real inference call is operator-optional and recorded BLOCKED if no token is supplied\"; the packet rule only says \"any FAIL stops the run\" and the verdict vocabulary distinguishes NOT_EXERCISED and BLOCKED without saying which blocks closure.",
+      "suggested_fix": "State explicitly that a BLOCKED scenario blocks phase closure (or name the operator action that converts it to PASS) and list it in the closure criteria."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "Boundary evidence is written under the tracked .kbd-orchestrator tree with no rule against recording secret values, colliding with no-hardcoded-secrets and dashboard-token-private.",
+      "evidence": "\"Preserve production evidence in dated review folders \u2192 evidence goes to `.kbd-orchestrator/phases/postgres-gke-deployment/evidence/<date>/`\" and \"Receipts: `evidence/<date>/boundary-results.json` plus logs\", while SCN-LOG-001 greps \"for the generated token and a dummy CLAUDE_CODE_OAUTH_TOKEN value\" \u2014 the generated token is a real dashboard/AI credential created for the run, and `./.kbd-orchestrator` is a tracked directory in the file tree.",
+      "suggested_fix": "Require evidence files to record only marker presence/absence and counts, and add an explicit redaction assertion before the evidence folder is committed."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The warning constraint windows-and-macos-supported is never acknowledged, although the Postgres backend and move tool are exactly the code that must keep working on Windows.",
+      "evidence": "Constraint: \"Local CLI behaviour keeps working on macOS, Linux and Windows (CI matrix)\", while the boundary packet runs only local pytest/docker and `actionlint`, the model/runner discovery mentions no CI matrix run, and no change covers Windows-specific behaviour of the psycopg 3 backend, `sellbird storage move`, or the /data path handling introduced by change 6.",
+      "suggested_fix": "Add a CI matrix job (or a documented Windows run) and a Windows-relevant assertion for the move tool and storage backend in the closure criteria."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The COMMANDS TO RUN block hardcodes one developer machine path, contradicting the project rule that commands run from the repo root.",
+      "evidence": "Ten commands all use `node \"$KBD_ORCHESTRATOR_ROOT/shared/openspec/cli.mjs\" run --project /Volumes/T7/Projects/references/sellbird -- new change \u2026`, while the constraints preamble states \"Commands run from the repo root with the project virtualenv at `.venv/`\".",
+      "suggested_fix": "Use a relative project path (or `$PWD`) so the commands are portable and re-runnable on the verification host."
+    }
+  ],
+  "judge_identity": {
+    "providerConnectionId": "xiaomi-token-plan",
+    "providerId": "xiaomi",
+    "modelId": "mimo-v2.6-pro"
+  },
+  "checked_classes": [
+    "ordering errors \u2014 the round/dependency graph was checked end to end (change 3\u21925, 6\u21927/8, 7+8\u21929, all\u219210); no change depends on a later change, so no ordering finding; the one apparent dependency (Postgres test container from change 7 used by change 3) is deferred to B4 and is consistent with the declared VLBV method",
+    "missing dependencies \u2014 checked against all six goals; findings raised for the missing migration step, missing CI test workflow, missing boundary check scripts/tools and the unowned G4\u2013G6 remainder",
+    "acceptance criteria testability \u2014 checked every scenario in the coverage table for a concrete oracle, a negative control command and declared nondeterminism; findings raised for SCN-LOG-001, SCN-BASE-001, SCN-STORE-002, SCN-AUTH-001 and the BLOCKED verdict semantics",
+    "scope smuggling \u2014 each of the 10 changes maps to an adopted goal (G2\u2013G7) or a blocking constraint (change 1 \u2192 tests-pass); `uv sync --extra dev` and uv.lock are pre-approved in the Inputs section, so no unrelated work is smuggled",
+    "constraint violations \u2014 checked all 8 blocking and 5 warning constraints; findings raised for no-real-personal-data (committed real domain/account identifiers), tests-pass (no enforcement after B4), sending-safety-preserved (uncovered invariants) and windows-and-macos-supported; no-hardcoded-secrets, codex-isolation-preserved and untrusted-text-stays-untrusted have no change touching the relevant code paths beyond the baseline suite, so no finding",
+    "adopted contract / AT 01\u201322 cross-reference \u2014 the packet contains no adopted-contract.json, scenarioMatrix or boundaryPacket payload (only plan.md prose referencing `.kbd-orchestrator/phases/postgres-gke-deployment/adopted-contract.json`), so scenario coverage was reviewed against the plan's own SCN-* table and the AT-numbered acceptance checks could not be cross-referenced; the missing contract binding is reported separately",
+    "scope of evidence \u2014 the plan's claimed baseline fixture and method reference were cross-checked against cited_paths and file_tree, producing the fixture-absent and method-binding findings rather than any assumption about unlisted intent"
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "mode": "diff",
+  "verdict": "BLOCK",
+  "judge_model": "mimo-v2.6-pro",
+  "producer_model": "claude-opus-5-5",
+  "isolation_mode": "rest-gateway:http://localhost:4000/v1",
+  "cross_model_check": "unverified-producer-unknown",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "file": "sellbird/storage_postgres/dialect.py",
+      "line": 304,
+      "claim": "`INSERT OR REPLACE` is rewritten to `ON CONFLICT (<primary key>) DO UPDATE`, which only absorbs conflicts on the table's primary key and only updates the listed columns, whereas SQLite's INSERT OR REPLACE resolves conflicts on *any* unique constraint and deletes-then-reinserts (resetting unlisted columns to their defaults) \u2014 so the two backends do not have the identical observable behaviour the spec requires.",
+      "evidence": "dialect.py `_insert_or`: `target = \", \".join(keys)` / `clause = f\"ON CONFLICT ({target}) DO UPDATE SET {sets}\"` using only `PRIMARY_KEYS[table]`; migrations/postgres/0002_core_tables.up.sql defines non-PK unique constraints `uq_companies_domain`, `uq_companies_external`, `uq_prospects_email`, `uq_prospects_linkedin`, `uq_usage_events_request`, `usage_log.date UNIQUE`, and 0004 defines `uq_suppressions_kind_value`, `mailboxes_address_key`, `uq_outbox_campaign_step`. Spec 'Selectable storage backend': \"with identical observable behaviour for every state operation\".",
+      "suggested_fix": "Rewrite `INSERT OR REPLACE` as a DELETE of the conflicting row(s) followed by the INSERT inside one statement (e.g. CTE `WITH del AS (DELETE FROM t WHERE <any unique key matches> RETURNING ...) INSERT ...`), or make the store SQL use explicit upserts with the actual conflict target. At minimum, generate `ON CONFLICT` arms for every unique index on the table, not just the PK, and reset unlisted columns to their defaults."
+    },
+    {
+      "severity": "WARNING",
+      "file": "sellbird/storage_postgres/errors.py",
+      "line": 40,
+      "claim": "Every violation of constraint `observations_signal_code_fkey` is reported as \"unknown signal_code: not in signal_codes vocabulary\", which is wrong for the `ON UPDATE RESTRICT ON DELETE RESTRICT` refusals that same constraint also enforces (deleting/renaming a code that observations still reference) and gives a different message than SQLite, whose trigger only fires when an observation is written.",
+      "evidence": "migrations/postgres/0003_signals_and_observations.up.sql: `CONSTRAINT observations_signal_code_fkey FOREIGN KEY (signal_code) REFERENCES signal_codes (code) ON UPDATE RESTRICT ON DELETE RESTRICT`; errors.py `_integrity_message` returns `UNKNOWN_SIGNAL_MESSAGE` for any `ForeignKeyViolation` with `diag.constraint_name == SIGNAL_CODE_FK`, with no distinction of the failing operation.",
+      "suggested_fix": "Return the unknown-code message only when the failing table is `observations` (i.e. `diag.table_name == 'observations'`), and use the generic \"FOREIGN KEY constraint failed\" when the violation comes from deleting/updating `signal_codes`."
+    },
+    {
+      "severity": "WARNING",
+      "file": "sellbird/storage_postgres/errors.py",
+      "line": 81,
+      "claim": "`translate_error`'s fallback raises the server's `message_primary` verbatim, which for data errors carries the offending value, contradicting both the function's own docstring (\"never echoes values or DSNs\") and the module's stated purpose of keeping values out of logs.",
+      "evidence": "errors.py:81 `return storage.DatabaseError(exc.diag.message_primary or type(exc).__name__)` while line 59 documents \"(never echoes values or DSNs)\" and the module docstring says messages \"leave values out, so an email address in a duplicate key never reaches a log line\". PostgreSQL primary messages such as `invalid input syntax for type bigint: \"\u2026\"` / `value too long for type character varying(n)` embed the input.",
+      "suggested_fix": "Map the remaining cases to fixed, value-free strings keyed on the SQLSTATE class (as the `OperationalError` branch already does) and keep `diag.message_primary` only on `.sqlstate`-carrying diagnostics, never in the raised message."
+    },
+    {
+      "severity": "WARNING",
+      "file": "sellbird/storage_postgres/dialect.py",
+      "line": 221,
+      "claim": "The NULL-ordering rewrite appends `NULLS FIRST/LAST` to every ORDER BY item and its clause scanner stops only at `LIMIT|OFFSET|UNION|INTERSECT|EXCEPT|FOR|FETCH|WINDOW`, so a window frame clause after `OVER (ORDER BY x \u2026)` is swallowed into the sort item and emits invalid SQL.",
+      "evidence": "dialect.py `_CLAUSE_END = re.compile(r\"\\b(LIMIT|OFFSET|UNION|INTERSECT|EXCEPT|FOR|FETCH|WINDOW)\\b\", re.I)` (no `ROWS|RANGE|GROUPS`) together with `_order_item`, which appends the NULLS marker to `body` at the very end of the item; for `SELECT count(*) OVER (ORDER BY observed_at ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM t` the item becomes `observed_at ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW NULLS FIRST`, which Postgres rejects.",
+      "suggested_fix": "Add `ROWS|RANGE|GROUPS` to `_CLAUSE_END` (or blank window specifications in `_depth0` before rewriting ORDER BY), and insert the NULLS marker immediately after the sort key rather than at the end of the item text."
+    },
+    {
+      "severity": "WARNING",
+      "file": "sellbird/storage_postgres/dialect.py",
+      "line": 349,
+      "claim": "`is_read_only` blanks parenthesised bodies before looking for write keywords, so a data-modifying CTE is classified as read-only and therefore runs outside the transaction and reports `rowcount = -1`, diverging from SQLite.",
+      "evidence": "dialect.py:343-350: `if re.match(r\"^\\s*WITH\\b\", masked, re.I): return not _WRITE_WORD.search(_depth0(masked))`; `_depth0` replaces everything inside parentheses with spaces, so `WITH d AS (DELETE FROM outbox RETURNING *) SELECT * FROM d` yields a masked text containing no INSERT/UPDATE/DELETE/MERGE and returns True. connection.py `_guarded` then takes the no-transaction fast path and `_run` sets `rowcount = -1 if is_read_only(sql) else cur.rowcount`.",
+      "suggested_fix": "Scan the unmasked (parenthesis-inclusive) statement for write keywords when the statement starts with `WITH`, or explicitly reject data-modifying CTEs with a `DialectError`."
+    },
+    {
+      "severity": "WARNING",
+      "file": "sellbird/storage_postgres/__init__.py",
+      "line": 86,
+      "claim": "`PostgresBackend.exists` swallows every database error and returns `False`, so an unreachable or auth-failing database is indistinguishable from a database that was never migrated \u2014 a silent failure behind `storage.exists`.",
+      "evidence": "storage_postgres/__init__.py: `except storage.ERRORS: return False` around `self.read_one(name, \"SELECT 1 FROM schema_version LIMIT 1\", ())`; `storage.exists`'s contract is \"Whether the database is there: the file for SQLite, the backend's answer otherwise\", and `storage.ERRORS` covers `sqlite3.Error`, which every translated `storage.OperationalError` (including \"could not reach the Postgres database\") subclasses.",
+      "suggested_fix": "Return `False` only for the not-there cases (undefined table / empty `schema_version`), and re-raise connection and permission failures so a down database does not masquerade as an empty one."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "sellbird/storage_postgres/errors.py",
+      "line": 78,
+      "claim": "The `psycopg.OperationalError` catch-all reports \"could not reach the Postgres database\" for every operational error, including lock timeouts and session kills that have nothing to do with reachability.",
+      "evidence": "errors.py:78-80; `pg.LockNotAvailable` (55P03, raised by `SET LOCAL lock_timeout` + `LOCK TABLE` in move.py) and `IdleInTransactionSessionTimeout`/`AdminShutdown` all subclass `psycopg.OperationalError`, so outside `move.py`'s special case they are reported as a connection failure.",
+      "suggested_fix": "Specialise the branch on SQLSTATE: `08***` \u2192 unreachable, `55P03` \u2192 lock timeout, `57014` \u2192 interrupted, default \u2192 a generic operational error naming the SQLSTATE."
+    }
+  ],
+  "judge_identity": {
+    "providerConnectionId": "xiaomi-token-plan",
+    "providerId": "xiaomi",
+    "modelId": "mimo-v2.6-pro"
+  }
+}

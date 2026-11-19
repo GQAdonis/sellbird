@@ -1,0 +1,128 @@
+# Sellbird's dashboard in gateway mode (platform contract v1;
+# openspec/changes/cluster-ready-container-image/design.md, "Notes for the
+# manifests").
+#
+# - One replica (decision D12) and the Recreate strategy, so two Sellbird
+#   processes never run against the same database at once.
+# - Gateway mode is selected only by SELLBIRD_DASHBOARD_MODE=gateway from
+#   ConfigMap `sellbird-gateway`; without it the image refuses `--host 0.0.0.0`.
+#   The ConfigMap is required (not optional): if it is missing the pod does not
+#   start, rather than starting in some other mode.
+# - Secrets reach the container only as single keys through `secretKeyRef`:
+#   SELLBIRD_DATABASE_URL from `sellbird-db-app` (runtime role) and
+#   CLAUDE_CODE_OAUTH_TOKEN from `sellbird-claude`. Never `sellbird-db-migrate`,
+#   never a Secret volume, never `envFrom: secretRef`.
+# - Probes are tcpSocket on 5555: gateway mode answers 400 to any request
+#   without the public Host, so an httpGet probe would always fail.
+# - Read-only root filesystem; writable paths are emptyDirs: /data
+#   (SELLBIRD_HOME, seeded from the image on start; state is in Postgres),
+#   /tmp (Python temp files, the Claude CLI config dir, Chromium) and /dev/shm.
+#   Settings saved from the dashboard to /data do not survive a restart: the
+#   AppProject allows no PersistentVolumeClaim (contract v1).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sellbird
+  labels:
+    app.kubernetes.io/name: sellbird
+    app.kubernetes.io/component: app
+  annotations:
+    # After the PreSync migration Job (wave -1).
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sellbird
+      app.kubernetes.io/component: app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sellbird
+        app.kubernetes.io/component: app
+    spec:
+      serviceAccountName: sellbird
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: sellbird
+          # Logical name; the overlay's `images` entry pins it to
+          # <registry>/<owner>/sellbird:<commit sha>@sha256:<digest>.
+          image: sellbird
+          imagePullPolicy: IfNotPresent
+          args: ["dashboard", "--host", "0.0.0.0", "--port", "5555"]
+          ports:
+            - name: http
+              containerPort: 5555
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: sellbird-gateway
+          env:
+            - name: SELLBIRD_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sellbird-db-app
+                  key: SELLBIRD_DATABASE_URL
+            - name: CLAUDE_CODE_OAUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: sellbird-claude
+                  key: CLAUDE_CODE_OAUTH_TOKEN
+          securityContext:
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+            - name: dshm
+              mountPath: /dev/shm
+      volumes:
+        - name: data
+          emptyDir:
+            sizeLimit: 1Gi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 2Gi
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi

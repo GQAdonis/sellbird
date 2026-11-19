@@ -1,0 +1,1 @@
+NEGATIVE-CONTROL SCN-SEND-001 PASS: a second claimer gets no claim, and 8 racers yield exactly one, on sqlite and postgres

@@ -1,0 +1,990 @@
+{
+  "contractVersion": "2",
+  "kind": "kbd.adopted-contract",
+  "identity": {
+    "projectId": "09d97122-c2c7-452a-a0a1-48a80e6cfef5",
+    "runId": "postgres-gke-deployment-20261118T052720Z",
+    "phaseId": "postgres-gke-deployment",
+    "planRevision": 1,
+    "contractDigest": "7d8112c02343cc0118a315dea16d8f75d3ad05eea1a31bf8c220b4e320cfff53"
+  },
+  "digestNormalization": {
+    "algorithm": "sha256",
+    "command": "jq -S -c 'del(.identity.contractDigest) | del(.identity.planRevision)'",
+    "rationale": "contractDigest is self-referential and planRevision is bound by the canonical decision",
+    "stalenessRule": "digest mismatch against the latest non-superseded adoption decision for this contract path"
+  },
+  "adoptionSource": "Operator instructions in session a0255aca on 2026-11-17/18: decisions D1-D12 at assess; at plan, adopted the restated goals G4-G7, chose single tenant with RLS deferred, moved the production overlay to the platform repository, approved the calibration examples, and pre-approved branch commits, pushes and PRs, local containers and local environment setup.",
+  "decisionOwner": "the operator (repository owner)",
+  "amendmentPolicy": "Material scope or acceptance changes require an explicit operator adoption recorded as a new canonical decision with supersedes; review suggestions never auto-enter task totals.",
+  "releaseClaim": {
+    "userOperation": "A hosted operator runs Sellbird against its own database on the shared flint-forge Postgres 18 and signs in through Kratos and flint-gate; a local user keeps running on SQLite with the token link unchanged. In this phase the hosted path is proven against local real-service stand-ins; the live public deployment is carried to the platform phase.",
+    "supportedEnvironments": [
+      "local: macOS, Linux and Windows with SQLite (CI matrix)",
+      "hosted path: Linux container with Postgres 18 (flint-forge image), Ory Kratos and flint-gate, verified via local Docker stand-ins",
+      "Postgres contract tests: Linux"
+    ],
+    "currentCapabilities": "SQLite-only, loopback-only dashboard with a token link; no Postgres backend, gateway mode, image pipeline or manifests; baseline build passes; baseline tests 3,700 pass, 2 timing tests fail, 27 skip.",
+    "explicitUnknowns": [
+      "Live GKE cluster contents (gcloud authentication expired)",
+      "Whether provider terms allow headless subscription use of the Claude CLI (operator risk)",
+      "Real-world claim contention rates on Postgres",
+      "Whether the platform repository exists by closure"
+    ]
+  },
+  "statusVocabulary": [
+    "PASS",
+    "FAIL",
+    "BLOCKED",
+    "NOT_EXERCISED"
+  ],
+  "scenarioMatrix": [
+    {
+      "id": "SCN-BASE-001",
+      "name": "Baseline suite still collected and green",
+      "actor": "Contributor running the project test command",
+      "usefulOutcome": "The configured test command runs and every baseline test still passes, with only justified test-file changes",
+      "sourceRequirement": "assumption: blocking constraint tests-pass in .kbd-orchestrator/constraints.md",
+      "reasonNow": "tests-pass is red at baseline",
+      "likelihood": "high",
+      "mandatory": true,
+      "scopeRefs": [
+        "Baseline test command runnable and green"
+      ],
+      "ownerTask": "baseline-test-green/1+baseline-test-green/2+baseline-test-green/3",
+      "productionEntry": ".venv/bin/python -m pytest -q -rs",
+      "realCollaborators": [
+        "project virtualenv",
+        "pytest",
+        "SQLite on disk"
+      ],
+      "substitutedBoundaries": [],
+      "oracle": {
+        "observation": "collected test IDs, per-file test digests and the run's failure count",
+        "expectedTruthSource": "fixtures/baseline-test-ids.txt and fixtures/baseline-test-sources.sha256 recorded from commit c74a172 before any change",
+        "comparator": "every baseline ID collected; zero failures; every changed baseline test file listed with justification in a change design"
+      },
+      "negativeControl": {
+        "input": "a planted quadratic implementation of the testimonial and reply scans",
+        "expectedRejection": "both timing tests fail against the planted implementation",
+        "commandRef": "neg-scn-base-001"
+      },
+      "fixtures": "fixtures/ under the phase directory; scratch copies only",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "does not prove performance on production hardware"
+      ],
+      "invalidationKeys": [
+        "tests/**",
+        "sellbird/**",
+        "fixtures/baseline-test-ids.txt",
+        "fixtures/baseline-test-sources.sha256"
+      ],
+      "restoration": "remove the planted implementation and scratch copies"
+    },
+    {
+      "id": "SCN-STORE-001",
+      "name": "SQLite behaviour unchanged after the backend split",
+      "actor": "Local single-user operator",
+      "usefulOutcome": "State operations on SQLite return the same results as before",
+      "sourceRequirement": "openspec:storage-backends#Selectable storage backend",
+      "reasonNow": "D1 keeps SQLite as the default",
+      "likelihood": "high",
+      "mandatory": true,
+      "scopeRefs": [
+        "Postgres 18 storage backend beside SQLite"
+      ],
+      "ownerTask": "postgres-storage-backend/1+postgres-storage-backend/5+postgres-storage-backend/6+postgres-storage-backend/8",
+      "productionEntry": ".venv/bin/python -m pytest -q -rs tests/storage_contract",
+      "realCollaborators": [
+        "SQLite on disk"
+      ],
+      "substitutedBoundaries": [],
+      "oracle": {
+        "observation": "rows returned by the storage contract operations on SQLite",
+        "expectedTruthSource": "hand-authored expected rows in the change's fixtures (task 3.8), written from fictional input data, not produced by either backend",
+        "comparator": "exact row-set equality per operation"
+      },
+      "negativeControl": {
+        "input": "a planted divergence in the company dedup path",
+        "expectedRejection": "the comparison fails and names the operation",
+        "commandRef": "neg-scn-store-001"
+      },
+      "fixtures": "scratch SQLite files under a temporary directory",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "does not cover the dashboard UI"
+      ],
+      "invalidationKeys": [
+        "sellbird/storage.py",
+        "sellbird/state.py",
+        "tests/storage_contract/**"
+      ],
+      "restoration": "delete scratch databases"
+    },
+    {
+      "id": "SCN-STORE-002",
+      "name": "Postgres 18 matches the same expectations",
+      "actor": "Hosted operator",
+      "usefulOutcome": "State operations on Postgres 18 behave exactly like SQLite, including signal governance",
+      "sourceRequirement": "openspec:storage-backends#Governed signal vocabulary",
+      "reasonNow": "Core of goal G2",
+      "likelihood": "high",
+      "mandatory": true,
+      "scopeRefs": [
+        "Postgres 18 storage backend beside SQLite"
+      ],
+      "ownerTask": "postgres-storage-backend/2+postgres-storage-backend/3+postgres-storage-backend/4+postgres-storage-backend/6+postgres-storage-backend/8",
+      "productionEntry": "SELLBIRD_TEST_PG_MIGRATE_DSN=$(scripts/local/dsn.sh migrate) SELLBIRD_TEST_PG_APP_DSN=$(scripts/local/dsn.sh app) .venv/bin/python -m pytest -q -rs tests/storage_contract",
+      "realCollaborators": [
+        "flint-forge Postgres 18 container",
+        "psycopg 3"
+      ],
+      "substitutedBoundaries": [],
+      "oracle": {
+        "observation": "rows returned by the same contract operations on Postgres",
+        "expectedTruthSource": "the same hand-authored expected rows used for SQLite",
+        "comparator": "exact row-set equality per operation"
+      },
+      "negativeControl": {
+        "input": "an observation with a signal code not in the vocabulary",
+        "expectedRejection": "the write is refused and no row exists afterwards",
+        "commandRef": "neg-scn-store-002"
+      },
+      "fixtures": "fresh database per run in the local flint-forge container",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "single-node Postgres only"
+      ],
+      "invalidationKeys": [
+        "sellbird/storage.py",
+        "sellbird/storage_postgres/**",
+        "migrations/postgres/**",
+        "tests/storage_contract/**"
+      ],
+      "restoration": "drop the scratch database"
+    },
+    {
+      "id": "SCN-STORE-003",
+      "name": "Migrations reverse cleanly and the runtime role cannot change schema",
+      "actor": "Hosted operator upgrading or rolling back",
+      "usefulOutcome": "Schema changes can be undone and the running app cannot alter the schema",
+      "sourceRequirement": "openspec:storage-backends#Reversible migrations",
+      "reasonNow": "Goal G2 requires reversible migrations and least privilege",
+      "likelihood": "high",
+      "mandatory": true,
+      "scopeRefs": [
+        "Reversible migrations and least-privilege roles"
+      ],
+      "ownerTask": "postgres-storage-backend/3+postgres-storage-backend/6+postgres-storage-backend/7",
+      "productionEntry": "SELLBIRD_TEST_PG_MIGRATE_DSN=$(scripts/local/dsn.sh migrate) SELLBIRD_TEST_PG_APP_DSN=$(scripts/local/dsn.sh app) .venv/bin/python -m pytest -q -rs tests/storage_contract/test_migrations.py",
+      "realCollaborators": [
+        "flint-forge Postgres 18 container",
+        "pg_dump 18"
+      ],
+      "substitutedBoundaries": [],
+      "oracle": {
+        "observation": "schema-only dump after up, down, up and the recorded schema version",
+        "expectedTruthSource": "a schema-only dump of a fresh up on an empty database plus the highest migration id in migrations/postgres",
+        "comparator": "byte-equal normalised dumps and equal version ids"
+      },
+      "negativeControl": {
+        "input": "CREATE TABLE and ALTER TABLE issued as the runtime role",
+        "expectedRejection": "both statements are refused with a permission error",
+        "commandRef": "neg-scn-store-003"
+      },
+      "fixtures": "fresh database per run",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "does not test data-preserving down migrations beyond schema"
+      ],
+      "invalidationKeys": [
+        "migrations/postgres/**",
+        "sellbird/storage_postgres/**"
+      ],
+      "restoration": "drop the scratch database"
+    },
+    {
+      "id": "SCN-SEND-001",
+      "name": "Concurrent claimers send an approved item once",
+      "actor": "A prospect receiving outreach",
+      "usefulOutcome": "An approved email is sent exactly once even when the heartbeat and dashboard race",
+      "sourceRequirement": "openspec:storage-backends#Exactly-once outbox claim",
+      "reasonNow": "Calibration CAL-CRIT-1; SQLite writer serialisation no longer protects it",
+      "likelihood": "UNKNOWN",
+      "mandatory": true,
+      "scopeRefs": [
+        "Exactly-once outbox and sending safety on Postgres"
+      ],
+      "ownerTask": "postgres-storage-backend/4+postgres-storage-backend/6",
+      "productionEntry": "SELLBIRD_TEST_PG_MIGRATE_DSN=$(scripts/local/dsn.sh migrate) SELLBIRD_TEST_PG_APP_DSN=$(scripts/local/dsn.sh app) .venv/bin/python -m pytest -q -rs tests/test_outbox_concurrency.py",
+      "realCollaborators": [
+        "flint-forge Postgres 18 container",
+        "asyncio concurrent connections"
+      ],
+      "substitutedBoundaries": [],
+      "oracle": {
+        "observation": "number of successful claims for one approved item across concurrent claimers",
+        "expectedTruthSource": "the specification: exactly one claim per approved item",
+        "comparator": "count equals 1 across every repetition"
+      },
+      "negativeControl": {
+        "input": "a second claimer on an item already claimed",
+        "expectedRejection": "no claim is returned",
+        "commandRef": "neg-scn-send-001"
+      },
+      "fixtures": "one approved item seeded per repetition",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "concurrency is simulated in one host, not across pods"
+      ],
+      "invalidationKeys": [
+        "sellbird/state.py",
+        "sellbird/storage_postgres/**",
+        "tests/test_outbox_concurrency.py"
+      ],
+      "restoration": "drop the scratch database",
+      "nondeterministic": true,
+      "stochastic": {
+        "samples": 50,
+        "grader": "count of successful claims per repetition must equal exactly 1",
+        "stoppingRule": "run all 50 repetitions; any repetition with a count other than 1 is FAIL"
+      }
+    },
+    {
+      "id": "SCN-SEND-002",
+      "name": "Sending safety identical on Postgres",
+      "actor": "A prospect and the sender's domain reputation",
+      "usefulOutcome": "Quiet hours, daily limit, opt-out and approval ladder behave the same on both backends",
+      "sourceRequirement": "openspec:storage-backends#Sending safety parity",
+      "reasonNow": "Sending safety is the product's core trust promise",
+      "likelihood": "high",
+      "mandatory": true,
+      "scopeRefs": [
+        "Exactly-once outbox and sending safety on Postgres"
+      ],
+      "ownerTask": "postgres-storage-backend/4+postgres-storage-backend/6+postgres-storage-backend/8",
+      "productionEntry": "SELLBIRD_TEST_PG_MIGRATE_DSN=$(scripts/local/dsn.sh migrate) SELLBIRD_TEST_PG_APP_DSN=$(scripts/local/dsn.sh app) .venv/bin/python -m pytest -q -rs tests/test_send_safety_parity.py",
+      "realCollaborators": [
+        "SQLite on disk",
+        "flint-forge Postgres 18 container"
+      ],
+      "substitutedBoundaries": [
+        "the outbound mailbox is a recording test double; no email leaves the machine"
+      ],
+      "oracle": {
+        "observation": "allowed or refused decision for each fixture send on each backend",
+        "expectedTruthSource": "hand-authored expected decisions in the change's fixtures (task 3.8)",
+        "comparator": "exact equality per fixture case on both backends"
+      },
+      "negativeControl": {
+        "input": "a send inside quiet hours, over the daily limit, to a suppressed address, or of an unapproved item",
+        "expectedRejection": "each is refused on both backends",
+        "commandRef": "neg-scn-send-002"
+      },
+      "fixtures": "fictional example.test prospects",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "real mailbox delivery is not exercised"
+      ],
+      "invalidationKeys": [
+        "sellbird/state.py",
+        "sellbird/agents/**",
+        "tests/test_send_safety_parity.py"
+      ],
+      "restoration": "drop scratch databases"
+    },
+    {
+      "id": "SCN-MOVE-001",
+      "name": "A fixture database moves intact",
+      "actor": "An operator moving from local to hosted",
+      "usefulOutcome": "An existing SQLite database lands in Postgres with nothing lost",
+      "sourceRequirement": "openspec:storage-move#Complete move",
+      "reasonNow": "Move tool is in scope; real data is excluded",
+      "likelihood": "medium",
+      "mandatory": true,
+      "scopeRefs": [
+        "SQLite to Postgres move tool"
+      ],
+      "ownerTask": "sqlite-to-postgres-move-tool/1+sqlite-to-postgres-move-tool/2",
+      "productionEntry": "SELLBIRD_TEST_PG_MIGRATE_DSN=$(scripts/local/dsn.sh migrate) SELLBIRD_TEST_PG_APP_DSN=$(scripts/local/dsn.sh app) .venv/bin/python -m pytest -q -rs tests/test_storage_move.py",
+      "realCollaborators": [
+        "SQLite on disk",
+        "flint-forge Postgres 18 container"
+      ],
+      "substitutedBoundaries": [],
+      "oracle": {
+        "observation": "per-table row counts and checksums after the move",
+        "expectedTruthSource": "counts and checksums recorded with the fictional fixture database",
+        "comparator": "exact equality per table"
+      },
+      "negativeControl": {
+        "input": "a move into a Postgres database that already holds Sellbird rows",
+        "expectedRejection": "the command refuses and the target is unchanged",
+        "commandRef": "neg-scn-move-001"
+      },
+      "fixtures": "fictional fixture sellbird.db with example.test data",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "the operator's real database is not moved"
+      ],
+      "invalidationKeys": [
+        "sellbird/storage_move.py",
+        "tests/fixtures/move/**"
+      ],
+      "restoration": "drop the scratch database"
+    },
+    {
+      "id": "SCN-AUTH-001",
+      "name": "Only the allowlisted identity reaches the hosted dashboard",
+      "actor": "The operator signing in",
+      "usefulOutcome": "The operator gets in through Kratos and flint-gate; nobody else gets anything",
+      "sourceRequirement": "openspec:dashboard-gateway-mode#Gate token verification",
+      "reasonNow": "Public exposure of a mailbox-controlling app",
+      "likelihood": "high",
+      "mandatory": true,
+      "scopeRefs": [
+        "Hosted gateway mode with gate JWT verification"
+      ],
+      "ownerTask": "hosted-gateway-mode/2+hosted-gateway-mode/3+hosted-gateway-mode/5+sellbird-gateway-route-config/1+sellbird-gateway-route-config/2+sellbird-gateway-route-config/3",
+      "productionEntry": "SELLBIRD_GATEWAY_URL=http://localhost:4456 scripts/local/e2e-env.sh .venv/bin/python -m pytest -q -rs tests/test_gateway_mode_e2e.py",
+      "realCollaborators": [
+        "sellbird:boundary container",
+        "Ory Kratos container",
+        "flint-gate container",
+        "flint-forge Postgres 18 container"
+      ],
+      "substitutedBoundaries": [],
+      "oracle": {
+        "observation": "HTTP status and resolved principal for each request through flint-gate to the packaged image",
+        "expectedTruthSource": "the allowlisted Kratos identity id created by the stand-in setup script",
+        "comparator": "principal equals the allowlisted id for the valid session; 401 with empty body otherwise"
+      },
+      "negativeControl": {
+        "input": "a forged x-flint-user-id header without a JWT, a JWT with the wrong aud, an expired JWT, and a non-allowlisted identity",
+        "expectedRejection": "each request is refused with 401 and no data",
+        "commandRef": "neg-scn-auth-001"
+      },
+      "fixtures": "local compose stand-in with digest-pinned images and an uncommitted .env",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "the public hostname and TLS are not exercised (carried CG-2)"
+      ],
+      "invalidationKeys": [
+        "sellbird/dashboard_auth.py",
+        "sellbird/dashboard.py",
+        "infra/flint-gate/**",
+        "infra/local/**"
+      ],
+      "restoration": "docker compose down -v"
+    },
+    {
+      "id": "SCN-AUTH-002",
+      "name": "Local token mode unchanged",
+      "actor": "Local single-user operator",
+      "usefulOutcome": "Local installs keep the token link and refuse public binds",
+      "sourceRequirement": "openspec:dashboard-gateway-mode#Configured gateway mode",
+      "reasonNow": "D3 keeps local token mode as the default",
+      "likelihood": "high",
+      "mandatory": true,
+      "scopeRefs": [
+        "Local token mode unchanged"
+      ],
+      "ownerTask": "hosted-gateway-mode/1+hosted-gateway-mode/4+hosted-gateway-mode/5",
+      "productionEntry": ".venv/bin/python -m pytest -q -rs tests/test_dashboard_auth.py tests/test_gateway_mode_local.py",
+      "realCollaborators": [
+        "uvicorn dashboard on loopback"
+      ],
+      "substitutedBoundaries": [],
+      "oracle": {
+        "observation": "baseline local-mode auth test outcomes and their file digests",
+        "expectedTruthSource": "fixtures/baseline-test-sources.sha256 and the baseline test IDs",
+        "comparator": "unchanged digests for the baseline local-auth tests and zero failures"
+      },
+      "negativeControl": {
+        "input": "starting local mode with host 0.0.0.0",
+        "expectedRejection": "startup exits with the loopback refusal",
+        "commandRef": "neg-scn-auth-002"
+      },
+      "fixtures": "temporary data directory",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "does not exercise MCP agent clients"
+      ],
+      "invalidationKeys": [
+        "sellbird/dashboard_auth.py",
+        "sellbird/dashboard.py",
+        "sellbird/cli.py"
+      ],
+      "restoration": "remove the temporary data directory"
+    },
+    {
+      "id": "SCN-LOG-001",
+      "name": "No secrets in logs; locked-down runtime",
+      "actor": "An operator whose cluster logs are widely readable",
+      "usefulOutcome": "Neither the dashboard token nor the Claude credential leaks, and the runtime is non-root and read-only",
+      "sourceRequirement": "openspec:container-runtime#Non-root read-only runtime",
+      "reasonNow": "Calibration CAL-CRIT-3",
+      "likelihood": "high",
+      "mandatory": true,
+      "scopeRefs": [
+        "Cluster-ready container image"
+      ],
+      "ownerTask": "hosted-gateway-mode/4+cluster-ready-container-image/1+cluster-ready-container-image/2+cluster-ready-container-image/4+gitops-deploy-sellbird/1+gitops-deploy-sellbird/5",
+      "productionEntry": "scripts/boundary/check_container.sh sellbird:boundary",
+      "realCollaborators": [
+        "sellbird:boundary image",
+        "running compose container"
+      ],
+      "substitutedBoundaries": [],
+      "oracle": {
+        "observation": "image user id, running container ReadonlyRootfs flag, rendered securityContext, and log/file search results for the generated token and a dummy credential",
+        "expectedTruthSource": "the generated token and the dummy credential value injected by the check script",
+        "comparator": "user id not 0; ReadonlyRootfs true; zero matches"
+      },
+      "negativeControl": {
+        "input": "an image built with token printing re-enabled",
+        "expectedRejection": "the check fails on the log search",
+        "commandRef": "neg-scn-log-001"
+      },
+      "fixtures": "scratch build context",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "cluster log pipeline itself not exercised"
+      ],
+      "invalidationKeys": [
+        "Dockerfile",
+        "sellbird/dashboard.py",
+        "scripts/boundary/check_container.sh"
+      ],
+      "restoration": "remove scratch images"
+    },
+    {
+      "id": "SCN-BRAIN-001",
+      "name": "AI credential from the environment only",
+      "actor": "The operator running the hosted brain",
+      "usefulOutcome": "The brain authenticates from the Secret-provided variable without persisting it",
+      "sourceRequirement": "openspec:container-runtime#Environment-only AI credential",
+      "reasonNow": "D4 setup-token decision",
+      "likelihood": "high",
+      "mandatory": true,
+      "scopeRefs": [
+        "Cluster-ready container image"
+      ],
+      "ownerTask": "platform-interface-contract/1+cluster-ready-container-image/2+gitops-deploy-sellbird/1",
+      "productionEntry": "scripts/boundary/check_container.sh --brain sellbird:boundary",
+      "realCollaborators": [
+        "sellbird:boundary container",
+        "claude CLI subprocess"
+      ],
+      "substitutedBoundaries": [
+        "no real inference call unless the operator supplies a token; without it that sub-check is BLOCKED"
+      ],
+      "oracle": {
+        "observation": "environment of the claude subprocess and the files under /data and HOME",
+        "expectedTruthSource": "the dummy value injected as CLAUDE_CODE_OAUTH_TOKEN by the check script",
+        "comparator": "variable present in the subprocess environment; zero credential files"
+      },
+      "negativeControl": {
+        "input": "the brain started with CLAUDE_CODE_OAUTH_TOKEN unset",
+        "expectedRejection": "the documented missing-login error, with no file fallback",
+        "commandRef": "neg-scn-brain-001"
+      },
+      "fixtures": "scratch container",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "provider terms for headless subscription use are the operator's risk and are not tested"
+      ],
+      "invalidationKeys": [
+        "Dockerfile",
+        "sellbird/claude_runtime.py",
+        "sellbird/brain.py"
+      ],
+      "restoration": "remove scratch containers"
+    },
+    {
+      "id": "SCN-SHIP-001",
+      "name": "Guarded digest pin and hardened manifests",
+      "actor": "The operator shipping a release",
+      "usefulOutcome": "A merge produces a scanned image and a guarded pin with no real hostname in this fork",
+      "sourceRequirement": "openspec:image-delivery#Guarded digest pin",
+      "reasonNow": "Goals G3 and G6 restated",
+      "likelihood": "medium",
+      "mandatory": true,
+      "scopeRefs": [
+        "Image build, scan and publish by digest",
+        "Guarded digest pin and hardened manifests"
+      ],
+      "ownerTask": "image-build-scan-publish/1+image-build-scan-publish/2+image-build-scan-publish/3+gitops-deploy-sellbird/1+gitops-deploy-sellbird/3+gitops-deploy-sellbird/4+gitops-deploy-sellbird/5",
+      "productionEntry": "scripts/boundary/check_manifests.sh infra/k8s/overlays/example",
+      "realCollaborators": [
+        "kustomize",
+        "actionlint",
+        "deploy guard script",
+        "scratch git repository"
+      ],
+      "substitutedBoundaries": [
+        "the platform repository is replaced by a scratch fixture repository; live run and Argo CD sync are NOT_EXERCISED (carried CG-1)"
+      ],
+      "oracle": {
+        "observation": "rendered example overlay checks, actionlint result, and the guard's decision for each fixture pin",
+        "expectedTruthSource": "the fixture pins' known validity (valid forward pin, malformed digest, tag-only, backwards commit)",
+        "comparator": "rendered checks all pass; actionlint reports zero errors; the guard accepts only the valid forward pin"
+      },
+      "negativeControl": {
+        "input": "a tag-only image, a backwards pin, and a malformed digest",
+        "expectedRejection": "each is rejected and the scratch repository is unchanged",
+        "commandRef": "neg-scn-ship-001"
+      },
+      "fixtures": "scratch git repository created by the check script",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "no real GitHub Actions run, registry push or cluster sync"
+      ],
+      "invalidationKeys": [
+        ".github/workflows/**",
+        "infra/k8s/**",
+        "scripts/deploy/**"
+      ],
+      "restoration": "remove the scratch repository"
+    },
+    {
+      "id": "SCN-CONTRACT-001",
+      "name": "Platform interface contract published and well-formed",
+      "actor": "The platform repository's maintainers",
+      "usefulOutcome": "Both repositories can build against one agreed interface",
+      "sourceRequirement": "openspec:platform-interface#Platform contract document",
+      "reasonNow": "Goal G7",
+      "likelihood": "high",
+      "mandatory": true,
+      "scopeRefs": [
+        "Platform interface contract"
+      ],
+      "ownerTask": "platform-interface-contract/1+platform-interface-contract/2+platform-interface-contract/3+platform-interface-contract/4",
+      "productionEntry": "scripts/boundary/check_platform_contract.sh docs/platform-interface.md",
+      "realCollaborators": [
+        "contract check script"
+      ],
+      "substitutedBoundaries": [],
+      "oracle": {
+        "observation": "sections, secret names, claims, overlay path and pin format found in the document",
+        "expectedTruthSource": "the required-section list in the platform-interface spec",
+        "comparator": "every required item present and well-formed; operator agreement recorded as a canonical decision, otherwise BLOCKED"
+      },
+      "negativeControl": {
+        "input": "a copy of the document with the JWKS section removed",
+        "expectedRejection": "the check fails and names the missing section",
+        "commandRef": "neg-scn-contract-001"
+      },
+      "fixtures": "scratch copy of the document",
+      "evidence": "argv, exit codes, pass/fail/skip counts, digests and marker presence only; written to evidence/boundary-run (dated folder created at B4)",
+      "limitations": [
+        "agreement by the platform repository's own phase is outside this contract"
+      ],
+      "invalidationKeys": [
+        "docs/platform-interface.md",
+        "scripts/boundary/check_platform_contract.sh"
+      ],
+      "restoration": "remove the scratch copy"
+    }
+  ],
+  "functionalScope": [
+    "Postgres 18 storage backend beside SQLite",
+    "Exactly-once outbox and sending safety on Postgres",
+    "Reversible migrations and least-privilege roles",
+    "SQLite to Postgres move tool",
+    "Hosted gateway mode with gate JWT verification",
+    "Local token mode unchanged",
+    "Cluster-ready container image",
+    "Image build, scan and publish by digest",
+    "Guarded digest pin and hardened manifests",
+    "Platform interface contract",
+    "Baseline test command runnable and green"
+  ],
+  "resilienceScope": {
+    "policy": "Adopted requirements never defer via budget overflow; exhaustion means checkpoint and BLOCKED. Only never-adopted optional items may defer.",
+    "deferredOptional": [
+      "automated backups",
+      "high availability"
+    ]
+  },
+  "exclusions": [
+    "deploying the shared platform services (separate phase in a new repository)",
+    "live Argo CD sync and live public sign-in (carried CG-1, CG-2)",
+    "automated backups (wal-g/GCS)",
+    "high availability and autoscaling",
+    "Codex in the cluster",
+    "moving the operator's real local data",
+    "flint-gate repository changes",
+    "Hydra for Sellbird",
+    "multi-user Sellbird and row-level security"
+  ],
+  "requiredSafetyChecks": [
+    {
+      "id": "sending-safety-preserved",
+      "description": "Approval default, quiet hours, daily limits, opt-outs and exactly-once claiming are preserved on both backends",
+      "scenarioIds": [
+        "SCN-SEND-001",
+        "SCN-SEND-002",
+        "SCN-STORE-001"
+      ]
+    },
+    {
+      "id": "signal-governance",
+      "description": "Unknown signal codes are rejected on both backends",
+      "scenarioIds": [
+        "SCN-STORE-002"
+      ]
+    },
+    {
+      "id": "dashboard-token-private",
+      "description": "The dashboard token and AI credential never appear in logs or files",
+      "scenarioIds": [
+        "SCN-LOG-001",
+        "SCN-BRAIN-001"
+      ]
+    },
+    {
+      "id": "gateway-trust-boundary",
+      "description": "Gateway mode is config-selected; only a verified gate JWT for an allowlisted identity is admitted; cookies and unverified headers are ignored",
+      "scenarioIds": [
+        "SCN-AUTH-001",
+        "SCN-AUTH-002"
+      ]
+    },
+    {
+      "id": "least-privilege-database",
+      "description": "The runtime database role cannot change schema",
+      "scenarioIds": [
+        "SCN-STORE-003"
+      ]
+    },
+    {
+      "id": "no-real-names-in-fork",
+      "description": "No real hostname or registry literal in this public fork's manifests",
+      "scenarioIds": [
+        "SCN-SHIP-001"
+      ]
+    }
+  ],
+  "budgets": {
+    "timeMinutes": 1440,
+    "toolCalls": 3000,
+    "repairAttempts": 6,
+    "noProgressLimit": 3,
+    "tokenBudget": "UNKNOWN",
+    "tokenFallback": "tool-call ceiling",
+    "exhaustion": "checkpoint and BLOCKED; never a silent PASS; documentation and state may be saved without running product tests"
+  },
+  "evidenceInvalidation": "Per-scenario invalidation keys (source globs, fixture digests, image digest, contract digest); a change invalidates only the scenarios whose keys it touches; prior evidence and history are preserved; no blanket re-review.",
+  "workerRoutes": {
+    "agent": "claude-code",
+    "model": "claude-opus-5-5",
+    "billing": "operator's existing Claude Code subscription; adversarial judge via the operator's liter-llm gateway",
+    "subagents": "Claude Code project subagents per role (.claude/agents), routed per plan.md TASK MODEL ASSIGNMENTS",
+    "reviewRoundsMax": 2
+  },
+  "boundaryPacket": {
+    "postImplementationOnly": true,
+    "singleRun": true,
+    "commands": [
+      {
+        "id": "preflight",
+        "argv": [
+          "bash",
+          "scripts/boundary/preflight.sh"
+        ],
+        "kind": "build"
+      },
+      {
+        "id": "build",
+        "argv": [
+          "docker",
+          "build",
+          "-t",
+          "sellbird:boundary",
+          "."
+        ],
+        "kind": "build"
+      },
+      {
+        "id": "run-standin",
+        "argv": [
+          "bash",
+          "-c",
+          "scripts/local/make-env.sh && docker compose -f infra/local/compose.yaml up -d --wait"
+        ],
+        "kind": "run"
+      },
+      {
+        "id": "scn-suite",
+        "argv": [
+          "bash",
+          "-c",
+          "SELLBIRD_TEST_PG_MIGRATE_DSN=$(scripts/local/dsn.sh migrate) SELLBIRD_TEST_PG_APP_DSN=$(scripts/local/dsn.sh app) .venv/bin/python -m pytest -q -rs"
+        ],
+        "kind": "scenario",
+        "scenarioIds": [
+          "SCN-BASE-001",
+          "SCN-STORE-001",
+          "SCN-STORE-002",
+          "SCN-STORE-003",
+          "SCN-SEND-001",
+          "SCN-SEND-002",
+          "SCN-MOVE-001",
+          "SCN-AUTH-002"
+        ]
+      },
+      {
+        "id": "scn-auth-e2e",
+        "argv": [
+          "bash",
+          "-c",
+          "SELLBIRD_GATEWAY_URL=http://localhost:4456 scripts/local/e2e-env.sh .venv/bin/python -m pytest -q -rs tests/test_gateway_mode_e2e.py"
+        ],
+        "kind": "scenario",
+        "scenarioIds": [
+          "SCN-AUTH-001"
+        ]
+      },
+      {
+        "id": "scn-container",
+        "argv": [
+          "bash",
+          "scripts/boundary/check_container.sh",
+          "--brain",
+          "sellbird:boundary"
+        ],
+        "kind": "scenario",
+        "scenarioIds": [
+          "SCN-LOG-001",
+          "SCN-BRAIN-001"
+        ]
+      },
+      {
+        "id": "scn-manifests",
+        "argv": [
+          "bash",
+          "scripts/boundary/check_manifests.sh",
+          "infra/k8s/overlays/example"
+        ],
+        "kind": "scenario",
+        "scenarioIds": [
+          "SCN-SHIP-001"
+        ]
+      },
+      {
+        "id": "scn-contract",
+        "argv": [
+          "bash",
+          "scripts/boundary/check_platform_contract.sh",
+          "docs/platform-interface.md"
+        ],
+        "kind": "scenario",
+        "scenarioIds": [
+          "SCN-CONTRACT-001"
+        ]
+      },
+      {
+        "id": "neg-scn-base-001",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-BASE-001"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-BASE-001"
+        ]
+      },
+      {
+        "id": "neg-scn-store-001",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-STORE-001"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-STORE-001"
+        ]
+      },
+      {
+        "id": "neg-scn-store-002",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-STORE-002"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-STORE-002"
+        ]
+      },
+      {
+        "id": "neg-scn-store-003",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-STORE-003"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-STORE-003"
+        ]
+      },
+      {
+        "id": "neg-scn-send-001",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-SEND-001"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-SEND-001"
+        ]
+      },
+      {
+        "id": "neg-scn-send-002",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-SEND-002"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-SEND-002"
+        ]
+      },
+      {
+        "id": "neg-scn-move-001",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-MOVE-001"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-MOVE-001"
+        ]
+      },
+      {
+        "id": "neg-scn-auth-001",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-AUTH-001"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-AUTH-001"
+        ]
+      },
+      {
+        "id": "neg-scn-auth-002",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-AUTH-002"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-AUTH-002"
+        ]
+      },
+      {
+        "id": "neg-scn-log-001",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-LOG-001"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-LOG-001"
+        ]
+      },
+      {
+        "id": "neg-scn-brain-001",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-BRAIN-001"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-BRAIN-001"
+        ]
+      },
+      {
+        "id": "neg-scn-ship-001",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-SHIP-001"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-SHIP-001"
+        ]
+      },
+      {
+        "id": "neg-scn-contract-001",
+        "argv": [
+          "bash",
+          "scripts/boundary/negative_controls.sh",
+          "SCN-CONTRACT-001"
+        ],
+        "kind": "negativeControl",
+        "scenarioIds": [
+          "SCN-CONTRACT-001"
+        ]
+      }
+    ],
+    "expectedEffects": [
+      "local Docker images and containers only",
+      "scratch databases and scratch git repository",
+      "no cluster, GitHub settings, registry or DNS change"
+    ],
+    "requiredApprovals": "pre-approved by the operator on 2026-11-18: local containers and local environment setup; nothing in this packet touches the cluster or GitHub",
+    "receipts": [
+      "evidence/boundary-run/boundary-results.json",
+      "evidence/boundary-run/README.md"
+    ],
+    "cleanup": [
+      "docker compose -f infra/local/compose.yaml down -v",
+      "docker image rm sellbird:boundary",
+      "remove scratch repositories and databases",
+      "delete the uncommitted local .env"
+    ],
+    "runnerOutputGlobs": [
+      ".kbd-orchestrator/phases/postgres-gke-deployment/evidence/**"
+    ],
+    "stopConditions": [
+      "any FAIL stops the run and goes to B5 repair",
+      "a redaction grep match in the evidence folder stops the run",
+      "budget exhaustion checkpoints as BLOCKED"
+    ]
+  },
+  "status": {
+    "implementationComplete": true
+  },
+  "calibration": {
+    "examplesPath": ".kbd-orchestrator/phases/postgres-gke-deployment/calibration.json",
+    "sha256": "4645562e934b18f747d5549c790d99b384612ec2ad07929a23aff6f6307b55a6"
+  },
+  "method": {
+    "name": "VLBV",
+    "packVersion": "1.15.0",
+    "referenceSha256": "b0911c8a7f93aec589b39a9a425b32c37c2d1cbadcc6a17ef2eae69c9840442f",
+    "openspecVersion": "2.1.0",
+    "specDeltaDigest": "df7274517b2b43a4e03cc072b748a7d4698242a2452cb9ff908a171dd45edd70"
+  },
+  "closure": {
+    "implementationComplete": true,
+    "behaviorAccepted": false,
+    "releaseEligible": false,
+    "releaseAuthorized": false
+  }
+}

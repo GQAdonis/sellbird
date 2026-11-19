@@ -1,0 +1,1940 @@
+.......EEEEEEE.E.E..E.E.E.E.E.E.E.E.E.E.E.E.E.E.E.E.E.E.E.E.E.E.E.E..... [  1%]
+........................................EEEEEEEEEEEE.................... [  3%]
+........................................................................ [  5%]
+........................................................................ [  7%]
+........................................................................ [  9%]
+........................................................................ [ 10%]
+...............................................................sss...... [ 12%]
+........................................................................ [ 14%]
+....................................sssssssssssssssssssss............... [ 16%]
+........................................................................ [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 23%]
+........................................................................ [ 25%]
+........................................................................ [ 27%]
+........................................................................ [ 28%]
+........................................................................ [ 30%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+........................................................................ [ 36%]
+........................................................................ [ 37%]
+.......................................F................................ [ 39%]
+........................................................................ [ 41%]
+........................................................................ [ 43%]
+........................................................................ [ 45%]
+........................................................................ [ 46%]
+........................................................................ [ 48%]
+......ssssssssssss.................................................F.... [ 50%]
+........................................................................ [ 52%]
+........................................................................ [ 54%]
+F....................................................................... [ 55%]
+........................................................s............... [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 61%]
+........................................................................ [ 63%]
+.....................F.F................................................ [ 64%]
+......s................................................................. [ 66%]
+........................................................................ [ 68%]
+.......................................................................s [ 70%]
+........................................................................ [ 72%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+........................................................................ [ 77%]
+........................................................................ [ 79%]
+........................................................................ [ 81%]
+........................................................................ [ 82%]
+....................................F.F.F.F.F.F.F.F.F................... [ 84%]
+........................................................................ [ 86%]
+........................................................................ [ 88%]
+........................................................................ [ 90%]
+........................................................................ [ 91%]
+.........EEEEEFE........................................................ [ 93%]
+........................................................................ [ 95%]
+........................................................................ [ 97%]
+........................................................................ [ 99%]
+..................................                                       [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_cohort_matches_the_hand_authored_expectation[postgres-newest booking reading is yes (alpha fli] _
+
+request = <SubRequest 'locator' for <Coroutine test_cohort_matches_the_hand_authored_expectation[postgres-newest booking reading is yes (alpha fli]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_cohort_matches_the_hand_a7')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b3ef620>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_cohort_matches_the_hand_authored_expectation[postgres-both signals currently true] _
+
+request = <SubRequest 'locator' for <Coroutine test_cohort_matches_the_hand_authored_expectation[postgres-both signals currently true]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_cohort_matches_the_hand_a8')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b1fa990>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_cohort_matches_the_hand_authored_expectation[postgres-running ads, with no incumbent agency re] _
+
+request = <SubRequest 'locator' for <Coroutine test_cohort_matches_the_hand_authored_expectation[postgres-running ads, with no incumbent agency re]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_cohort_matches_the_hand_a9')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b1fae90>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_cohort_matches_the_hand_authored_expectation[postgres-epsilon's booking reading is below the c] _
+
+request = <SubRequest 'locator' for <Coroutine test_cohort_matches_the_hand_authored_expectation[postgres-epsilon's booking reading is below the c]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_cohort_matches_the_hand_a10')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10afdf100>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_cohort_matches_the_hand_authored_expectation[postgres-ranked for at least one phrase now (delt] _
+
+request = <SubRequest 'locator' for <Coroutine test_cohort_matches_the_hand_authored_expectation[postgres-ranked for at least one phrase now (delt]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_cohort_matches_the_hand_a11')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10afdf950>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_cohort_matches_the_hand_authored_expectation[postgres-a text signal counts by existing] _
+
+request = <SubRequest 'locator' for <Coroutine test_cohort_matches_the_hand_authored_expectation[postgres-a text signal counts by existing]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_cohort_matches_the_hand_a12')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10afeb890>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_cohort_matches_the_hand_authored_expectation[postgres-no requirement is no cohort, never every] _
+
+request = <SubRequest 'locator' for <Coroutine test_cohort_matches_the_hand_authored_expectation[postgres-no requirement is no cohort, never every]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_cohort_matches_the_hand_a13')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b28bf00>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_________ ERROR at setup of test_ranked_companies_per_phrase[postgres] _________
+
+request = <SubRequest 'locator' for <Coroutine test_ranked_companies_per_phrase[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_ranked_companies_per_phra1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10ae50f30>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_____ ERROR at setup of test_signal_counts_are_the_cohort_sizes[postgres] ______
+
+request = <SubRequest 'locator' for <Coroutine test_signal_counts_are_the_cohort_sizes[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_signal_counts_are_the_coh1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b217550>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_a_company_is_recorded_once_per_normalised_domain[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_a_company_is_recorded_once_per_normalised_domain[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_a_company_is_recorded_onc1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10ae38150>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_a_prospect_is_recorded_once_per_email_whatever_its_case[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_a_prospect_is_recorded_once_per_email_whatever_its_case[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_a_prospect_is_recorded_on1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10ae30c80>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_an_unknown_signal_code_is_refused_and_nothing_is_stored[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_an_unknown_signal_code_is_refused_and_nothing_is_stored[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_an_unknown_signal_code_is1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10ae33890>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_a_known_signal_is_stored_as_a_row_without_hidden_columns[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_a_known_signal_is_stored_as_a_row_without_hidden_columns[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_a_known_signal_is_stored_1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b00baf0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_signals_are_only_confirmed_by_an_explicit_status[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_signals_are_only_confirmed_by_an_explicit_status[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_signals_are_only_confirme1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10aee0c90>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_latest_only_reads_the_newest_observation_per_signal[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_latest_only_reads_the_newest_observation_per_signal[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_latest_only_reads_the_new1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b1d3790>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_the_same_sequence_step_cannot_be_queued_twice[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_the_same_sequence_step_cannot_be_queued_twice[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_the_same_sequence_step_ca1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10aecdd90>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+____ ERROR at setup of test_an_approved_due_item_is_claimed_once[postgres] _____
+
+request = <SubRequest 'locator' for <Coroutine test_an_approved_due_item_is_claimed_once[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_an_approved_due_item_is_c1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10aece090>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_unapproved_or_future_items_are_never_claimed[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_unapproved_or_future_items_are_never_claimed[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_unapproved_or_future_item1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10ae445d0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_an_abandoned_claim_fails_with_a_check_your_sent_folder_note[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_an_abandoned_claim_fails_with_a_check_your_sent_folder_note[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_an_abandoned_claim_fails_1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10aef6200>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_items_with_no_send_time_come_first_as_in_sqlite[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_items_with_no_send_time_come_first_as_in_sqlite[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_items_with_no_send_time_c1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10ae72170>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+___ ERROR at setup of test_sends_today_count_only_todays_utc_sends[postgres] ___
+
+request = <SubRequest 'locator' for <Coroutine test_sends_today_count_only_todays_utc_sends[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_sends_today_count_only_to1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10ae75090>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_an_opt_out_is_permanent_until_a_human_undoes_it[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_an_opt_out_is_permanent_until_a_human_undoes_it[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_an_opt_out_is_permanent_u1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10ae4e4e0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+__ ERROR at setup of test_a_suppressed_domain_covers_its_subdomains[postgres] __
+
+request = <SubRequest 'locator' for <Coroutine test_a_suppressed_domain_covers_its_subdomains[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_a_suppressed_domain_cover1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10aff99d0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_a_reply_stops_cold_email_to_the_rest_of_the_company[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_a_reply_stops_cold_email_to_the_rest_of_the_company[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_a_reply_stops_cold_email_1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10aec91d0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_________ ERROR at setup of test_settings_upsert_and_delete[postgres] __________
+
+request = <SubRequest 'locator' for <Coroutine test_settings_upsert_and_delete[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_settings_upsert_and_delet1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10ae8e660>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_usage_counts_and_sums_come_back_as_plain_numbers[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_usage_counts_and_sums_come_back_as_plain_numbers[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_usage_counts_and_sums_com1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10ae8e120>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_an_email_pattern_only_gives_way_to_equal_or_better_confidence[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_an_email_pattern_only_gives_way_to_equal_or_better_confidence[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_an_email_pattern_only_giv1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10aeecf50>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_____ ERROR at setup of test_feedback_lives_in_a_migrated_table[postgres] ______
+
+request = <SubRequest 'locator' for <Coroutine test_feedback_lives_in_a_migrated_table[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_feedback_lives_in_a_migra1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10aeefa10>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_connecting_an_address_twice_says_it_exists[postgres] __
+
+request = <SubRequest 'locator' for <Coroutine test_connecting_an_address_twice_says_it_exists[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_connecting_an_address_twi1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b448650>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_a_failed_statement_leaves_the_rest_of_the_transaction_usable[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_a_failed_statement_leaves_the_rest_of_the_transaction_usable[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_a_failed_statement_leaves1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b4490d0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+__ ERROR at setup of test_closing_without_commit_discards_the_write[postgres] __
+
+request = <SubRequest 'locator' for <Coroutine test_closing_without_commit_discards_the_write[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_closing_without_commit_di1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10aeef410>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_______ ERROR at setup of test_rows_read_by_name_and_position[postgres] ________
+
+request = <SubRequest 'locator' for <Coroutine test_rows_read_by_name_and_position[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_rows_read_by_name_and_pos1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10aeef2f0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_read_one_answers_synchronously_through_the_seam[postgres] _
+
+request = <SubRequest 'locator' for <Coroutine test_read_one_answers_synchronously_through_the_seam[postgres]>>
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_read_one_answers_synchron1')
+
+    @pytest.fixture(params=BACKENDS)
+    def locator(request, tmp_path) -> str:
+        """A fresh, empty database on each backend, as a storage locator."""
+>       return fresh_locator(request.param, tmp_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/storage_contract/backends.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10ae81910>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+___________ ERROR at setup of test_up_down_up_gives_the_same_schema ____________
+
+    @pytest.fixture
+    def pg():
+        migrate_dsn, app_dsn = require_pg()
+>       runner.migrate_up(migrate_dsn)
+
+tests/storage_contract/test_migrations.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10aefdd30>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+______ ERROR at setup of test_every_migration_reverses_cleanly_on_its_own ______
+
+    @pytest.fixture
+    def pg():
+        migrate_dsn, app_dsn = require_pg()
+>       runner.migrate_up(migrate_dsn)
+
+tests/storage_contract/test_migrations.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b44a7b0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+________ ERROR at setup of test_schema_version_is_the_newest_migration _________
+
+    @pytest.fixture
+    def pg():
+        migrate_dsn, app_dsn = require_pg()
+>       runner.migrate_up(migrate_dsn)
+
+tests/storage_contract/test_migrations.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b449b50>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_the_runtime_role_cannot_change_the_schema[CREATE TABLE sellbird_probe (x text)] _
+
+    @pytest.fixture
+    def pg():
+        migrate_dsn, app_dsn = require_pg()
+>       runner.migrate_up(migrate_dsn)
+
+tests/storage_contract/test_migrations.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b449df0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_the_runtime_role_cannot_change_the_schema[ALTER TABLE companies ADD COLUMN probe text] _
+
+    @pytest.fixture
+    def pg():
+        migrate_dsn, app_dsn = require_pg()
+>       runner.migrate_up(migrate_dsn)
+
+tests/storage_contract/test_migrations.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b4483b0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_the_runtime_role_cannot_change_the_schema[DROP TABLE settings] _
+
+    @pytest.fixture
+    def pg():
+        migrate_dsn, app_dsn = require_pg()
+>       runner.migrate_up(migrate_dsn)
+
+tests/storage_contract/test_migrations.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b44b2f0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_the_runtime_role_cannot_change_the_schema[TRUNCATE settings] _
+
+    @pytest.fixture
+    def pg():
+        migrate_dsn, app_dsn = require_pg()
+>       runner.migrate_up(migrate_dsn)
+
+tests/storage_contract/test_migrations.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b44be30>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_the_runtime_role_cannot_change_the_schema[CREATE FUNCTION sellbird_probe() RETURNS int LANGUAGE sql AS 'SELECT 1'] _
+
+    @pytest.fixture
+    def pg():
+        migrate_dsn, app_dsn = require_pg()
+>       runner.migrate_up(migrate_dsn)
+
+tests/storage_contract/test_migrations.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b448170>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_the_runtime_role_cannot_change_the_schema[INSERT INTO schema_version (version, name, checksum) VALUES (999, 'probe', 'x')] _
+
+    @pytest.fixture
+    def pg():
+        migrate_dsn, app_dsn = require_pg()
+>       runner.migrate_up(migrate_dsn)
+
+tests/storage_contract/test_migrations.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10ae839b0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+______ ERROR at setup of test_migrating_with_the_runtime_role_is_refused _______
+
+    @pytest.fixture
+    def pg():
+        migrate_dsn, app_dsn = require_pg()
+>       runner.migrate_up(migrate_dsn)
+
+tests/storage_contract/test_migrations.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10aeee8d0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_the_app_refuses_to_run_on_a_schema_that_is_not_its_version _
+
+    @pytest.fixture
+    def pg():
+        migrate_dsn, app_dsn = require_pg()
+>       runner.migrate_up(migrate_dsn)
+
+tests/storage_contract/test_migrations.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b47c290>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_a_migration_edited_after_it_was_applied_stops_the_run _
+
+    @pytest.fixture
+    def pg():
+        migrate_dsn, app_dsn = require_pg()
+>       runner.migrate_up(migrate_dsn)
+
+tests/storage_contract/test_migrations.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x10b2539b0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ ERROR at setup of test_move_into_an_empty_postgres_matches_the_recorded_counts_and_checksums _
+
+    @pytest.fixture
+    def empty_target() -> str:
+        """The runtime role's DSN for a newest-schema database with every table empty."""
+        migrate_dsn, app_dsn = require_pg()
+>       import psycopg  # noqa: F401  (configured for Postgres: a missing driver must fail)
+        ^^^^^^^^^^^^^^
+E       ModuleNotFoundError: No module named 'psycopg'
+
+tests/test_storage_move.py:198: ModuleNotFoundError
+_______ ERROR at setup of test_moved_rows_read_back_exactly_as_recorded ________
+
+    @pytest.fixture
+    def empty_target() -> str:
+        """The runtime role's DSN for a newest-schema database with every table empty."""
+        migrate_dsn, app_dsn = require_pg()
+>       import psycopg  # noqa: F401  (configured for Postgres: a missing driver must fail)
+        ^^^^^^^^^^^^^^
+E       ModuleNotFoundError: No module named 'psycopg'
+
+tests/test_storage_move.py:198: ModuleNotFoundError
+____ ERROR at setup of test_moved_signal_confirmation_is_what_the_app_sees _____
+
+    @pytest.fixture
+    def empty_target() -> str:
+        """The runtime role's DSN for a newest-schema database with every table empty."""
+        migrate_dsn, app_dsn = require_pg()
+>       import psycopg  # noqa: F401  (configured for Postgres: a missing driver must fail)
+        ^^^^^^^^^^^^^^
+E       ModuleNotFoundError: No module named 'psycopg'
+
+tests/test_storage_move.py:198: ModuleNotFoundError
+____ ERROR at setup of test_new_rows_after_the_move_follow_the_moved_rowids ____
+
+    @pytest.fixture
+    def empty_target() -> str:
+        """The runtime role's DSN for a newest-schema database with every table empty."""
+        migrate_dsn, app_dsn = require_pg()
+>       import psycopg  # noqa: F401  (configured for Postgres: a missing driver must fail)
+        ^^^^^^^^^^^^^^
+E       ModuleNotFoundError: No module named 'psycopg'
+
+tests/test_storage_move.py:198: ModuleNotFoundError
+_ ERROR at setup of test_move_into_a_target_with_sellbird_rows_is_refused_and_leaves_it_unchanged _
+
+    @pytest.fixture
+    def empty_target() -> str:
+        """The runtime role's DSN for a newest-schema database with every table empty."""
+        migrate_dsn, app_dsn = require_pg()
+>       import psycopg  # noqa: F401  (configured for Postgres: a missing driver must fail)
+        ^^^^^^^^^^^^^^
+E       ModuleNotFoundError: No module named 'psycopg'
+
+tests/test_storage_move.py:198: ModuleNotFoundError
+_ ERROR at setup of test_cli_move_prints_counts_and_checksums_but_never_the_connection_string _
+
+    @pytest.fixture
+    def empty_target() -> str:
+        """The runtime role's DSN for a newest-schema database with every table empty."""
+        migrate_dsn, app_dsn = require_pg()
+>       import psycopg  # noqa: F401  (configured for Postgres: a missing driver must fail)
+        ^^^^^^^^^^^^^^
+E       ModuleNotFoundError: No module named 'psycopg'
+
+tests/test_storage_move.py:198: ModuleNotFoundError
+=================================== FAILURES ===================================
+__________________________ test_query_db_on_postgres ___________________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b441010>
+
+    def test_query_db_on_postgres(monkeypatch):
+        from tests.storage_contract.backends import fresh_pg_locator
+>       locator = fresh_pg_locator()   # skips unless SELLBIRD_TEST_PG_* are set
+                  ^^^^^^^^^^^^^^^^^^
+
+tests/test_dashboard_storage_seam.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x11091bdd0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_______________ test_other_bad_tokens_are_refused[sub_uppercase] _______________
+
+gw = <starlette.testclient.TestClient object at 0x10ae52580>
+gate_key = <cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x110ee77f0>
+case = 'sub_uppercase'
+
+    @pytest.mark.parametrize("case", [
+        "wrong_issuer", "missing_exp", "missing_iat", "missing_sub", "lifetime_too_long",
+        "issued_in_future", "not_yet_valid", "aal1", "sub_not_uuid", "sub_uppercase",
+        "missing_kid", "unknown_kid", "jku_header", "x5u_header", "jwk_header",
+    ])
+    def test_other_bad_tokens_are_refused(gw, gate_key, case):
+        now = int(time.time())
+        token = {
+            "wrong_issuer": lambda: _token(gate_key, iss="https://other.example.test"),
+            "missing_exp": lambda: _token(gate_key, exp=None),
+            "missing_iat": lambda: _token(gate_key, iat=None),
+            "missing_sub": lambda: _token(gate_key, sub=None),
+            "lifetime_too_long": lambda: _token(gate_key, iat=now, exp=now + 3600),
+            "issued_in_future": lambda: _token(gate_key, iat=now + 120, exp=now + 300),
+            "not_yet_valid": lambda: _token(gate_key, nbf=now + 120),
+            "aal1": lambda: _token(gate_key, aal="aal1"),
+            "sub_not_uuid": lambda: _token(gate_key, sub="operator"),
+            "sub_uppercase": lambda: _token(gate_key, sub=ALLOWED_SUB.upper()),
+            "missing_kid": lambda: _token(gate_key, kid=None),
+            "unknown_kid": lambda: _token(gate_key, kid="no-such-key"),
+            "jku_header": lambda: _token(gate_key, headers={"jku": "https://evil.example.test/jwks"}),
+            "x5u_header": lambda: _token(gate_key, headers={"x5u": "https://evil.example.test/x5u"}),
+            "jwk_header": lambda: _token(gate_key, headers={"jwk": _jwk(gate_key)}),
+        }[case]()
+>       _assert_refused(gw.get("/api/stats", headers={"Authorization": f"Bearer {token}"}))
+
+tests/test_gateway_mode_local.py:393: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+response = <Response [200 OK]>
+
+    def _assert_refused(response):
+>       assert response.status_code == 401
+E       assert 200 == 401
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_gateway_mode_local.py:170: AssertionError
+__________________________ test_dockerfile_pins_home ___________________________
+
+    def test_dockerfile_pins_home():
+        text = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+>       assert "SELLBIRD_HOME=/app" in text
+E       assert 'SELLBIRD_HOME=/app' in '# Sellbird container image: the local Docker Compose setup and the hosted\n# (Kubernetes) deployment use the same ima...D_MODE=gateway) and the migration Job `storage migrate`.\nENTRYPOINT ["python", "-m", "sellbird"]\nCMD ["dashboard"]\n'
+
+tests/test_home.py:105: AssertionError
+____ test_concurrent_claimers_on_one_item_yield_exactly_one_claim[postgres] ____
+
+backend = 'postgres'
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_concurrent_claimers_on_on1')
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("backend", BACKENDS)
+    async def test_concurrent_claimers_on_one_item_yield_exactly_one_claim(backend, tmp_path):
+>       locator = fresh_locator(backend, tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_outbox_concurrency.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x110919df0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ test_claimers_in_separate_threads_and_event_loops_yield_one_claim[postgres] __
+
+backend = 'postgres'
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_claimers_in_separate_thre1')
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("backend", BACKENDS)
+    async def test_claimers_in_separate_threads_and_event_loops_yield_one_claim(backend, tmp_path):
+        """Like separate processes: each claimer runs its own event loop, released together."""
+>       locator = fresh_locator(backend, tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_outbox_concurrency.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x1111483b0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+____ test_sending_safety_matches_the_expectation[approval_ladder-postgres] _____
+
+backend = 'postgres'
+scenario = {'expected_items': {'approved': {'status': 'sent'}, 'waiting': {'error': '', 'status': 'pending_review'}}, 'expected_s... {'approval': 'human', 'key': 'approved', 'kind': 'sequence', 'prospect': 'ben', ...}], 'name': 'approval_ladder', ...}
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_sending_safety_matches_th1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b440670>
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("backend", BACKENDS)
+    @pytest.mark.parametrize("scenario", FIXTURE["scenarios"], ids=lambda s: s["name"])
+    async def test_sending_safety_matches_the_expectation(backend, scenario, tmp_path, monkeypatch):
+>       state = StateManager(db_path=fresh_locator(backend, tmp_path))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_send_safety_parity.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x113aa5c10>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+__ test_sending_safety_matches_the_expectation[rejected_never_sends-postgres] __
+
+backend = 'postgres'
+scenario = {'expected_items': {'rejected': {'status': 'rejected'}}, 'expected_sent': [], 'items': [{'approval': 'rejected', 'key': 'rejected', 'kind': 'sequence', 'prospect': 'cara', ...}], 'name': 'rejected_never_sends', ...}
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_sending_safety_matches_th3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x110ef6040>
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("backend", BACKENDS)
+    @pytest.mark.parametrize("scenario", FIXTURE["scenarios"], ids=lambda s: s["name"])
+    async def test_sending_safety_matches_the_expectation(backend, scenario, tmp_path, monkeypatch):
+>       state = StateManager(db_path=fresh_locator(backend, tmp_path))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_send_safety_parity.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x113ab4cb0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+______ test_sending_safety_matches_the_expectation[daily_limit-postgres] _______
+
+backend = 'postgres'
+scenario = {'expected_items': {'over_limit': {'error': '', 'status': 'approved'}}, 'expected_sent': [], 'items': [{'approval': 'human', 'key': 'over_limit', 'kind': 'sequence', 'prospect': 'dev', ...}], 'max_daily_sends': 2, ...}
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_sending_safety_matches_th5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1138c1e10>
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("backend", BACKENDS)
+    @pytest.mark.parametrize("scenario", FIXTURE["scenarios"], ids=lambda s: s["name"])
+    async def test_sending_safety_matches_the_expectation(backend, scenario, tmp_path, monkeypatch):
+>       state = StateManager(db_path=fresh_locator(backend, tmp_path))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_send_safety_parity.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x113ab4770>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+___ test_sending_safety_matches_the_expectation[under_daily_limit-postgres] ____
+
+backend = 'postgres'
+scenario = {'expected_items': {'last_slot': {'status': 'sent'}}, 'expected_sent': ['eli@epsilon.example.test'], 'items': [{'approval': 'human', 'key': 'last_slot', 'kind': 'sequence', 'prospect': 'eli', ...}], 'max_daily_sends': 2, ...}
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_sending_safety_matches_th7')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x106c62d60>
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("backend", BACKENDS)
+    @pytest.mark.parametrize("scenario", FIXTURE["scenarios"], ids=lambda s: s["name"])
+    async def test_sending_safety_matches_the_expectation(backend, scenario, tmp_path, monkeypatch):
+>       state = StateManager(db_path=fresh_locator(backend, tmp_path))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_send_safety_parity.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x113ab5a30>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+___ test_sending_safety_matches_the_expectation[suppressed_address-postgres] ___
+
+backend = 'postgres'
+scenario = {'expected_items': {'to_suppressed': {'error': 'suppressed (manual)', 'status': 'cancelled'}}, 'expected_sent': [], 'i...val': 'human', 'key': 'to_suppressed', 'kind': 'sequence', 'prospect': 'fay', ...}], 'name': 'suppressed_address', ...}
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_sending_safety_matches_th9')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x113b39400>
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("backend", BACKENDS)
+    @pytest.mark.parametrize("scenario", FIXTURE["scenarios"], ids=lambda s: s["name"])
+    async def test_sending_safety_matches_the_expectation(backend, scenario, tmp_path, monkeypatch):
+>       state = StateManager(db_path=fresh_locator(backend, tmp_path))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_send_safety_parity.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x113ab6510>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+___ test_sending_safety_matches_the_expectation[suppressed_domain-postgres] ____
+
+backend = 'postgres'
+scenario = {'expected_items': {'to_subdomain': {'error': 'suppressed (manual)', 'status': 'cancelled'}}, 'expected_sent': [], 'it...roval': 'human', 'key': 'to_subdomain', 'kind': 'sequence', 'prospect': 'gus', ...}], 'name': 'suppressed_domain', ...}
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_sending_safety_matches_th11')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x113b3a0b0>
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("backend", BACKENDS)
+    @pytest.mark.parametrize("scenario", FIXTURE["scenarios"], ids=lambda s: s["name"])
+    async def test_sending_safety_matches_the_expectation(backend, scenario, tmp_path, monkeypatch):
+>       state = StateManager(db_path=fresh_locator(backend, tmp_path))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_send_safety_parity.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x113ab7950>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_______ test_sending_safety_matches_the_expectation[opted_out-postgres] ________
+
+backend = 'postgres'
+scenario = {'expected_items': {'after_opt_out': {'error': "prospect status 'opted_out'", 'status': 'cancelled'}}, 'expected_sent'...[{'approval': 'human', 'key': 'after_opt_out', 'kind': 'sequence', 'prospect': 'hana', ...}], 'name': 'opted_out', ...}
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_sending_safety_matches_th13')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x113b3ad60>
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("backend", BACKENDS)
+    @pytest.mark.parametrize("scenario", FIXTURE["scenarios"], ids=lambda s: s["name"])
+    async def test_sending_safety_matches_the_expectation(backend, scenario, tmp_path, monkeypatch):
+>       state = StateManager(db_path=fresh_locator(backend, tmp_path))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_send_safety_parity.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x113ac4470>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+_ test_sending_safety_matches_the_expectation[quiet_hours_hold_replies-postgres] _
+
+backend = 'postgres'
+scenario = {'cold_only': True, 'expected_items': {'reply': {'error': '', 'status': 'approved'}}, 'expected_sent': [], 'items': [{'approval': 'human', 'key': 'reply', 'kind': 'reply', 'prospect': 'ivo', ...}], ...}
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_sending_safety_matches_th15')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x113b3ba80>
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("backend", BACKENDS)
+    @pytest.mark.parametrize("scenario", FIXTURE["scenarios"], ids=lambda s: s["name"])
+    async def test_sending_safety_matches_the_expectation(backend, scenario, tmp_path, monkeypatch):
+>       state = StateManager(db_path=fresh_locator(backend, tmp_path))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_send_safety_parity.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x113ad9c70>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+______ test_sending_safety_matches_the_expectation[not_yet_due-postgres] _______
+
+backend = 'postgres'
+scenario = {'expected_items': {'later': {'error': '', 'status': 'approved'}}, 'expected_sent': [], 'items': [{'approval': 'human', 'key': 'later', 'kind': 'sequence', 'prospect': 'jon', ...}], 'name': 'not_yet_due', ...}
+tmp_path = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_sending_safety_matches_th17')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x113b3b850>
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("backend", BACKENDS)
+    @pytest.mark.parametrize("scenario", FIXTURE["scenarios"], ids=lambda s: s["name"])
+    async def test_sending_safety_matches_the_expectation(backend, scenario, tmp_path, monkeypatch):
+>       state = StateManager(db_path=fresh_locator(backend, tmp_path))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_send_safety_parity.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/storage_contract/backends.py:81: in fresh_locator
+    return fresh_pg_locator()
+           ^^^^^^^^^^^^^^^^^^
+tests/storage_contract/backends.py:73: in fresh_pg_locator
+    migrate_to_latest(migrate_dsn)
+tests/storage_contract/backends.py:53: in migrate_to_latest
+    migrate.migrate_up(migrate_dsn)
+sellbird/storage_postgres/migrate.py:232: in migrate_up
+    with _Session(dsn) as conn:
+         ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sellbird.storage_postgres.migrate._Session object at 0x113ac7ef0>
+
+    def __enter__(self):
+>       import psycopg
+E       ModuleNotFoundError: No module named 'psycopg'
+
+sellbird/storage_postgres/migrate.py:189: ModuleNotFoundError
+____ test_move_refuses_a_target_that_is_not_migrated_to_the_current_version ____
+
+fixture_db = PosixPath('/private/var/folders/ln/0wnpd96j26z2qhvx9m6hwt2r0000gn/T/pytest-of-gqadonis/pytest-3/test_move_refuses_a_target_tha0/sellbird.db')
+
+    def test_move_refuses_a_target_that_is_not_migrated_to_the_current_version(fixture_db):
+        migrate_dsn, app_dsn = require_pg()
+>       import psycopg  # noqa: F401
+        ^^^^^^^^^^^^^^
+E       ModuleNotFoundError: No module named 'psycopg'
+
+tests/test_storage_move.py:290: ModuleNotFoundError
+=============================== warnings summary ===============================
+tests/test_analyst_hosted.py: 2 warnings
+tests/test_codex_e2e.py: 37 warnings
+tests/test_gmail_history.py: 2 warnings
+tests/test_gmail_inbox.py: 3 warnings
+tests/test_gmail_send_outcomes.py: 4 warnings
+  /Volumes/T7/Projects/references/sellbird/sellbird/agents/analyst.py:37: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "generated_at": datetime.utcnow().isoformat(),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_claude_cli_isolation.py:155: set SELLBIRD_CLAUDE_CLI_TESTS=1 (runs the installed Claude CLI against a localhost stand-in; no credentials or network)
+SKIPPED [1] tests/test_claude_cli_isolation.py:178: set SELLBIRD_CLAUDE_CLI_TESTS=1 (runs the installed Claude CLI against a localhost stand-in; no credentials or network)
+SKIPPED [1] tests/test_claude_cli_isolation.py:199: set SELLBIRD_CLAUDE_CLI_TESTS=1 (runs the installed Claude CLI against a localhost stand-in; no credentials or network)
+SKIPPED [1] tests/test_codex_cli_surface.py:185: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_codex_cli_surface.py:202: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_codex_cli_surface.py:213: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [4] tests/test_codex_cli_surface.py:229: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [10] tests/test_codex_cli_surface.py:340: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_codex_cli_surface.py:362: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_codex_cli_surface.py:374: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_codex_cli_surface.py:401: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_codex_cli_surface.py:431: set SELLBIRD_CODEX_CLI_TESTS=1 with the Codex CLI installed
+SKIPPED [1] tests/test_gateway_mode_e2e.py:121: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:127: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:140: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:146: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:150: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:158: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:164: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:168: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:174: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:179: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:184: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_gateway_mode_e2e.py:191: SELLBIRD_GATEWAY_URL is not set: no gateway stack to test against (run the local stand-in, then set it; see design.md of hosted-gateway-mode)
+SKIPPED [1] tests/test_login_item.py:380: real shortcut needs Windows
+SKIPPED [1] tests/test_packaging.py:121: set SELLBIRD_PACKAGE_TESTS=1 (needs setuptools); Codex runs on macOS/Linux only
+SKIPPED [1] tests/test_pidfile.py:70: real kernel32 query
+15 failed, 3889 passed, 39 skipped, 48 warnings, 51 errors in 288.16s (0:04:48)

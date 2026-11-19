@@ -1,0 +1,77 @@
+{
+  "mode": "artifact",
+  "verdict": "BLOCK",
+  "judge_model": "mimo-v2.6-pro",
+  "producer_model": "claude-opus-5-5",
+  "isolation_mode": "rest-gateway:http://localhost:4000/v1",
+  "cross_model_check": "unverified-producer-unknown",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "file": "assessment.md",
+      "claim": "The assessment asserts `.github/workflows/tests.yml` is the only workflow and is 'present in this repo', but the packet's file tree shows no `.github` entry at all and clearly does include dot-directories, so the CI-pipeline gap analysis rests on an unverifiable/contradicted premise.",
+      "evidence": "Artifact: \"the only workflow is `.github/workflows/tests.yml` (present in this repo; the review packet's file tree omitted dot-directories)\". The supplied file_tree lists `./.agent-team`, `./.codex`, `./.dockerignore`, `./.env.example`, `./.impeccable`, `./.venv`, `./AGENTS.md` etc. \u2014 dot-directories are present \u2014 yet contains no `./.github` path. The same unverified workflow is then used as the basis for the supported-environments claim \"local: macOS, Linux, Windows with SQLite (existing CI matrix)\" and for G3/G6 pipeline work.",
+      "suggested_fix": "State the CI-workflow claim as UNKNOWN/UNVERIFIED against the packet, or cite a path the packet can resolve; do not assert an 'existing CI matrix' as fact when GitHub reports 0 workflow runs ever and no workflow file is visible in the packet."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "claim": "Goal 2's required 'observation' invariants are never gap-analysed anywhere in the implementation status.",
+      "evidence": "Goal: \"preserved signal/observation and sending-safety invariants\". The implementation status enumerates \"Signal governance: DONE on SQLite, MISSING on Postgres\" and \"Outbox claim safety\" but has no entry mentioning observations (e.g. `site_facts`/signals evidence rows), so a plan derived from this assessment can silently drop half of the invariant porting work.",
+      "suggested_fix": "Add an implementation-status and risk entry for observation/evidence invariants (where they are enforced today, e.g. FK/trigger/transaction boundaries in `state.py`) and fold them into the Postgres contract-test scope."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "claim": "Goal 3 requires a 'scanned' image, but no scanning capability is assessed anywhere, while the adopted outcome claims a scanned image is produced.",
+      "evidence": "Goal 3: \"A hardened container image is built, scanned and pushed to GHCR by digest\". Implementation status covers only Dockerfile PARTIAL, \"CI image pipeline: MISSING\" and \"GitHub governance: MISSING\" \u2014 no scanner (Trivy/Grype/Dependabot/registry scanning), no scan gate, no scanner configuration is mentioned. Adopted outcome (b) nonetheless states \"a merge to main builds, scans and pushes `ghcr.io/gqadonis/sellbird@sha256:\u2026`\" with no gap identified for the scan step.",
+      "suggested_fix": "Add a gap entry for image vulnerability scanning (tool choice, fail threshold, where the scan gate runs in the workflow) so the plan must cover it."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "claim": "The proposed main ruleset gives the deploy GitHub App an `always` bypass, contradicting the goal's requirement that the pinning happens 'through a protected-main ruleset', so the stated acceptance criterion is unverifiable as protective.",
+      "evidence": "Goal 4: \"a deploy job that pins image@digest via a GitHub App bot and a protected-main ruleset\"; adopted outcome (b): \"the deploy bot pins it in the production overlay through the protected ruleset\". Operator action 8: \"Apply the main ruleset with the app's `always` bypass\". An `always` bypass actor is not constrained by the ruleset's protections, so the claim that the pinning occurs 'through the protected ruleset' cannot be verified and the protection story differs from the goal text.",
+      "suggested_fix": "State explicitly which rules the deploy app bypasses and which it is still subject to (e.g. required status checks vs required reviews), and reword the acceptance criterion to match the actual ruleset semantics."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "claim": "The AGENTS.md 'N/A' dismissal contradicts the file tree, which lists a tracked-looking `./AGENTS.md`, so any blocking rules it may carry were not reviewed.",
+      "evidence": "Artifact: \"AGENTS.md violations: N/A \u2014 AGENTS.md is gitignored and holds only the team routing block.\" file_tree contains \"./AGENTS.md\" alongside tracked files, and the constraint text only asserts it is gitignored; the packet gives no evidence of its contents, so the assessment has not actually checked it for violations.",
+      "suggested_fix": "Either quote AGENTS.md's contents as evidence for the N/A verdict or record it as UNVERIFIED rather than N/A."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "claim": "Goal 6's 'independent security review' is carried forward without any gap analysis of what it is, who performs it, or its criteria, so it cannot drive an acceptance scenario.",
+      "evidence": "Goal 6: \"with an independent security review of Postgres, auth, gateway and Kubernetes changes\". The assessment only says \"Independent security review and docs/CHANGELOG remain in-phase\" (goal-progress/decision section) and lists it under \"Required safety/security checks (non-waivable)\" as \"independent security review of storage, auth, gateway and manifests\"; no finding describes the current absence of any review process, its scope boundaries, or what evidence a review must produce.",
+      "suggested_fix": "Add an implementation-status entry (MISSING) and a risk/contract input specifying the reviewer (independent agent/role, not the implementer), the artifacts reviewed, and the required review record so VLBV can check it."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "assessment.md",
+      "claim": "The test-count figures are internally inconsistent and unexplained, weakening the coverage claim used to size the Postgres contract-test port.",
+      "evidence": "\"~2,047 tests in 118 files\" and \"~1,312 tests in 69 files construct SQLite databases\" versus the baseline run reporting \"3,700 passed, 2 failed, 27 skipped\" (3,729 collected). The artifact never explains the difference (parametrization vs test functions) or the basis of the file counts.",
+      "suggested_fix": "Reconcile the counts or label them as distinct metrics (collected items vs test functions) with the command used to derive each."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "assessment.md",
+      "claim": "The claimed container image size is an unsupported estimate presented with a number.",
+      "evidence": "\"Estimated size \u22651.5 GB (not built)\" \u2014 no build was run and no source for the estimate is cited, yet the figure reads as a measured fact in an evidence section and could anchor later sizing/performance decisions.",
+      "suggested_fix": "Drop the numeric estimate or label it explicitly as an unverified heuristic with its basis."
+    }
+  ],
+  "judge_identity": {
+    "providerConnectionId": "xiaomi-token-plan",
+    "providerId": "xiaomi",
+    "modelId": "mimo-v2.6-pro"
+  },
+  "checked_classes": [],
+  "sycophancy_screen": {
+    "reject_cap": 2,
+    "cap_overridden": false,
+    "cap_default": 2
+  }
+}

@@ -1,0 +1,41 @@
+make-env: removing any previous stand-in containers and volumes
+make-env: starting postgres, kratos and flint-gate (health-gated)
+ Network sellbird-local_default Creating 
+ Volume sellbird-local_pg-data Creating 
+ Volume sellbird-local_pg-data Creating 
+ Network sellbird-local_default Creating 
+ Volume sellbird-local_pg-data Created 
+ Volume sellbird-local_pg-data Created 
+ Network sellbird-local_default Created 
+ Network sellbird-local_default Created 
+ Container sellbird-local-postgres-1 Creating 
+ Container sellbird-local-postgres-1 Created 
+ Container sellbird-local-kratos-1 Creating 
+ Container sellbird-local-kratos-1 Created 
+ Container sellbird-local-flint-gate-1 Creating 
+ Container sellbird-local-flint-gate-1 Created 
+ Container sellbird-local-postgres-1 Starting 
+ Container sellbird-local-postgres-1 Started 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-kratos-1 Starting 
+ Container sellbird-local-kratos-1 Started 
+ Container sellbird-local-kratos-1 Waiting 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-kratos-1 Healthy 
+ Container sellbird-local-flint-gate-1 Starting 
+ Container sellbird-local-flint-gate-1 Started 
+ Container sellbird-local-flint-gate-1 Waiting 
+ Container sellbird-local-postgres-1 Waiting 
+ Container sellbird-local-kratos-1 Waiting 
+ Container sellbird-local-kratos-1 Healthy 
+ Container sellbird-local-postgres-1 Healthy 
+ Container sellbird-local-flint-gate-1 Healthy 
+make-env: creating the operator and a non-allowlisted identity in Kratos
+ Container sellbird-local-kratos-admin-client-run-2ee2e476f5a4 Creating 
+ Container sellbird-local-kratos-admin-client-run-2ee2e476f5a4 Created 
+ Container sellbird-local-kratos-admin-client-run-a76200ced8f7 Creating 
+ Container sellbird-local-kratos-admin-client-run-a76200ced8f7 Created 
+make-env: signing in both identities with password + TOTP (about a minute)
+kratos_session: aal2 init: HTTP 400 (session_already_available)

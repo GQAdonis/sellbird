@@ -28,6 +28,14 @@ def pytest_configure(config):
 
 
 @pytest.fixture(autouse=True)
+def _no_ambient_database_url(monkeypatch):
+    """A developer's exported Postgres URLs never reach bare StateManager()
+    tests. Postgres cases pass their explicit SELLBIRD_TEST_PG_* DSNs."""
+    monkeypatch.delenv("SELLBIRD_DATABASE_URL", raising=False)
+    monkeypatch.delenv("SELLBIRD_MIGRATE_DATABASE_URL", raising=False)
+
+
+@pytest.fixture(autouse=True)
 def _private_dashboard_token(tmp_path_factory):
     """Never create or read the checkout's real data/dashboard-token."""
     import sellbird.dashboard as dash

@@ -1,0 +1,120 @@
+# Ory Kratos settings for Sellbird's LOCAL stand-in (infra/local/compose.yaml).
+#
+# In a hosted deployment Kratos is shared and platform-owned; this file mirrors
+# the settings the platform contract requires (docs/platform-interface.md,
+# "Identity (Kratos)" and "Session cookie domain") so the auth path can be
+# exercised against a real Kratos before the platform exists.
+#
+# Not in this file, by design:
+#   - dsn: from the DSN environment variable (Postgres, built from the
+#     uncommitted infra/local/.env);
+#   - secrets.cookie / secrets.cipher / secrets.default: a second config file,
+#     infra/local/.env.generated/kratos-secrets.yml, written per run by
+#     scripts/local/make-env.sh and passed as another `-c`.
+#
+# Admin API (4434) is reachable only on the compose network, never published to
+# the host and never routed through flint-gate.
+#
+# Placeholders only: example.test hosts are not real.
+
+version: v1.3.1
+
+serve:
+  public:
+    # The auth host flint-gate passes Kratos self-service through on.
+    base_url: http://auth.example.test/
+    cors:
+      enabled: false
+  admin:
+    base_url: http://kratos:4434/
+
+selfservice:
+  default_browser_return_url: https://sellbird.example.test/
+  allowed_return_urls:
+    - https://sellbird.example.test/
+
+  methods:
+    password:
+      enabled: true
+      config:
+        # No calls to an external breach API from a local stand-in.
+        haveibeenpwned_enabled: false
+    totp:
+      enabled: true
+      config:
+        issuer: Sellbird local stand-in
+    lookup_secret:
+      enabled: true
+    link:
+      enabled: false
+    code:
+      enabled: false
+    profile:
+      enabled: false
+
+  flows:
+    error:
+      ui_url: https://auth.example.test/error
+    login:
+      ui_url: https://auth.example.test/login
+      lifespan: 10m
+    registration:
+      # Operator-only sign-in: nobody can create an account.
+      enabled: false
+      ui_url: https://auth.example.test/registration
+    settings:
+      ui_url: https://auth.example.test/settings
+      privileged_session_max_age: 15m
+      # Changing credentials needs the second factor once one exists.
+      required_aal: highest_available
+    recovery:
+      # An email account alone must not reset access; recovery is admin-only.
+      enabled: false
+      ui_url: https://auth.example.test/recovery
+    verification:
+      enabled: false
+      ui_url: https://auth.example.test/verification
+    logout:
+      after:
+        default_browser_return_url: https://auth.example.test/login
+
+session:
+  lifespan: 24h
+  whoami:
+    # A session without the second factor gets no identity from whoami, so
+    # flint-gate refuses it.
+    required_aal: highest_available
+  cookie:
+    domain: example.test
+    same_site: Lax
+    persistent: false
+
+cookies:
+  domain: example.test
+  same_site: Lax
+
+identity:
+  default_schema_id: sellbird
+  schemas:
+    - id: sellbird
+      url: file:///etc/config/kratos/identity.schema.json
+
+# Recovery and verification are disabled, so the courier never sends. Kratos
+# still requires a connection URI; this one points at a reserved, unresolvable
+# name.
+courier:
+  smtp:
+    connection_uri: smtp://courier.invalid:25/?disable_starttls=true
+
+hashers:
+  algorithm: bcrypt
+  bcrypt:
+    cost: 12
+
+ciphers:
+  algorithm: xchacha20-poly1305
+
+log:
+  level: info
+  format: json
+  leak_sensitive_values: false
