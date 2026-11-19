@@ -111,6 +111,11 @@ class Browser:
                     self.cookies[name] = morsel.value
 
 
+def _error_id(payload: dict) -> str:
+    err = payload.get("error") if isinstance(payload.get("error"), dict) else {}
+    return str(err.get("id") or "")
+
+
 def _kratos_error(payload: dict) -> str:
     err = payload.get("error") if isinstance(payload.get("error"), dict) else {}
     ident = err.get("id") or err.get("reason") or ""
@@ -172,10 +177,17 @@ def password_login(b: Browser, email: str, password: str) -> None:
     flow = _expect("login init", *b.request("login init", "GET",
                                             "/self-service/login/browser"))
     flow_id, csrf = _flow_id_and_csrf("login init", flow)
-    _expect("password login", *b.request(
+    status, payload = b.request(
         "password login", "POST", f"/self-service/login?flow={flow_id}",
         {"method": "password", "identifier": email, "password": password,
-         "csrf_token": csrf}))
+         "csrf_token": csrf})
+    # Once the identity has TOTP, Kratos accepts the password with an aal1
+    # session and answers 422 browser_location_change_required, pointing the
+    # browser at the second-factor step. That is success for this step.
+    second_factor_next = (status == 422 and
+                          _error_id(payload) == "browser_location_change_required")
+    if not second_factor_next:
+        _expect("password login", status, payload)
     if SESSION_COOKIE not in b.cookies:
         raise FlowError("password login: no session cookie was set")
 
