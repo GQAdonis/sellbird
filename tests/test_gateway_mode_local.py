@@ -37,7 +37,8 @@ ORIGIN = f"https://{PUBLIC_HOST}"
 ISSUER = "https://gate.example.test"
 AUDIENCE = "sellbird"
 JWKS_URL = "http://flint-gate.flint-gate.svc.cluster.local:4456/.well-known/jwks.json"
-ALLOWED_SUB = "00000000-0000-4000-8000-000000000001"
+# Has hex letters, so the upper-cased variant is a different string.
+ALLOWED_SUB = "0000000a-0000-4000-8000-00000000000b"
 OTHER_SUB = "00000000-0000-4000-8000-000000000002"
 KID = "test-key-1"
 

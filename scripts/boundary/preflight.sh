@@ -55,6 +55,13 @@ sb_preflight() {
     echo "preflight: pulling $image"
     docker pull --quiet "$image" >/dev/null
   done < <(sb_images)
+  # The suite's Postgres scenarios need the postgres extra in the venv:
+  # pip install -e '.[dev,postgres]'
+  if [[ -x "$SB_ROOT/.venv/bin/python" ]]; then
+    "$SB_ROOT/.venv/bin/python" -I -c "import psycopg" 2>/dev/null \
+      || { echo "preflight: psycopg missing from .venv; run: uv pip install -e '.[dev,postgres]' (or pip install)" >&2; return 1; }
+    echo "preflight: psycopg present in .venv"
+  fi
   echo "preflight: ok"
   echo "preflight: wrappers (source this file): sb_actionlint sb_kustomize sb_yq sb_yq_stdin sb_pg"
   echo "preflight: equivalent commands:"

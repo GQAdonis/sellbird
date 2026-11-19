@@ -380,6 +380,11 @@ class Brain:
 
                 if process.returncode != 0:
                     error = stderr.decode(errors="replace").strip()
+                    if not error:
+                        # With --output-format json the CLI reports some
+                        # failures (e.g. "Not logged in") as an is_error
+                        # result on stdout and leaves stderr empty.
+                        error = self._stdout_error(stdout)
                     logger.error(
                         f"Claude exited with code {process.returncode}: {error[:300]}"
                     )
@@ -547,6 +552,24 @@ class Brain:
         if not isinstance(payload, dict) or payload.get("type") != "result":
             return raw, None
         return str(payload.get("result") or ""), payload
+
+    @staticmethod
+    def _stdout_error(stdout: bytes | None) -> str:
+        """The error text of a failed CLI call that reported it on stdout.
+
+        Returns the ``result`` of an ``is_error`` JSON result, bounded, or ""
+        when stdout holds no such result (plain text is never echoed: it may
+        be anything the model wrote).
+        """
+        if not stdout:
+            return ""
+        try:
+            payload = json.loads(stdout.decode(errors="replace").strip())
+        except json.JSONDecodeError:
+            return ""
+        if not isinstance(payload, dict) or not payload.get("is_error"):
+            return ""
+        return str(payload.get("result") or "")[:500]
 
     async def _record_usage(
         self, payload: dict | None, agent: str, task: str, label: str

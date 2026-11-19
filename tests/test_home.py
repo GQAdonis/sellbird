@@ -102,7 +102,7 @@ def test_the_test_run_uses_the_checkout():
 
 def test_dockerfile_pins_home():
     text = (ROOT / "Dockerfile").read_text(encoding="utf-8")
-    assert "SELLBIRD_HOME=/app" in text
+    assert "SELLBIRD_HOME=/data" in text
 
 
 def test_docker_app_is_not_a_checkout_but_pinned_home_wins(tmp_path):

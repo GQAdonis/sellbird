@@ -50,7 +50,8 @@ esac
 [ -f "$ROOT/$OVERLAY/kustomization.yaml" ] || { echo "error: no kustomization.yaml in $OVERLAY" >&2; exit 2; }
 
 # shellcheck source=preflight.sh
-SB_ROOT="$ROOT" . "$ROOT/scripts/boundary/preflight.sh"
+SB_ROOT="$ROOT"  # a prefix assignment on `.` would be reverted afterwards
+. "$ROOT/scripts/boundary/preflight.sh"
 set +e  # preflight sets -e when sourced; this script counts failures instead
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/check_manifests.XXXXXX")" || exit 2
