@@ -2,8 +2,10 @@
 
 ## Status
 
-Proposed (2026-11-18). Becomes Accepted when the operator records agreement with
-the platform interface contract (`docs/platform-interface.md`, contract version 1).
+Accepted (2026-11-19). Proposed on 2026-11-18. The operator recorded agreement
+with the platform interface contract (`docs/platform-interface.md`) in the shared
+platform repository's phase: version 1, then version 2, which changes only operator
+identity provisioning.
 
 ## Context
 
