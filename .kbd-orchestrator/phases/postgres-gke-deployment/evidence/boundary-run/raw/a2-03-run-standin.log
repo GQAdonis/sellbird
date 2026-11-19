@@ -1,0 +1,184 @@
+make-env: removing any previous stand-in containers and volumes
+make-env: starting postgres, kratos and flint-gate (health-gated)
+ Image tribehealth/flint-forge-pg@sha256:a0acdaa591095c6169d22a357d3b18f230eb7985c83688ab13e6afbe1b329f05 Pulling 
+ Image ghcr.io/know-me-tools/flint-gate@sha256:e67abd80b024cd85dd1cbb2615ab940510aa3b48b48c86454b32c5a646398511 Pulling 
+ acd43e9bebc3 Already exists 0B
+ b9850989558c Already exists 0B
+ 597c6c618d36 Already exists 0B
+ 522e4466b1a3 Already exists 0B
+ 0bbd4b227721 Pulling fs layer 0B
+ 83f8c22b1c6c Pulling fs layer 0B
+ 84e8370cd2d3 Pulling fs layer 0B
+ 757cb80005ec Pulling fs layer 0B
+ 757cb80005ec Waiting 0B
+ 2c6741b0a4e3 Already exists 0B
+ 74b5992a86dd Already exists 0B
+ cda92371d550 Already exists 0B
+ 3e4a5deb12c5 Already exists 0B
+ 5936923b56b4 Already exists 0B
+ ecaa85fc0565 Already exists 0B
+ c34e9134de33 Already exists 0B
+ 98de7c870b42 Already exists 0B
+ 89864bc6fe11 Already exists 0B
+ b27435a72898 Already exists 0B
+ dde476f66c5b Pulling fs layer 0B
+ bdd78b612d35 Pulling fs layer 0B
+ caab3f5e5e44 Pulling fs layer 0B
+ 7f64eb18b49f Pulling fs layer 0B
+ 2ce32562188b Pulling fs layer 0B
+ 253ec41354e4 Pulling fs layer 0B
+ bdd78b612d35 Waiting 0B
+ a938bb7e11b2 Pulling fs layer 0B
+ caab3f5e5e44 Waiting 0B
+ 7bfa2edce67c Pulling fs layer 0B
+ 9f0debf319d4 Pulling fs layer 0B
+ 7f64eb18b49f Waiting 0B
+ 79162e078147 Pulling fs layer 0B
+ 2ce32562188b Waiting 0B
+ 253ec41354e4 Waiting 0B
+ 4f4fb700ef54 Pulling fs layer 0B
+ a938bb7e11b2 Waiting 0B
+ 7bfa2edce67c Waiting 0B
+ e144f52b95f0 Pulling fs layer 0B
+ 9f0debf319d4 Waiting 0B
+ 79162e078147 Waiting 0B
+ 4f4fb700ef54 Waiting 0B
+ e144f52b95f0 Waiting 0B
+ dde476f66c5b Waiting 0B
+ 0bbd4b227721 Downloading 93B
+ 0bbd4b227721 Download complete 0B
+ 0bbd4b227721 Extracting 93B
+ 0bbd4b227721 Extracting 93B
+ 83f8c22b1c6c Downloading 35.68kB
+ 0bbd4b227721 Pull complete 0B
+ 84e8370cd2d3 Downloading 163.8kB
+ 83f8c22b1c6c Downloading 1.835MB
+ 83f8c22b1c6c Verifying Checksum 0B
+ 83f8c22b1c6c Download complete 0B
+ 83f8c22b1c6c Extracting 65.54kB
+ 84e8370cd2d3 Downloading 1.474MB
+ 83f8c22b1c6c Extracting 393.2kB
+ 757cb80005ec Downloading 3.316kB
+ 84e8370cd2d3 Downloading 4.417MB
+ 757cb80005ec Verifying Checksum 0B
+ 757cb80005ec Download complete 0B
+ 83f8c22b1c6c Extracting 3.211MB
+ 83f8c22b1c6c Extracting 3.512MB
+ 83f8c22b1c6c Extracting 3.512MB
+ 84e8370cd2d3 Downloading 8.981MB
+ 83f8c22b1c6c Pull complete 0B
+ dde476f66c5b Downloading 33.27kB
+ 84e8370cd2d3 Downloading 10.62MB
+ dde476f66c5b Downloading 895.2kB
+ 84e8370cd2d3 Verifying Checksum 0B
+ 84e8370cd2d3 Download complete 0B
+ 84e8370cd2d3 Extracting 163.8kB
+ dde476f66c5b Downloading 2.069MB
+ bdd78b612d35 Downloading 188.9kB
+ dde476f66c5b Verifying Checksum 0B
+ dde476f66c5b Extracting 32.77kB
+ 84e8370cd2d3 Extracting 6.226MB
+ bdd78b612d35 Downloading 4.231MB
+ dde476f66c5b Extracting 393.2kB
+ 84e8370cd2d3 Extracting 14.42MB
+ 84e8370cd2d3 Extracting 15.71MB
+ 84e8370cd2d3 Pull complete 0B
+ 757cb80005ec Extracting 3.316kB
+ 757cb80005ec Extracting 3.316kB
+ 757cb80005ec Pull complete 0B
+ bdd78b612d35 Downloading 12.04MB
+ dde476f66c5b Extracting 2.163MB
+ 7f64eb18b49f Downloading 3.465kB
+ Image ghcr.io/know-me-tools/flint-gate@sha256:e67abd80b024cd85dd1cbb2615ab940510aa3b48b48c86454b32c5a646398511 Pulled 
+ 7f64eb18b49f Downloading 132.2kB
+ 7f64eb18b49f Verifying Checksum 0B
+ 7f64eb18b49f Download complete 0B
+ caab3f5e5e44 Downloading 84.47kB
+ bdd78b612d35 Download complete 0B
+ dde476f66c5b Extracting 2.673MB
+ dde476f66c5b Pull complete 0B
+ bdd78b612d35 Extracting 196.6kB
+ caab3f5e5e44 Downloading 1.491MB
+ bdd78b612d35 Extracting 5.898MB
+ caab3f5e5e44 Downloading 3.39MB
+ 2ce32562188b Downloading 16.38kB
+ 2ce32562188b Verifying Checksum 0B
+ 2ce32562188b Download complete 0B
+ bdd78b612d35 Extracting 12.39MB
+ caab3f5e5e44 Downloading 5.724MB
+ bdd78b612d35 Extracting 18.33MB
+ bdd78b612d35 Pull complete 0B
+ 253ec41354e4 Downloading 15.75kB
+ caab3f5e5e44 Verifying Checksum 0B
+ caab3f5e5e44 Download complete 0B
+ caab3f5e5e44 Extracting 98.3kB
+ a938bb7e11b2 Downloading 1.112kB
+ a938bb7e11b2 Verifying Checksum 0B
+ a938bb7e11b2 Download complete 0B
+ 253ec41354e4 Downloading 895.7kB
+ 253ec41354e4 Verifying Checksum 0B
+ 253ec41354e4 Download complete 0B
+ caab3f5e5e44 Extracting 7.373MB
+ caab3f5e5e44 Extracting 8.347MB
+ caab3f5e5e44 Extracting 8.347MB
+ caab3f5e5e44 Pull complete 0B
+ 7f64eb18b49f Extracting 32.77kB
+ 7f64eb18b49f Extracting 132.2kB
+ 7f64eb18b49f Pull complete 0B
+ 2ce32562188b Extracting 32.77kB
+ 9f0debf319d4 Downloading 2.422kB
+ 9f0debf319d4 Verifying Checksum 0B
+ 9f0debf319d4 Download complete 0B
+ 2ce32562188b Extracting 243.4kB
+ 2ce32562188b Extracting 243.4kB
+ 2ce32562188b Pull complete 0B
+ 253ec41354e4 Extracting 32.77kB
+ 7bfa2edce67c Downloading 519B
+ 7bfa2edce67c Verifying Checksum 0B
+ 7bfa2edce67c Download complete 0B
+ 253ec41354e4 Extracting 895.7kB
+ 253ec41354e4 Pull complete 0B
+ a938bb7e11b2 Extracting 1.112kB
+ a938bb7e11b2 Extracting 1.112kB
+ a938bb7e11b2 Pull complete 0B
+ 7bfa2edce67c Extracting 519B
+ 7bfa2edce67c Extracting 519B
+ 7bfa2edce67c Pull complete 0B
+ 4f4fb700ef54 Downloading 32B
+ 4f4fb700ef54 Verifying Checksum 0B
+ 4f4fb700ef54 Download complete 0B
+ 9f0debf319d4 Extracting 2.422kB
+ 9f0debf319d4 Extracting 2.422kB
+ 9f0debf319d4 Pull complete 0B
+ 79162e078147 Downloading 772B
+ 79162e078147 Download complete 0B
+ 79162e078147 Extracting 772B
+ 79162e078147 Extracting 772B
+ 79162e078147 Pull complete 0B
+ 4f4fb700ef54 Extracting 32B
+ 4f4fb700ef54 Extracting 32B
+ 4f4fb700ef54 Pull complete 0B
+ e144f52b95f0 Downloading 1.332kB
+ e144f52b95f0 Verifying Checksum 0B
+ e144f52b95f0 Download complete 0B
+ e144f52b95f0 Extracting 1.332kB
+ e144f52b95f0 Extracting 1.332kB
+ e144f52b95f0 Pull complete 0B
+ Image tribehealth/flint-forge-pg@sha256:a0acdaa591095c6169d22a357d3b18f230eb7985c83688ab13e6afbe1b329f05 Pulled 
+ Network sellbird-local_default Creating 
+ Volume sellbird-local_pg-data Creating 
+ Volume sellbird-local_pg-data Creating 
+ Network sellbird-local_default Creating 
+ Volume sellbird-local_pg-data Created 
+ Volume sellbird-local_pg-data Created 
+ Network sellbird-local_default Created 
+ Network sellbird-local_default Created 
+ Container sellbird-local-postgres-1 Creating 
+ Container sellbird-local-postgres-1 Created 
+ Container sellbird-local-kratos-1 Creating 
+ Container sellbird-local-kratos-1 Created 
+ Container sellbird-local-flint-gate-1 Creating 
+ Container sellbird-local-flint-gate-1 Created 
+ Container sellbird-local-postgres-1 Starting 
+Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint sellbird-local-postgres-1 (e8faed848d41b4bcfa8c582ca76f0e5a401510fe797bde7c5a8b24b1e348f183): Bind for 0.0.0.0:55432 failed: port is already allocated
+exit: 1

@@ -1,0 +1,20 @@
+{
+  "attempt": 9,
+  "boundary": "B5",
+  "repair": 6,
+  "authorizedAt": "2026-11-19T18:25:22.898Z",
+  "contract": "7d8112c02343cc0118a315dea16d8f75d3ad05eea1a31bf8c220b4e320cfff53",
+  "reason": "repair 6 under signed amendment 7: fixes for three confirmed independent-review findings (7c0a084). Product code changed, so the image is rebuilt. Rerun only the affected scenarios: build, run-standin (prerequisites), scn-suite (SCN-BASE/STORE/SEND/MOVE/LOG plus the new test_pg_failures cases), scn-auth-e2e (dashboard.py runs in the stand-in), and negative controls for SCN-STORE-001..003, SCN-SEND-001/002, SCN-LOG-001, SCN-AUTH-001/002. The images.yml change runs only in GitHub Actions and has no local scenario: NOT_EXERCISED here.",
+  "environment": "modern-python plugin shim removed from PATH as the owner directed; aso-prior-auth-demo db/kratos/flint-gate stopped for the ports, restarted after",
+  "frozenAt": "2026-11-19T18:28:22.999299+00:00",
+  "commit": "7c0a084b8bba80132be41f04825dfc7b3804fe4d",
+  "tree": "aa8362e109f0c745775c8249b5d05ca0e1f3d07e",
+  "trackedChanges": "",
+  "files": {
+    "sellbird/storage_postgres/__init__.py": "96010e2bea379d7f2e1c44d2102ee569b7d8fad567805d044ee139b80e311aa4",
+    "sellbird/storage_postgres/errors.py": "cb5671d9205ea68ccf91f521571ac3e9037facbb68cd966898bf3eecbd1af18a",
+    "sellbird/dashboard.py": "5c1d0c4c97ee52096db308c4fe305300e45746019f2534754e2f3e487bd7a16e",
+    ".github/workflows/images.yml": "57300aecf67e460f4c43f98743fcb1e9027c265dc32aeb71444f0682cc48e202",
+    "tests/storage_contract/test_pg_failures.py": "869b97a86f6e01c5742fdff58e0b2fe1f4f59494d397f3fd6f703ed585829374"
+  }
+}

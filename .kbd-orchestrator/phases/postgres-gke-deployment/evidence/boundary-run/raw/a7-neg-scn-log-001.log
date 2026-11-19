@@ -1,0 +1,1 @@
+NEGATIVE-CONTROL SCN-LOG-001 PASS: check_container.sh fails on the log search (token or unlock link in local-mode logs)

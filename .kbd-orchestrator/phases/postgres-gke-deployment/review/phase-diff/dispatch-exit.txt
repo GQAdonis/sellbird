@@ -1,0 +1,4 @@
+platform exit 0
+local-scripts exit 0
+auth-gateway exit 0
+storage exit 0

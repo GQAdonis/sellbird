@@ -1,0 +1,1 @@
+NEGATIVE-CONTROL SCN-CONTRACT-001 PASS: check_platform_contract.sh exits 1 and names the missing section 'Issuer and JWKS'

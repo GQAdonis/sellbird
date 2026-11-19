@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "kind": "kbd.derived-method-context",
+  "generatedAt": "2026-11-19T19:02:53.986Z",
+  "authority": "derived-read-only-index; canonical signed decisions, phase binding, contract and governing host policy remain authority",
+  "projectId": "09d97122-c2c7-452a-a0a1-48a80e6cfef5",
+  "runId": "postgres-gke-deployment-20261118T052720Z",
+  "phaseId": "postgres-gke-deployment",
+  "sourceRevision": 273,
+  "phaseDirectory": ".kbd-orchestrator/phases/postgres-gke-deployment",
+  "contract": {
+    "path": ".kbd-orchestrator/phases/postgres-gke-deployment/adopted-contract.json",
+    "observation": "observed",
+    "sha256": "f2b3810785702ef36109e463161e21919ba8778c1ebe6c1f48899da0226fee57",
+    "contractDigest": "7d8112c02343cc0118a315dea16d8f75d3ad05eea1a31bf8c220b4e320cfff53",
+    "binding": {
+      "contractPath": ".kbd-orchestrator/phases/postgres-gke-deployment/adopted-contract.json",
+      "contractDigest": "7d8112c02343cc0118a315dea16d8f75d3ad05eea1a31bf8c220b4e320cfff53",
+      "scenarioDigests": {
+        "SCN-AUTH-001": "144d7cdcabe2a1dd7616475727ab8c9e2e8d085c97d409e1e9466dadd2a85ad4",
+        "SCN-AUTH-002": "b48abe3619b86706029526b6ddc70c3aff8934e94faa434d289106eca6bf30ce",
+        "SCN-BASE-001": "1713e3cddc2cd6132fe7ade2989038278bcbf3b86ef802de71671bdec9fe47c4",
+        "SCN-BRAIN-001": "5b64a84dbe40e057460d792dbf952719be1ebc01e76280a9079b262ee4abc1d8",
+        "SCN-CONTRACT-001": "4edefbdbf492070eed3705ec0881b574f3cf8ca1b654af72f4c0a68d9d071b02",
+        "SCN-LOG-001": "9c9eb0c283acc2ec9e9c75b2b9e3f957a100755ce5be9347e089c915aeca28a0",
+        "SCN-MOVE-001": "baf7127aed9273408c5810aea2f6633415f4c3fd65f4bec3413f9c7d8878ce3b",
+        "SCN-SEND-001": "cb49ad98b7801bfea3a0778cdd73c64efd34498d54d6c5bdaf5db8ba31bf8112",
+        "SCN-SEND-002": "89190ac99857fa14081993529a503a9a66309cf585af3a87acc4e962c8686e11",
+        "SCN-SHIP-001": "dd9477d29e50d5402638ed9d5d0b2a88df0a895eefb7e216aa9189a2da4433de",
+        "SCN-STORE-001": "71b71167013710f4f49dfad53be3f268fbcc89baf7399d78385eb594eee65bd0",
+        "SCN-STORE-002": "64dafea6f30f946269d2a6fb635f07a0fd76b87756a2fe6e0fb6d606f5d99233",
+        "SCN-STORE-003": "6aaa9855027589548e4687f958a4949b44a8ecb93c8312ff5597ae3395d605a8"
+      },
+      "planRevision": 1,
+      "adoptionDecisionId": "contract-adoption-postgres-gke-deployment-7d8112c0",
+      "bindingRevision": 8,
+      "authority": {
+        "manifestRaw": "{\"action\":\"amend-contract\",\"approver\":\"travis@tribehealthsolutions.com\",\"contractPath\":\".kbd-orchestrator/phases/postgres-gke-deployment/adopted-contract.json\",\"kind\":\"kbd.scope-authority\",\"namespace\":\"prometheus-kbd-scope-amendment\",\"newContractDigest\":\"7d8112c02343cc0118a315dea16d8f75d3ad05eea1a31bf8c220b4e320cfff53\",\"nonce\":\"aff613bc20d1bdaaecd2e07273ac0cfb\",\"phaseId\":\"postgres-gke-deployment\",\"previousContractDigest\":\"7f35692c36e20aaee939c5a64126014532abac4f5eb7fa58da181a780c1e7419\",\"projectId\":\"09d97122-c2c7-452a-a0a1-48a80e6cfef5\",\"reason\":\"Raise budgets.repairAttempts 5 -> 6 for one B5 repair of three findings the independent phase-diff review confirmed (review verdict BLOCK; its four CRITICALs did not survive verification): (1) images.yml Trivy planted-secret control matches paths only with a leading slash; (2) storage_postgres/errors.py fallback echoes the database message, which can carry data values; (3) PostgresBackend.exists reports an unreachable or refused database as absent. Reruns only the affected scenarios and negative controls.\",\"runId\":\"postgres-gke-deployment-20261118T052720Z\",\"scenarioChanges\":{\"added\":[],\"modified\":[],\"removed\":[]},\"schemaVersion\":\"1\",\"timestamp\":\"2026-11-19T18:24:15Z\"}",
+        "manifestSha256": "bbc26fa9e9f39461d24ab0f7d572afe24cf843028ee491669ed1613f060e4d4d",
+        "signature": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgsgqOvzJMpDfEY0CKRyfxixLl97\nUxT+bg/r6Jl4BBHFcAAAAecHJvbWV0aGV1cy1rYmQtc2NvcGUtYW1lbmRtZW50AAAAAAAA\nAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQFPXUHjVPw5vCVBlQlwwK7Xm0dja0Z\nDLkc8UbR4zamkaqFyCRzseLbjrZOa8XD27rlZ+haYJYbL4oZBfuUTeqwM=\n-----END SSH SIGNATURE-----\n",
+        "approver": "travis@tribehealthsolutions.com",
+        "namespace": "prometheus-kbd-scope-amendment",
+        "allowedSignersSha256": "4c32adefb70e281e6c78f3ecb562088ef82209c54a9a01b1ed630ba3ed78a573"
+      }
+    },
+    "identity": {
+      "projectId": "09d97122-c2c7-452a-a0a1-48a80e6cfef5",
+      "runId": "postgres-gke-deployment-20261118T052720Z",
+      "phaseId": "postgres-gke-deployment",
+      "planRevision": 1,
+      "contractDigest": "7d8112c02343cc0118a315dea16d8f75d3ad05eea1a31bf8c220b4e320cfff53"
+    }
+  },
+  "selectedMethod": "VLBV",
+  "methodSource": "project-pin",
+  "deviation": null,
+  "methodDecision": null,
+  "retiredMethods": [],
+  "references": [],
+  "includedValue": [
+    "Postgres 18 storage backend beside SQLite",
+    "Exactly-once outbox and sending safety on Postgres",
+    "Reversible migrations and least-privilege roles",
+    "SQLite to Postgres move tool",
+    "Hosted gateway mode with gate JWT verification",
+    "Local token mode unchanged",
+    "Cluster-ready container image",
+    "Image build, scan and publish by digest",
+    "Guarded digest pin and hardened manifests",
+    "Platform interface contract",
+    "Baseline test command runnable and green"
+  ],
+  "exclusions": [
+    "deploying the shared platform services (separate phase in a new repository)",
+    "live Argo CD sync and live public sign-in (carried CG-1, CG-2)",
+    "automated backups (wal-g/GCS)",
+    "high availability and autoscaling",
+    "Codex in the cluster",
+    "moving the operator's real local data",
+    "flint-gate repository changes",
+    "Hydra for Sellbird",
+    "multi-user Sellbird and row-level security"
+  ],
+  "stage": "execute",
+  "stageAuthority": {
+    "operations": [
+      "author agreed production without generated-code verification"
+    ],
+    "implementationComplete": true,
+    "verificationAuthority": "separately authorized whole-value-phase boundary required; this index grants none",
+    "executableTestAuthoring": "governed by host policy; where that policy is production-first, defer until the complete agreed production work"
+  },
+  "governingInstructions": [
+    {
+      "path": "AGENTS.md",
+      "observation": "observed",
+      "sha256": "426cc1ffff0b89cd7048b89afe30abeff4c01f0a0e1e3cb3ba941ff4b4f41a69"
+    },
+    {
+      "path": "CLAUDE.md",
+      "observation": "observed",
+      "sha256": "5a2ddb1b2df50eb9189d145c8c9a25986f487b6c9fbc737d7d8ce7abab499c34"
+    },
+    {
+      "path": ".kbd-orchestrator/constraints.md",
+      "observation": "observed",
+      "sha256": "904cb600a099162ae6b98d29246ac80eb4d4401162f542ce0b8bc8d3cc6c7b9c"
+    }
+  ],
+  "effectiveRules": {
+    "harness": null,
+    "profile": "not-found",
+    "files": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".kbd-orchestrator/constraints.md"
+    ],
+    "shadowing": null
+  },
+  "policyConflicts": [],
+  "candidateAndEvidence": {
+    "freshness": "Per-scenario invalidation keys (source globs, fixture digests, image digest, contract digest); a change invalidates only the scenarios whose keys it touches; prior evidence and history are preserved; no blanket re-review.",
+    "paths": [
+      "evidence/boundary-run/boundary-results.json",
+      "evidence/boundary-run/README.md"
+    ]
+  },
+  "budgets": {
+    "adopted": {
+      "timeMinutes": 1440,
+      "toolCalls": 3000,
+      "repairAttempts": 6,
+      "noProgressLimit": 3,
+      "tokenBudget": "UNKNOWN",
+      "tokenFallback": "tool-call ceiling",
+      "exhaustion": "checkpoint and BLOCKED; never a silent PASS; documentation and state may be saved without running product tests"
+    },
+    "consumption": {
+      "noProgress": 0,
+      "repairAttempts": 6,
+      "timeMinutes": 105,
+      "toolCalls": 240
+    }
+  },
+  "unresolved": {
+    "boundaryObligations": {},
+    "blockers": [],
+    "instruction": "Unknown side effects require reconciliation before retry, not a fresh attempt assumption."
+  },
+  "preserve": [
+    "latest non-superseded method decision and retiredMethods; old commands/memory are context only",
+    "original contract snapshots, evidence and source/build/configuration/fixture/assertion identity",
+    "all budget consumption/high-water marks, including UNKNOWN prior usage; never reset on recovery",
+    "unresolved effects and cleanup/receipt obligations; reconcile uncertain effects before retry"
+  ],
+  "hostCapabilities": {
+    "platform": "darwin",
+    "nodeVersion": "v26.5.0",
+    "observedInterfaces": [
+      "canonical status",
+      "typed phase disposition",
+      "project-owned file identity"
+    ],
+    "executionInterception": "not provided by this helper",
+    "commandInventoryIsPermission": false
+  },
+  "control": {
+    "mode": "instruction-only",
+    "observed": [
+      "canonical references and file identities"
+    ],
+    "enforced": [
+      "only named existing signed runtime mutations; no generic shell/tool interception claimed"
+    ],
+    "unsupported": [
+      "universal model obedience or arbitrary tool interception"
+    ]
+  },
+  "status": "RESOLVED_REFERENCES",
+  "blockers": []
+}

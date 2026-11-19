@@ -1,0 +1,6 @@
+
+tests/storage_contract/test_pg_failures.py:49: Failed
+=========================== short test summary info ============================
+FAILED tests/storage_contract/test_pg_failures.py::test_an_unexpected_postgres_error_never_echoes_the_value
+FAILED tests/storage_contract/test_pg_failures.py::test_exists_raises_when_the_server_cannot_be_reached
+2 failed, 1 passed in 1.18s

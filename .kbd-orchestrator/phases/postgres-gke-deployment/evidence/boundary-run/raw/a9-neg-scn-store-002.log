@@ -1,0 +1,2 @@
+NEGATIVE-CONTROL SCN-STORE-002 PASS: unknown signal code refused with 'unknown signal_code' and no row, on sqlite and postgres
+SCN-STORE-002 exit 0

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "5",
+  "generatedBy": "kbd-runtime",
+  "projectionContractVersion": 2,
+  "sourceRevision": 273,
+  "derivedRevision": 273,
+  "frontier": {
+    "6a8a0899-8ef7-41ad-b20f-dc28120196cf": 273
+  },
+  "conflictCount": 0,
+  "projectId": "09d97122-c2c7-452a-a0a1-48a80e6cfef5",
+  "runId": "postgres-gke-deployment-20261118T052720Z",
+  "path": [
+    "postgres-gke-deployment"
+  ],
+  "phaseIds": [
+    "postgres-gke-deployment"
+  ],
+  "activePhaseId": "postgres-gke-deployment",
+  "activePhase": "postgres-gke-deployment",
+  "phase": "postgres-gke-deployment",
+  "parentPhase": null,
+  "childPointer": null,
+  "change": null,
+  "currentTask": null,
+  "status": "ready",
+  "lifecycle": "ready",
+  "stageId": "execute",
+  "stageStatus": "COMPLETE",
+  "completionMetric": "implementation",
+  "implementationCompleted": 10,
+  "implementationTotal": 10,
+  "planRevision": 1,
+  "revision": 273,
+  "exactNextCommand": "/kbd-assess postgres-gke-deployment",
+  "nextChange": null,
+  "nextTask": null,
+  "updatedAt": "2026-11-19T18:59:27.344083Z"
+}

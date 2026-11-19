@@ -1,0 +1,393 @@
+{
+  "phase": "postgres-gke-deployment",
+  "changes": [
+    {
+      "id": "baseline-test-green",
+      "title": "Make the configured test command runnable and the baseline suite green",
+      "role": "qa-engineer",
+      "goal": "Constraint tests-pass (blocking) and SCN-BASE-001",
+      "scope": "tests | tooling",
+      "depends": [],
+      "complexity": "S",
+      "score": "Low",
+      "value": "HIGH",
+      "details": "Install the dev extras into .venv with `uv sync --extra dev` (pre-approved; may create or update uv.lock) so `.venv/bin/python -m pytest -q` runs, and make the two baseline failures deterministic without weakening them: tests/test_compliance_footer.py::test_a_long_french_reply_is_quick (asserts a long French reply is classified in under 2 s, line 873) and tests/test_people_finder.py::test_nested_testimonials_are_bounded (asserts 2,000-level nested testimonial HTML is scanned in under 1.0 s, line 413). Both guard against super-linear (pathological) processing; the replacement must still fail on a quadratic implementation, e.g. by comparing time at n and 2n or bounding work rather than wall-clock on a slow volume. Their pre-change digests and the 3,729 baseline test IDs are recorded as fixtures so the boundary can prove no test was deleted and these two kept their intent.",
+      "tasks": [
+        {
+          "id": "1.1",
+          "title": "Make the project test command runnable in .venv via uv-managed dev extras",
+          "req": "low reasoning; tooling; small context"
+        },
+        {
+          "id": "1.2",
+          "title": "Make test_a_long_french_reply_is_quick and test_nested_testimonials_are_bounded deterministic while still failing on super-linear processing",
+          "req": "medium reasoning; read two tests and the code under test; preserve assertion intent"
+        },
+        {
+          "id": "1.3",
+          "title": "Record the baseline decision for uv.lock and the test command in project.json notes and the change design",
+          "req": "low reasoning; documentation"
+        },
+        {
+          "title": "Write scripts/boundary/preflight.sh that runs pinned, containerized actionlint, kustomize, yq and the Postgres 18 client so the boundary needs no host installs",
+          "req": "low reasoning; shell; image references pinned by digest",
+          "id": "1.4"
+        }
+      ]
+    },
+    {
+      "id": "platform-interface-contract",
+      "title": "Agree the interface between Sellbird and the shared platform (G7)",
+      "role": "architect",
+      "goal": "G7",
+      "scope": "docs | spec",
+      "depends": [],
+      "complexity": "M",
+      "score": "Medium",
+      "value": "HIGH",
+      "details": "Write docs/platform-interface.md and an OpenSpec capability spec defining what Sellbird needs from the shared platform: how the sellbird database and its least-privilege roles are provisioned on the shared flint-forge PG18, the flint-gate issuer, JWKS URL and minted-claims shape (aud=sellbird, sub=Kratos identity id), the hostname listener and certificate ownership on the shared Gateway, namespaces and secret names, and Kratos operator-identity provisioning. Mark it as the counterpart the new platform repository must satisfy; agreement is recorded by the operator. It also fixes the AI brain credential contract: the operator creates Secret `sellbird-claude` with key `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`, decision D4), consumed only as an environment variable, never written to disk or logged. Per operator decision (2026-11-18), Sellbird's production overlay, real hostname and digest pins live in the platform repository (which can be private), not in this public fork; the contract defines the overlay path there, the pin format the deploy bot writes, the Argo CD AppProject/Application ownership, and the repository variable naming the platform repo.",
+      "tasks": [
+        {
+          "id": "2.1",
+          "title": "Draft docs/platform-interface.md covering database, identity, gateway, hostname, namespaces and secrets",
+          "req": "high reasoning; cross-repo design; reads flint-gate/flint-forge references"
+        },
+        {
+          "id": "2.2",
+          "title": "Write the platform-interface capability spec with requirements and scenarios",
+          "req": "medium reasoning; spec authoring"
+        },
+        {
+          "id": "2.3",
+          "title": "Record ADR 0001: shared platform services and Sellbird's single-tenant database",
+          "req": "medium reasoning; ADR authoring"
+        },
+        {
+          "id": "2.4",
+          "title": "Write scripts/boundary/check_platform_contract.sh validating the contract document's required sections and schema",
+          "req": "low reasoning; shell; asserts every required section, secret name, claim and hostname is present and well-formed"
+        }
+      ]
+    },
+    {
+      "id": "postgres-storage-backend",
+      "title": "Add a Postgres 18 storage backend beside SQLite with reversible migrations",
+      "role": "database-engineer",
+      "goal": "G2",
+      "scope": "db | storage | tests",
+      "depends": [
+        "platform-interface-contract"
+      ],
+      "complexity": "L",
+      "score": "High",
+      "value": "HIGH",
+      "details": "Register a psycopg 3 async backend behind sellbird/storage.py with a small dialect layer (placeholders, INSERT OR IGNORE/REPLACE, datetime/julianday, json_extract), versioned up/down migrations under migrations/postgres with a schema_version table, a foreign key from observations.signal_code to signal_codes, an outbox claim that is exactly-once under concurrent writers (UPDATE ... WHERE status RETURNING / SKIP LOCKED), a backend-neutral IntegrityError, and the dashboard's raw sqlite3 read and inline DDL routed through the seam. The app role has no DDL rights at runtime. SQLite behaviour is unchanged. Contract tests run against both backends, Postgres via a real flint-forge PG18 container.",
+      "tasks": [
+        {
+          "id": "3.1",
+          "title": "Define the backend-neutral connection and error contract in sellbird/storage.py",
+          "req": "high reasoning; API design; preserves aiosqlite path"
+        },
+        {
+          "id": "3.2",
+          "title": "Implement the psycopg 3 async Postgres backend and dialect layer",
+          "req": "high reasoning; large context (state.py ~2800 lines); SQL translation"
+        },
+        {
+          "id": "3.3",
+          "title": "Author versioned up/down Postgres migrations, schema_version table and least-privilege roles",
+          "req": "high reasoning; SQL DDL; security"
+        },
+        {
+          "id": "3.4",
+          "title": "Port signal-code governance and the outbox claim to concurrency-safe Postgres forms",
+          "req": "high reasoning; concurrency; sending safety"
+        },
+        {
+          "id": "3.5",
+          "title": "Route dashboard.py's raw sqlite3 read and inline feedback DDL through the storage seam",
+          "req": "medium reasoning; small scope"
+        },
+        {
+          "id": "3.6",
+          "title": "Run the storage contract tests against SQLite and a Postgres 18 container, including migration up/down/up and app-role DDL refusal",
+          "req": "medium reasoning; test harness; Docker"
+        },
+        {
+          "title": "Add `sellbird storage migrate` using a migration-role DSN, separate from the app-role DSN used at runtime",
+          "req": "medium reasoning; CLI; privilege separation",
+          "id": "3.7"
+        },
+        {
+          "title": "Author hand-written expected-result fixtures for cohorts and sending safety (quiet hours, daily limit, opt-out/suppression, approval ladder) independent of either backend",
+          "req": "medium reasoning; fixtures with fictional example.test data",
+          "id": "3.8"
+        },
+        {
+          "id": "3.9",
+          "title": "Route the dashboard's remaining database access (query_db, _state, inbox_routes) through the storage seam so a hosted dashboard uses Postgres, and keep tests isolated from SELLBIRD_DATABASE_URL",
+          "req": "medium reasoning; dashboard.py and inbox_routes.py; added during execute (gap found by database-engineer)",
+          "role": "backend-engineer"
+        }
+      ]
+    },
+    {
+      "id": "hosted-gateway-mode",
+      "title": "Hosted gateway mode: trust a flint-gate JWT, keep local token mode unchanged",
+      "role": "identity-engineer",
+      "goal": "G5 (restated)",
+      "scope": "api | auth | cli",
+      "depends": [
+        "platform-interface-contract"
+      ],
+      "complexity": "L",
+      "score": "High",
+      "value": "HIGH",
+      "details": "Add a config-selected gateway mode (never chosen by request headers) that allows a non-loopback bind, accepts the configured public Host and https Origin, verifies the gate-minted JWT against a pinned JWKS (iss, aud, kid, alg, exp) and an allowlisted Kratos sub, maps it to principal user, ignores cookies and unverified x-flint-*/forwarded headers, disables the agent token, and never prints the dashboard token. Local token mode stays the default and still refuses non-loopback binds.",
+      "tasks": [
+        {
+          "id": "4.1",
+          "title": "Add gateway-mode configuration and the guarded non-loopback bind in dashboard startup",
+          "req": "medium reasoning; config and CLI"
+        },
+        {
+          "id": "4.2",
+          "title": "Implement JWT verification against a pinned JWKS with iss/aud/kid/alg/exp and sub allowlist",
+          "req": "high reasoning; security-critical crypto use"
+        },
+        {
+          "id": "4.3",
+          "title": "Apply gateway-mode request rules: Host/Origin, cookie and header distrust, agent token off",
+          "req": "high reasoning; trust boundaries"
+        },
+        {
+          "id": "4.4",
+          "title": "Suppress token output in containers and keep local token mode byte-for-byte unchanged",
+          "req": "medium reasoning; regression safety"
+        },
+        {
+          "id": "4.5",
+          "title": "Write gateway-mode and local-mode auth tests asserting the resolved principal, forged-header, wrong-aud, expired and non-loopback negatives",
+          "req": "medium reasoning; security tests"
+        }
+      ]
+    },
+    {
+      "id": "sqlite-to-postgres-move-tool",
+      "title": "A tested tool that moves a sellbird.db into the Postgres backend",
+      "role": "database-engineer",
+      "goal": "G2",
+      "scope": "cli | db",
+      "depends": [
+        "postgres-storage-backend"
+      ],
+      "complexity": "M",
+      "score": "Medium",
+      "value": "MEDIUM",
+      "details": "Add `sellbird storage move --from <sqlite> --to <postgres-dsn>` that copies every table in dependency order inside one transaction, preserves ids, timestamps, JSON and signal confirmation state, refuses a non-empty target, and reports per-table row counts. Exercised only with fixture databases; moving the operator's real data is excluded.",
+      "tasks": [
+        {
+          "id": "5.1",
+          "title": "Implement the move command with dependency-ordered transactional copy and non-empty-target refusal",
+          "req": "medium reasoning; data integrity"
+        },
+        {
+          "id": "5.2",
+          "title": "Build a fictional fixture sellbird.db and tests comparing row counts and invariants after the move",
+          "req": "medium reasoning; fixtures use example.com data only"
+        }
+      ]
+    },
+    {
+      "id": "cluster-ready-container-image",
+      "title": "Make the Sellbird image reproducible and runnable in Kubernetes",
+      "role": "platform-engineer",
+      "goal": "G3",
+      "scope": "container",
+      "depends": [
+        "postgres-storage-backend",
+        "hosted-gateway-mode"
+      ],
+      "complexity": "M",
+      "score": "Medium",
+      "value": "MEDIUM",
+      "details": "Pin the Claude CLI to an exact version with checksum verification instead of an unpinned install script, move writable state to a /data volume so the root filesystem can be read-only, run gateway mode by configuration with a health endpoint reachable from the Service, keep the non-root user, include the Postgres client dependencies, and never log the token. The brain reads CLAUDE_CODE_OAUTH_TOKEN from the environment only (Secret `sellbird-claude`), with no credential written under /data or /home.",
+      "tasks": [
+        {
+          "id": "6.1",
+          "title": "Pin and verify the Claude CLI install and remove the unpinned installer",
+          "req": "medium reasoning; supply chain"
+        },
+        {
+          "id": "6.2",
+          "title": "Move writable paths to /data, support read-only root and gateway-mode health checks",
+          "req": "medium reasoning; container runtime"
+        },
+        {
+          "id": "6.3",
+          "title": "Add Postgres driver dependencies and image metadata labels",
+          "req": "low reasoning; packaging"
+        },
+        {
+          "id": "6.4",
+          "title": "Write scripts/boundary/check_container.sh asserting non-root, read-only root, no token or credential in logs or filesystem",
+          "req": "low reasoning; shell; docker inspect/run assertions"
+        }
+      ]
+    },
+    {
+      "id": "sellbird-gateway-route-config",
+      "title": "Sellbird's flint-gate route, claims and local Kratos/flint-gate stand-in",
+      "role": "gateway-engineer",
+      "goal": "G5 (restated)",
+      "scope": "infra | auth",
+      "depends": [
+        "platform-interface-contract",
+        "hosted-gateway-mode",
+        "cluster-ready-container-image"
+      ],
+      "complexity": "M",
+      "score": "Medium",
+      "value": "HIGH",
+      "details": "Write infra/flint-gate/sellbird-routes.yaml: kratos_session auth, a claims_enhancement hook minting an RS256 JWT with aud=sellbird and TTL of 300 s or less, passthrough for Kratos self-service routes, and no admin-port exposure. Add a local stand-in (compose file under infra/local/) running the flint-forge PG18 image, Kratos with registration disabled and a minimal email+password+TOTP schema, flint-gate with the route, and Sellbird in gateway mode, so the auth path is verified against real services before the platform exists. The compose file builds Sellbird from the Dockerfile owned by change 6 (cluster-ready-container-image), pins the flint-forge and flint-gate images by digest, and gates startup on health checks. A one-shot migrate service runs `sellbird storage migrate` with the migration-role DSN before Sellbird starts with the app-role DSN. Local credentials come from an uncommitted .env generated by a script, never from tracked files.",
+      "tasks": [
+        {
+          "id": "7.1",
+          "title": "Author Sellbird's flint-gate route and claims configuration",
+          "req": "medium reasoning; flint-gate config schema"
+        },
+        {
+          "id": "7.2",
+          "title": "Author the local Kratos identity schema and settings with registration disabled and aal2",
+          "req": "medium reasoning; Kratos config"
+        },
+        {
+          "id": "7.3",
+          "title": "Author infra/local compose stand-in wiring PG18, Kratos, flint-gate and Sellbird gateway mode",
+          "req": "medium reasoning; Docker compose; multi-service"
+        }
+      ]
+    },
+    {
+      "id": "image-build-scan-publish",
+      "title": "Build, scan and publish the image to GHCR by digest on merge to main",
+      "role": "platform-engineer",
+      "goal": "G3",
+      "scope": "ci",
+      "depends": [
+        "baseline-test-green",
+        "cluster-ready-container-image"
+      ],
+      "complexity": "M",
+      "score": "Medium",
+      "value": "HIGH",
+      "details": "Add .github/workflows/images.yml mirroring know-meet: build with buildx, a non-root check, a vulnerability scan with a fail threshold on CRITICAL, an artifact secret scan with a planted-secret negative control that must fail, refuse to push if the SHA tag already exists, push ghcr.io/gqadonis/sellbird:<sha>, and expose the digest as a job output. paths-ignore the overlay so the bot's pin commit does not rebuild.",
+      "tasks": [
+        {
+          "id": "8.1",
+          "title": "Author images.yml build, non-root check and push-by-SHA with digest outputs",
+          "req": "medium reasoning; GitHub Actions"
+        },
+        {
+          "id": "8.2",
+          "title": "Add vulnerability scan and secret scan with a negative control",
+          "req": "medium reasoning; security tooling"
+        },
+        {
+          "title": "Add a Postgres 18 service-container job to tests.yml for the storage contract tests and name the required checks",
+          "req": "medium reasoning; GitHub Actions service containers; Linux only (Windows/macOS keep the SQLite matrix)",
+          "role": "qa-engineer",
+          "id": "8.3"
+        }
+      ]
+    },
+    {
+      "id": "gitops-deploy-sellbird",
+      "title": "Sellbird's generic manifests, migration job and the digest-pinning deploy bot targeting the platform repo",
+      "role": "platform-engineer",
+      "goal": "G4 and G6 (restated)",
+      "scope": "infra | ci",
+      "depends": [
+        "platform-interface-contract",
+        "sellbird-gateway-route-config",
+        "image-build-scan-publish"
+      ],
+      "complexity": "L",
+      "score": "High",
+      "value": "HIGH",
+      "details": "Add infra/k8s base (Deployment with read-only root and non-root securityContext, ServiceAccount, Service, NetworkPolicy allowing only flint-gate, a migration Job running `sellbird storage migrate` with the migration-role Secret, app Secret references by name via secretKeyRef only, including `sellbird-claude`) and an overlays/example overlay using example.test values only. Add the deploy job: after images.yml outputs the digest, it mints a GitHub App token for the platform repository named by a repository variable (no literal), and writes newTag+digest into the overlay path defined by the platform contract, with SHA/digest regex, never-backwards, changed-lines-only and retry guards. Add infra/github/main-ruleset.json (required checks from tests.yml) and CODEOWNERS for this fork. No real hostname or registry literal appears in this repository; the production overlay and the Argo CD AppProject/Application live in the platform repository. Applying settings or anything to the cluster is operator-approved; live sync is gated on the platform phase.",
+      "tasks": [
+        {
+          "title": "Author infra/k8s base and an example.test overlay with NetworkPolicy, read-only root and secretKeyRef-only secrets",
+          "req": "high reasoning; Kubernetes security",
+          "id": "9.1"
+        },
+        {
+          "title": "Author the migration Job using the migration-role Secret and order it before the Deployment",
+          "req": "medium reasoning; Kubernetes Jobs; Argo CD sync waves",
+          "id": "9.2"
+        },
+        {
+          "title": "Add the deploy job: GitHub App token for the platform repo, digest pin into its overlay, guards and push retry",
+          "req": "high reasoning; CI guards; cross-repo write",
+          "id": "9.3"
+        },
+        {
+          "title": "Author infra/github/main-ruleset.json, CODEOWNERS and the operator runbook for settings",
+          "req": "medium reasoning; GitHub governance",
+          "id": "9.4"
+        },
+        {
+          "title": "Write scripts/boundary/check_manifests.sh asserting image@sha256 pinning, NetworkPolicy, read-only root, migration Job, secretKeyRef-only secrets and no real hostname literal",
+          "req": "low reasoning; shell + yq; rendered-manifest assertions",
+          "id": "9.5"
+        }
+      ]
+    },
+    {
+      "id": "hosted-mode-docs-and-review",
+      "title": "Hosting documentation, changelog and the independent security review",
+      "role": "documentation-specialist",
+      "goal": "G6 (restated)",
+      "scope": "docs | review",
+      "depends": [
+        "baseline-test-green",
+        "platform-interface-contract",
+        "postgres-storage-backend",
+        "hosted-gateway-mode",
+        "sqlite-to-postgres-move-tool",
+        "sellbird-gateway-route-config",
+        "cluster-ready-container-image",
+        "image-build-scan-publish",
+        "gitops-deploy-sellbird"
+      ],
+      "complexity": "M",
+      "score": "Medium",
+      "value": "MEDIUM",
+      "details": "Write docs/hosting.md using example.test values only (gateway mode, Postgres backend, move tool, deployment, operator steps) and the CHANGELOG entry. The security-reviewer role, in a separate read-only context, reviews storage, auth, gateway config, manifests, workflows and ruleset after implementation and records severity-ranked findings under .agent-team/findings/security/; CRITICAL or HIGH findings block closure.",
+      "tasks": [
+        {
+          "id": "10.1",
+          "title": "Write docs/hosting.md and update docs/configuration.md and docs/docker.md",
+          "req": "low reasoning; documentation"
+        },
+        {
+          "id": "10.2",
+          "title": "Add the CHANGELOG entry for the Postgres backend and hosted gateway mode",
+          "req": "low reasoning; documentation"
+        },
+        {
+          "id": "10.3",
+          "title": "Independent security review of the completed phase recorded under .agent-team/findings/security",
+          "req": "high reasoning; independence required; read-only; broad context"
+        },
+        {
+          "id": "10.4",
+          "title": "Write scripts/boundary/negative_controls.sh running each scenario's negative control and recording the expected refusal",
+          "req": "medium reasoning; shell; one control per scenario as defined in adopted-contract.json; added during execute (boundary audit)",
+          "role": "qa-engineer"
+        }
+      ]
+    }
+  ]
+}

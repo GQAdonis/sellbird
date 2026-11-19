@@ -1,0 +1,11 @@
+{
+  "stage": "assess",
+  "completedAt": "2026-11-18T06:11:00Z",
+  "outputs": [
+    "assessment.md"
+  ],
+  "nextStage": "analyze",
+  "summaryForNext": "Decisions D1-D12 recorded: keep SQLite + add Postgres backend; Sellbird gets its own database and roles on a SHARED flint-forge PG18; operator-only Kratos+MFA via shared flint-gate; Claude setup-token (operator owns terms risk); shared platform (Gateway, flint-forge, Kratos, Hydra, flint-gate, flint-realtime-fabric, ElectricSQL) moves to a NEW platform repo built in a PRIOR phase, so G4-G6 are restated with live parts gated on it and a new G7 platform interface contract is required. Baseline: build PASS, tests 3700 pass / 2 timing failures and the configured .venv test command cannot run, so blocking tests-pass is red; cluster facts UNVERIFIED (gcloud auth expired). Adversarial review (mimo-v2.6-pro) round 2 BLOCK 1/5/2: warnings folded in; one CRITICAL (packet omits .github/) recorded as unresolved with local evidence.",
+  "skipped": false,
+  "skipReason": null
+}

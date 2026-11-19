@@ -1,0 +1,1 @@
+NEGATIVE-CONTROL SCN-SHIP-001 PASS: tag-only, backwards and malformed-digest pins each refused (exit 1, stated reason, overlay unchanged); a forward pin is accepted

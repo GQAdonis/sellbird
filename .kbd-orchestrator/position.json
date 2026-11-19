@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "1",
+  "generatedBy": "kbd-runtime",
+  "projectionContractVersion": 2,
+  "sourceRevision": 273,
+  "derivedRevision": 273,
+  "frontier": {
+    "6a8a0899-8ef7-41ad-b20f-dc28120196cf": 273
+  },
+  "conflictCount": 0,
+  "updatedAt": "2026-11-19T18:59:27.344083Z",
+  "cursor": [
+    "postgres-gke-deployment",
+    "execute"
+  ],
+  "root": {
+    "type": "phase",
+    "id": "09d97122-c2c7-452a-a0a1-48a80e6cfef5",
+    "status": "ready",
+    "progress": {
+      "done": 10,
+      "total": 10
+    },
+    "children": [
+      {
+        "type": "phase",
+        "id": "postgres-gke-deployment",
+        "canonicalId": "postgres-gke-deployment",
+        "status": "COMPLETE",
+        "progress": {
+          "done": 10,
+          "total": 10
+        },
+        "children": [
+          {
+            "type": "change",
+            "id": "baseline-test-green",
+            "status": "COMPLETE",
+            "progress": {
+              "done": 4,
+              "total": 4
+            }
+          },
+          {
+            "type": "change",
+            "id": "platform-interface-contract",
+            "status": "COMPLETE",
+            "progress": {
+              "done": 4,
+              "total": 4
+            }
+          },
+          {
+            "type": "change",
+            "id": "postgres-storage-backend",
+            "status": "COMPLETE",
+            "progress": {
+              "done": 9,
+              "total": 9
+            }
+          },
+          {
+            "type": "change",
+            "id": "hosted-gateway-mode",
+            "status": "COMPLETE",
+            "progress": {
+              "done": 5,
+              "total": 5
+            }
+          },
+          {
+            "type": "change",
+            "id": "sqlite-to-postgres-move-tool",
+            "status": "COMPLETE",
+            "progress": {
+              "done": 2,
+              "total": 2
+            }
+          },
+          {
+            "type": "change",
+            "id": "cluster-ready-container-image",
+            "status": "COMPLETE",
+            "progress": {
+              "done": 4,
+              "total": 4
+            }
+          },
+          {
+            "type": "change",
+            "id": "sellbird-gateway-route-config",
+            "status": "COMPLETE",
+            "progress": {
+              "done": 3,
+              "total": 3
+            }
+          },
+          {
+            "type": "change",
+            "id": "image-build-scan-publish",
+            "status": "COMPLETE",
+            "progress": {
+              "done": 3,
+              "total": 3
+            }
+          },
+          {
+            "type": "change",
+            "id": "gitops-deploy-sellbird",
+            "status": "COMPLETE",
+            "progress": {
+              "done": 5,
+              "total": 5
+            }
+          },
+          {
+            "type": "change",
+            "id": "hosted-mode-docs-and-review",
+            "status": "COMPLETE",
+            "progress": {
+              "done": 4,
+              "total": 4
+            }
+          }
+        ],
+        "annotations": []
+      }
+    ],
+    "annotations": []
+  }
+}

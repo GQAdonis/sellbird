@@ -1,0 +1,616 @@
+{
+  "phase": "postgres-gke-deployment",
+  "projectId": "09d97122-c2c7-452a-a0a1-48a80e6cfef5",
+  "runId": "postgres-gke-deployment-20261118T052720Z",
+  "contractDigest": "7f35692c36e20aaee939c5a64126014532abac4f5eb7fa58da181a780c1e7419",
+  "authorizedAt": "2026-11-19T15:15:39.233Z",
+  "sourceDigests": {
+    "Dockerfile": "229eba07ba0f027c3f8687fc65921d0a9a50d9d852d3c60576f99603698b8ebf",
+    "pyproject.toml": "7500aa42afe3283fc35dd8d826ea543f4b6aa7ba90b612e49394bd7be8eb586f",
+    "infra/local/compose.yaml": "170ed5c2492380e6e66f7037533836554d14d0c9cbb24c1438f277b34bf226aa",
+    "sellbird/brain.py": "d3aac4e58381346028755f6b81ef61dd8463f1864f45781770c696168a8a5eb4",
+    "scripts/local/kratos_session.py": "597a2852cd714daf47145bcde5ab2fb5ad21baa5ac49e4bca6f5b71fac6cd604",
+    "scripts/boundary/check_manifests.sh": "d6bde29751b2824f0abce0331dd8195eb13cec74c4a30f6ac9026c3413e59344",
+    "scripts/boundary/preflight.sh": "724338a0ddd3617c5f4533fc0d9305ad1a8ea972986528b2e1eff7b79e8c9dbb",
+    "scripts/boundary/negative_probes.py": "088d1c03696220c712176e6085481f8d8f6696d82e72bd005c377863205dfabc",
+    "scripts/boundary/negative_controls.sh": "93d98ab61860e875d4661f19816e8e39d6fa7a225612763fb545cd8b09bd7d4a",
+    "tests/storage_contract/test_migrations.py": "0cf0925f02bfc73525ad48685a4de7938c8f2d472f16958fc5268b079cb0472c"
+  },
+  "scenarios": [
+    {
+      "id": "SCN-BASE-001",
+      "status": "PASS",
+      "attempted": "attempt 8 (B5 repair 5): affected-scenario rerun",
+      "observed": "full suite 3955 passed, 0 failed; timing control now deterministic and detects the planted quadratic cost",
+      "evidence": "evidence/boundary-run/raw/ (a8-*)"
+    },
+    {
+      "id": "SCN-STORE-001",
+      "status": "PASS",
+      "attempted": "attempt 8 (B5 repair 5): affected-scenario rerun",
+      "observed": "SQLite storage contract passes; control now fails the contract with the planted dedup divergence",
+      "evidence": "evidence/boundary-run/raw/ (a8-*)"
+    },
+    {
+      "id": "SCN-STORE-002",
+      "status": "PASS",
+      "attempted": "attempt 7 (B5 repair 4): storage contract on Postgres",
+      "observed": "contract tests pass on Postgres; unknown signal code refused with no row on both backends",
+      "evidence": "evidence/boundary-run/raw/ (a7-*)"
+    },
+    {
+      "id": "SCN-STORE-003",
+      "status": "PASS",
+      "attempted": "attempt 8 (B5 repair 5): affected-scenario rerun",
+      "observed": "up/down/up schema round trip identical on the flint-forge image; app role refused DDL (42501)",
+      "evidence": "evidence/boundary-run/raw/ (a8-*)"
+    },
+    {
+      "id": "SCN-SEND-001",
+      "status": "PASS",
+      "attempted": "attempt 7 (B5 repair 4): outbox claim race",
+      "observed": "exactly one claim among 8 racers on SQLite and Postgres",
+      "evidence": "evidence/boundary-run/raw/ (a7-*)"
+    },
+    {
+      "id": "SCN-SEND-002",
+      "status": "PASS",
+      "attempted": "attempt 7 (B5 repair 4): send gate",
+      "observed": "limit, suppression, quiet hours and unapproved items refused on both backends (8 cases)",
+      "evidence": "evidence/boundary-run/raw/ (a7-*)"
+    },
+    {
+      "id": "SCN-MOVE-001",
+      "status": "PASS",
+      "attempted": "attempt 7 (B5 repair 4): SQLite -> Postgres move",
+      "observed": "move tests pass; move into a non-empty target refused, every table unchanged",
+      "evidence": "evidence/boundary-run/raw/ (a7-*)"
+    },
+    {
+      "id": "SCN-AUTH-001",
+      "status": "PASS",
+      "attempted": "attempt 7 (B5 repair 4): sign-in through flint-gate",
+      "observed": "12 of 12 e2e; forged header, wrong audience, expired and non-allowlisted tokens all 401",
+      "evidence": "evidence/boundary-run/raw/ (a7-*)"
+    },
+    {
+      "id": "SCN-AUTH-002",
+      "status": "PASS",
+      "attempted": "attempt 7 (B5 repair 4): local-mode auth unchanged",
+      "observed": "local auth and gateway-mode local tests pass (sub_uppercase now a real negative); 0.0.0.0 refusal holds",
+      "evidence": "evidence/boundary-run/raw/ (a7-*)"
+    },
+    {
+      "id": "SCN-LOG-001",
+      "status": "PASS",
+      "attempted": "attempt 7 (B5 repair 4): container hardening and log hygiene",
+      "observed": "non-root, read-only rootfs, no token/link/credential in logs or files; control detects a planted leak",
+      "evidence": "evidence/boundary-run/raw/ (a7-*)"
+    },
+    {
+      "id": "SCN-BRAIN-001",
+      "status": "PASS",
+      "attempted": "attempt 7 (B5 repair 4): brain credential in a pod",
+      "observed": "token reaches the claude subprocess only; unset token gives the auth error and an empty reply, no credential file",
+      "evidence": "evidence/boundary-run/raw/ (a7-*)"
+    },
+    {
+      "id": "SCN-SHIP-001",
+      "status": "PASS",
+      "attempted": "attempt 8 (B5 repair 5): affected-scenario rerun",
+      "observed": "97 of 97 manifest checks; pin guard refuses bad pins",
+      "evidence": "evidence/boundary-run/raw/ (a8-*)"
+    },
+    {
+      "id": "SCN-CONTRACT-001",
+      "status": "PASS",
+      "attempted": "attempt 7 (B5 repair 4): platform interface contract",
+      "observed": "110 checks pass; control names a removed section",
+      "evidence": "evidence/boundary-run/raw/ (a7-*)"
+    }
+  ],
+  "executedBy": {
+    "harness": "Claude Code (desktop app)",
+    "version": "unknown",
+    "model": "claude-opus-5-5"
+  },
+  "budgetConsumption": {
+    "source": "self-reported by the driver session; time measured from the authorization event, tool calls estimated",
+    "values": {
+      "timeMinutes": {
+        "value": 75,
+        "class": "estimate"
+      },
+      "toolCalls": {
+        "value": 200,
+        "class": "estimate"
+      },
+      "repairAttempts": {
+        "value": 5,
+        "class": "measured"
+      },
+      "noProgress": {
+        "value": 0,
+        "class": "measured"
+      }
+    }
+  },
+  "attempts": [
+    {
+      "boundary": "B4",
+      "attempt": 1,
+      "startedAt": "2026-11-18T20:15:19.333102+00:00",
+      "stoppedAt": "2026-11-18T20:17:39.199956+00:00",
+      "candidate": {
+        "commit": "70b4ccb5380acb218f26455f55943fcddaa986bd",
+        "tree": "12b4741ae79444acf9dedd64ebfbffe16587f6ae"
+      },
+      "packet": [
+        {
+          "id": "preflight",
+          "kind": "build",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/01-preflight.log"
+        },
+        {
+          "id": "build",
+          "kind": "build",
+          "exit": 1,
+          "status": "FAIL",
+          "evidence": "evidence/boundary-run/raw/02-build.log",
+          "observed": "docker build failed in stage-1 step 4/12: 'playwright install --with-deps chromium' exited 127; the Playwright node driver could not load libatomic.so.1 (not present in the arm64 python slim base). requirements and the hosted/postgres extras installed and imported successfully before that point."
+        },
+        {
+          "id": "run-standin",
+          "status": "NOT_EXERCISED"
+        },
+        {
+          "id": "scn-suite",
+          "status": "NOT_EXERCISED"
+        },
+        {
+          "id": "scn-auth-e2e",
+          "status": "NOT_EXERCISED"
+        },
+        {
+          "id": "scn-container",
+          "status": "NOT_EXERCISED"
+        },
+        {
+          "id": "scn-manifests",
+          "status": "NOT_EXERCISED"
+        },
+        {
+          "id": "scn-contract",
+          "status": "NOT_EXERCISED"
+        },
+        {
+          "id": "negative-controls (13)",
+          "status": "NOT_EXERCISED"
+        }
+      ],
+      "result": "FAIL (packet command 'build'); no scenario exercised"
+    },
+    {
+      "boundary": "B5",
+      "attempt": 2,
+      "repair": 1,
+      "authorizedAt": "2026-11-18T20:23:11.279Z",
+      "startedAt": "2026-11-18T20:23:49.985098+00:00",
+      "stoppedAt": "2026-11-18T20:27:02.889863+00:00",
+      "candidate": {
+        "commit": "39ab979980feff9da3e78a2824f16a7019f6ecce",
+        "tree": "78d06338ed102c6f92de72b7c40dacfba1093fe1",
+        "image": "sha256:764bb477ab1114eb3f4dcc2a34c3cd36ceb035a88445f4aa7fc57b2c251a661c (arm64)"
+      },
+      "packet": [
+        {
+          "id": "build",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a2-02-build.log"
+        },
+        {
+          "id": "run-standin",
+          "exit": 1,
+          "status": "BLOCKED",
+          "evidence": "evidence/boundary-run/raw/a2-03-run-standin.log",
+          "observed": "Docker refused to publish host port 55432 for sellbird-local-postgres-1: already allocated. Unrelated containers from another local project (aso-prior-auth-demo, up 4 days) hold 55432, 4456 and 4433-4434. Environment conflict, not a product observation."
+        },
+        {
+          "id": "scenario commands and 13 negative controls",
+          "status": "NOT_EXERCISED"
+        }
+      ],
+      "result": "BLOCKED at run-standin (host port conflict); no scenario exercised",
+      "cleanup": "docker compose down -v removed the partial sellbird-local containers, volume and network; infra/local/.env deleted; image sellbird:boundary kept for the next attempt"
+    },
+    {
+      "attempt": 3,
+      "boundary": "B5",
+      "repair": 1,
+      "startedAt": "2026-11-18T23:33:54Z",
+      "stoppedAt": "2026-11-18T23:40:00Z",
+      "candidate": {
+        "commit": "39ab979980feff9da3e78a2824f16a7019f6ecce",
+        "tree": "78d06338ed102c6f92de72b7c40dacfba1093fe1",
+        "image": "sha256:764bb477ab1114eb3f4dcc2a34c3cd36ceb035a88445f4aa7fc57b2c251a661c (arm64)"
+      },
+      "packet": [
+        {
+          "id": "run-standin",
+          "exit": 1,
+          "status": "BLOCKED",
+          "evidence": "evidence/boundary-run/raw/a3-03-run-standin.log",
+          "observed": "Containers started and both Kratos identities were created; make-env.sh then stopped when it ran python3 -I scripts/local/kratos_session.py. A Claude Code plugin PATH shim (trailofbits modern-python) on the driver session refuses `python3 script.py`. Harness environment, not a product observation. Removing the shim from PATH was denied by the session permission classifier."
+        },
+        {
+          "id": "scenario commands and 13 negative controls",
+          "status": "NOT_EXERCISED"
+        }
+      ],
+      "result": "BLOCKED at run-standin (driver-session python3 shim); no scenario exercised",
+      "cleanup": "docker compose down -v; infra/local/.env deleted; image kept. The aso-prior-auth-demo containers were stopped (not removed) with the owner's approval and are still stopped."
+    },
+    {
+      "attempt": 4,
+      "boundary": "B5",
+      "repair": 1,
+      "startedAt": "2026-11-18T23:50:00Z",
+      "stoppedAt": "2026-11-18T23:55:00Z",
+      "candidate": {
+        "commit": "39ab979980feff9da3e78a2824f16a7019f6ecce",
+        "tree": "78d06338ed102c6f92de72b7c40dacfba1093fe1",
+        "image": "sha256:764bb477ab1114eb3f4dcc2a34c3cd36ceb035a88445f4aa7fc57b2c251a661c (arm64)"
+      },
+      "environment": "owner directed the run to proceed with the modern-python plugin shim removed from PATH; commands unchanged",
+      "packet": [
+        {
+          "id": "run-standin",
+          "exit": 1,
+          "status": "FAIL",
+          "evidence": "evidence/boundary-run/raw/a4-03-run-standin.log",
+          "observed": "All containers healthy and both identities created. scripts/local/kratos_session.py then failed: aal2 init returned HTTP 400 session_already_available. Enrolling TOTP in the settings flow already raises the same session to aal2, so the script never performs a real password-then-TOTP sign-in. Product defect in a phase-owned script."
+        },
+        {
+          "id": "scenario commands and 13 negative controls",
+          "status": "NOT_EXERCISED"
+        }
+      ],
+      "result": "FAIL at run-standin (kratos_session.py reuses the enrolment session); needs B5 repair 2",
+      "cleanup": "docker compose down -v; infra/local/.env deleted; image kept; aso-prior-auth-demo containers still stopped"
+    },
+    {
+      "attempt": 5,
+      "boundary": "B5",
+      "repair": 2,
+      "authorizedAt": "2026-11-19T00:15:02.981Z",
+      "startedAt": "2026-11-19T00:18:00Z",
+      "stoppedAt": "2026-11-19T00:22:00Z",
+      "candidate": {
+        "commit": "bf40883bf3653e3af733fe7ca5aee1f0d48b6d5f",
+        "image": "sha256:764bb477ab1114eb3f4dcc2a34c3cd36ceb035a88445f4aa7fc57b2c251a661c (arm64)"
+      },
+      "environment": "modern-python plugin shim removed from PATH as the owner directed; commands unchanged",
+      "packet": [
+        {
+          "id": "run-standin",
+          "exit": 1,
+          "status": "FAIL",
+          "evidence": "evidence/boundary-run/raw/a5-03-run-standin.log",
+          "observed": "Repair 2 removed the session_already_available failure. The fresh password login after TOTP enrolment then returned HTTP 422 browser_location_change_required, which is Kratos asking for the second factor; password_login only accepts 200. Product defect in a phase-owned script; repair budget (2) now exhausted."
+        },
+        {
+          "id": "scenario commands and 13 negative controls",
+          "status": "NOT_EXERCISED"
+        }
+      ],
+      "result": "FAIL at run-standin (password_login rejects Kratos second-factor handoff); repairAttempts 2 of 2 used",
+      "cleanup": "docker compose down -v; infra/local/.env deleted; image kept; aso-prior-auth-demo containers still stopped"
+    },
+    {
+      "attempt": 6,
+      "boundary": "B5",
+      "repair": 3,
+      "authorizedAt": "2026-11-19T00:54:04.139Z",
+      "contract": "0298f387d54c6cbc815f906044fe890fb02c34dc2e900b5053d3cb588f38e91e",
+      "startedAt": "2026-11-19T00:56:00Z",
+      "stoppedAt": "2026-11-19T01:40:00Z",
+      "candidate": {
+        "commit": "f1889208876ab2ee200b9a2eb5d3f16edb0742c6",
+        "image": "sha256:764bb477ab1114eb3f4dcc2a34c3cd36ceb035a88445f4aa7fc57b2c251a661c (arm64)"
+      },
+      "environment": "modern-python plugin shim removed from PATH as the owner directed; commands unchanged",
+      "packet": [
+        {
+          "id": "run-standin",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a6-03-run-standin.log",
+          "observed": "all services healthy; both identities signed in with password + TOTP; no secret in the log"
+        },
+        {
+          "id": "scn-suite",
+          "exit": 1,
+          "status": "BLOCKED",
+          "evidence": "evidence/boundary-run/raw/a6-04-scn-suite.log",
+          "observed": "3889 passed, 15 failed, 51 errors, 39 skipped. 64 failures/errors are ModuleNotFoundError psycopg: the local .venv lacks the postgres extra (CI installs .[dev,postgres]; preflight does not check it). Two oracle defects: test_other_bad_tokens_are_refused[sub_uppercase] uses an all-digit UUID so upper() is a no-op and the valid token correctly got 200 (gate_token.py refuses non-canonical subs); test_dockerfile_pins_home expects SELLBIRD_HOME=/app but the image deliberately uses /data."
+        },
+        {
+          "id": "scn-auth-e2e",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a6-05-scn-auth-e2e.log",
+          "observed": "12 passed against the live stand-in"
+        },
+        {
+          "id": "scn-container",
+          "exit": 1,
+          "status": "FAIL",
+          "evidence": "evidence/boundary-run/raw/a6-06-scn-container.log",
+          "observed": "all log/credential checks pass; with the token unset the pinned Claude CLI exits 1 with empty stderr and puts \"Not logged in\" in its JSON stdout result, which sellbird/brain.py never reads, so no documented missing-login error is logged. Product defect (SCN-BRAIN-001)."
+        },
+        {
+          "id": "scn-manifests",
+          "exit": 1,
+          "status": "BLOCKED",
+          "evidence": "evidence/boundary-run/raw/a6-07-scn-manifests.log",
+          "observed": "empty log: check_manifests.sh sources preflight with a one-line SB_ROOT=... prefix, so SB_ROOT is unset afterwards and the first wrapper aborts on an unbound variable; its message went to a deleted temp file. Oracle-script defect; manifests never examined."
+        },
+        {
+          "id": "scn-contract",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a6-08-scn-contract.log",
+          "observed": "110 checks passed"
+        },
+        {
+          "id": "negative controls",
+          "observed": "PASS: BASE-001, AUTH-001, AUTH-002, LOG-001, SHIP-001, CONTRACT-001. BLOCKED by missing psycopg: STORE-002, STORE-003, SEND-001, MOVE-001; FAIL caused by missing psycopg (Postgres half skipped/failed): STORE-001, SEND-002. FAIL: BRAIN-001 (same brain.py defect).",
+          "evidence": "evidence/boundary-run/raw/a6-neg-*.log"
+        }
+      ],
+      "result": "FAIL (SCN-BRAIN-001 product defect) plus BLOCKED (missing postgres extra in .venv; two test oracle defects; check_manifests.sh SB_ROOT bug); repairAttempts 3 of 3 used",
+      "cleanup": "docker compose down -v; infra/local/.env deleted; image kept; aso-prior-auth-demo containers still stopped"
+    },
+    {
+      "attempt": 7,
+      "boundary": "B5",
+      "repair": 4,
+      "authorizedAt": "2026-11-19T14:51:14.145Z",
+      "contract": "fd8ba0479d45d75569d040969f08fb4415707d1b57d7dd0617dcdf8019cf19fb",
+      "startedAt": "2026-11-19T14:55:00Z",
+      "stoppedAt": "2026-11-19T15:40:00Z",
+      "candidate": {
+        "commit": "1890b98bdfe21bc1380bf08ec3925026043841f1",
+        "image": "sha256:417bad158f4c34cb587fa6005f8225b8d581842d0e47717fa3b82aac47421a45 (arm64)"
+      },
+      "environment": "modern-python plugin shim removed from PATH as the owner directed; postgres extra installed into .venv with uv; scn-auth-e2e run after scn-suite finished (packet commands unchanged)",
+      "packet": [
+        {
+          "id": "preflight",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-01-preflight.log",
+          "observed": "tool images pulled; psycopg present in .venv"
+        },
+        {
+          "id": "build",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-02-build.log",
+          "observed": "image rebuilt with the brain fix; sha256:417bad158f4c34cb587fa6005f8225b8d581842d0e47717fa3b82aac47421a45 (arm64)"
+        },
+        {
+          "id": "run-standin",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-03-run-standin.log",
+          "observed": "all services healthy; migrate job exited; both identities signed in"
+        },
+        {
+          "id": "scn-suite",
+          "exit": 1,
+          "status": "BLOCKED",
+          "evidence": "evidence/boundary-run/raw/a7-04-scn-suite.log",
+          "observed": "3954 passed, 1 failed, 39 skipped (opt-in CLI/e2e/platform skips). The one failure, test_up_down_up_gives_the_same_schema, is an oracle defect: the flint-forge PG18 image stamps every column with a per-create attribute option 'pg_attver=<n>' (seen in pg_dump: ALTER TABLE ... ALTER COLUMN ... SET (pg_attver=...)), and _pg_dump does not normalise it, so two identical schemas compare unequal. All other diff context was identical; the catalog comparison was not reached."
+        },
+        {
+          "id": "scn-auth-e2e",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-05-scn-auth-e2e.log",
+          "observed": "12 passed against the live stand-in"
+        },
+        {
+          "id": "scn-container",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-06-scn-container.log",
+          "observed": "all checks passed, including unset token -> 'Non-retryable Claude error (auth)', empty reply, no credential file"
+        },
+        {
+          "id": "scn-manifests",
+          "exit": 1,
+          "status": "BLOCKED",
+          "evidence": "evidence/boundary-run/raw/a7-07-scn-manifests.log",
+          "observed": "96 of 97 checks passed; first real run after the SB_ROOT fix. The one failure is an oracle defect: the yq query for 'ingress rule without a from' emits $n.metadata.name for every NetworkPolicy, including ones with no ingress rules (yq evaluates the context-free $n path even when the ingress stream is empty). Confirmed on a two-policy sample where neither has a from-less rule and both were reported."
+        },
+        {
+          "id": "scn-contract",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-08-scn-contract.log",
+          "observed": "110 checks passed"
+        },
+        {
+          "id": "neg-scn-base-001",
+          "exit": 1,
+          "status": "BLOCKED",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-base-001.log",
+          "observed": "test_nested_testimonials_are_bounded did not fail against the planted quadratic scans (both timing tests passed); the same control passed in attempt 6 and in a diagnostic rerun (a7-diag-neg-scn-base-001-rerun.log, not counted): the control is nondeterministic -> oracle defect"
+        },
+        {
+          "id": "neg-scn-store-001",
+          "exit": 1,
+          "status": "BLOCKED",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-store-001.log",
+          "observed": "planted dedup divergence did not fail the contract: the plant removes _norm in state.add_company, but Company's field_validator already strips and lower-cases the domain, so no defect is planted (also true in attempt 6) -> oracle defect"
+        },
+        {
+          "id": "neg-scn-store-002",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-store-002.log",
+          "observed": "SCN-STORE-002 PASS: unknown signal code refused with 'unknown signal_code' and no row, on sqlite and postgres"
+        },
+        {
+          "id": "neg-scn-store-003",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-store-003.log",
+          "observed": "SCN-STORE-003 PASS: CREATE TABLE and ALTER TABLE both refused with SQLSTATE 42501 as sellbird_app"
+        },
+        {
+          "id": "neg-scn-send-001",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-send-001.log",
+          "observed": "SCN-SEND-001 PASS: a second claimer gets no claim, and 8 racers yield exactly one, on sqlite and postgres"
+        },
+        {
+          "id": "neg-scn-send-002",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-send-002.log",
+          "observed": "SCN-SEND-002 PASS: daily limit, suppressed address, quiet hours and unapproved item each refused on sqlite and postgres (8 cases)"
+        },
+        {
+          "id": "neg-scn-move-001",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-move-001.log",
+          "observed": "SCN-MOVE-001 PASS: move refused with 'already holds Sellbird rows (in settings)'; every table unchanged"
+        },
+        {
+          "id": "neg-scn-auth-001",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-auth-001.log",
+          "observed": "SCN-AUTH-001 PASS: forged header, wrong audience, expired token and non-allowlisted identity each 401 with no data; both positive controls 200"
+        },
+        {
+          "id": "neg-scn-auth-002",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-auth-002.log",
+          "observed": "SCN-AUTH-002 PASS: start on 0.0.0.0 exited 2 with the loopback refusal and printed no link"
+        },
+        {
+          "id": "neg-scn-log-001",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-log-001.log",
+          "observed": "SCN-LOG-001 PASS: check_container.sh fails on the log search (token or unlock link in local-mode logs)"
+        },
+        {
+          "id": "neg-scn-brain-001",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-brain-001.log",
+          "observed": "SCN-BRAIN-001 PASS: token unset: 'Non-retryable Claude error (auth)', empty reply, no credential file"
+        },
+        {
+          "id": "neg-scn-ship-001",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-ship-001.log",
+          "observed": "SCN-SHIP-001 PASS: tag-only, backwards and malformed-digest pins each refused (exit 1, stated reason, overlay unchanged); a forward pin is accepted"
+        },
+        {
+          "id": "neg-scn-contract-001",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a7-neg-scn-contract-001.log",
+          "observed": "SCN-CONTRACT-001 PASS: check_platform_contract.sh exits 1 and names the missing section 'Issuer and JWKS'"
+        }
+      ],
+      "result": "No product FAIL. 9 scenarios PASS; 4 BLOCKED on oracle defects (pg_attver not normalised in the schema-dump comparison; yq ingress-from query; ineffective dedup plant; nondeterministic timing control). repairAttempts 4 of 4 used.",
+      "cleanup": "see a7-cleanup.log"
+    },
+    {
+      "attempt": 8,
+      "boundary": "B5",
+      "repair": 5,
+      "authorizedAt": "2026-11-19T15:15:39.233Z",
+      "contract": "7f35692c36e20aaee939c5a64126014532abac4f5eb7fa58da181a780c1e7419",
+      "startedAt": "2026-11-19T15:22:00Z",
+      "stoppedAt": "2026-11-19T15:35:00Z",
+      "candidate": {
+        "commit": "ebf4e3b4b388b25ca2ab17be4d7021a318395a21",
+        "image": "sha256:417bad158f4c34cb587fa6005f8225b8d581842d0e47717fa3b82aac47421a45 (arm64, unchanged from attempt 7)"
+      },
+      "scope": "affected scenarios only: SCN-BASE-001, SCN-STORE-001, SCN-STORE-003, SCN-SHIP-001 and their negative controls (oracle-only repair; product code and image unchanged since attempt 7)",
+      "environment": "modern-python plugin shim removed from PATH as the owner directed; aso-prior-auth-demo db/kratos/flint-gate stopped for ports and restarted after",
+      "packet": [
+        {
+          "id": "run-standin",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a8-03-run-standin.log",
+          "observed": "all services healthy"
+        },
+        {
+          "id": "scn-suite",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a8-04-scn-suite.log",
+          "observed": "3955 passed, 0 failed, 39 skipped (opt-in Claude/Codex CLI, packaging, Windows-only, and gateway-e2e tests that scn-auth-e2e runs separately); test_up_down_up_gives_the_same_schema now passes on the flint-forge image"
+        },
+        {
+          "id": "scn-manifests",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a8-07-scn-manifests.log",
+          "observed": "97 of 97 checks pass; repaired ingress-from query shown sensitive on a sample (reports only the policy with a from-less rule: a8-oracle-sensitivity-ingress-from.log)"
+        },
+        {
+          "id": "neg-scn-base-001",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a8-neg-scn-base-001.log",
+          "observed": "both timing tests fail on the growth ratio against the planted (now deterministic) quadratic cost"
+        },
+        {
+          "id": "neg-scn-store-001",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a8-neg-scn-store-001.log",
+          "observed": "contract test fails with the planted dedup divergence (both normalisation layers removed)"
+        },
+        {
+          "id": "neg-scn-store-003",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a8-neg-scn-store-003.log",
+          "observed": "CREATE TABLE and ALTER TABLE refused with 42501 as sellbird_app"
+        },
+        {
+          "id": "neg-scn-ship-001",
+          "exit": 0,
+          "status": "PASS",
+          "evidence": "evidence/boundary-run/raw/a8-neg-scn-ship-001.log",
+          "observed": "tag-only, backwards and malformed-digest pins refused; forward pin accepted"
+        }
+      ],
+      "result": "PASS: all affected scenarios and their negative controls pass. repairAttempts 5 of 5 used.",
+      "cleanup": "see a8-cleanup.log"
+    }
+  ],
+  "result": "PASS: 13 of 13 scenarios PASS (9 in attempt 7, 4 affected scenarios re-verified in attempt 8 after an oracle-only repair); 0 FAIL, 0 BLOCKED. Repairs used 5 of 5.",
+  "candidate": {
+    "commit": "ebf4e3b4b388b25ca2ab17be4d7021a318395a21",
+    "image": "sha256:417bad158f4c34cb587fa6005f8225b8d581842d0e47717fa3b82aac47421a45 (arm64, unchanged from attempt 7)"
+  }
+}

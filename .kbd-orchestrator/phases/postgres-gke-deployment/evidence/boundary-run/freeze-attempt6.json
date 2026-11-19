@@ -1,0 +1,15 @@
+{
+  "attempt": 6,
+  "boundary": "B5",
+  "repair": 3,
+  "authorizedAt": "2026-11-19T00:54:04.139Z",
+  "contract": "0298f387d54c6cbc815f906044fe890fb02c34dc2e900b5053d3cb588f38e91e",
+  "reason": "repair 3 under signed amendment 4: password_login accepts the 422 second-factor handoff (f188920); image unchanged (no scripts/ in image)",
+  "environment": "modern-python plugin shim removed from PATH as the owner directed; commands unchanged",
+  "frozenAt": "2026-11-19T00:54:59.269137+00:00",
+  "commit": "f1889208876ab2ee200b9a2eb5d3f16edb0742c6",
+  "tree": "15bec9e360ab3609e278c4fd7a363b2da3d6e324",
+  "trackedChanges": "",
+  "kratos_session.py": "597a2852cd714daf47145bcde5ab2fb5ad21baa5ac49e4bca6f5b71fac6cd604",
+  "image": "sha256:764bb477ab1114eb3f4dcc2a34c3cd36ceb035a88445f4aa7fc57b2c251a661c"
+}

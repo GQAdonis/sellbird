@@ -1,0 +1,21 @@
+{
+  "attempt": 8,
+  "boundary": "B5",
+  "repair": 5,
+  "authorizedAt": "2026-11-19T15:15:39.233Z",
+  "contract": "7f35692c36e20aaee939c5a64126014532abac4f5eb7fa58da181a780c1e7419",
+  "reason": "repair 5 under signed amendment 6: oracle-only fixes (ebf4e3b); image unchanged; rerun only affected scenarios SCN-BASE-001, SCN-STORE-001, SCN-STORE-003, SCN-SHIP-001 and their negative controls",
+  "environment": "modern-python plugin shim removed from PATH as the owner directed; aso-prior-auth-demo db/kratos/flint-gate stopped for the port, restarted after",
+  "frozenAt": "2026-11-19T15:16:57.894459+00:00",
+  "commit": "ebf4e3b4b388b25ca2ab17be4d7021a318395a21",
+  "tree": "7cba0d9e1304a6202b093e25c2ac239b8a194efe",
+  "trackedChanges": "",
+  "files": {
+    "tests/storage_contract/test_migrations.py": "0cf0925f02bfc73525ad48685a4de7938c8f2d472f16958fc5268b079cb0472c",
+    "scripts/boundary/check_manifests.sh": "d6bde29751b2824f0abce0331dd8195eb13cec74c4a30f6ac9026c3413e59344",
+    "scripts/boundary/negative_probes.py": "088d1c03696220c712176e6085481f8d8f6696d82e72bd005c377863205dfabc",
+    "scripts/boundary/negative_controls.sh": "93d98ab61860e875d4661f19816e8e39d6fa7a225612763fb545cd8b09bd7d4a",
+    "sellbird/brain.py": "d3aac4e58381346028755f6b81ef61dd8463f1864f45781770c696168a8a5eb4"
+  },
+  "image": "sha256:417bad158f4c34cb587fa6005f8225b8d581842d0e47717fa3b82aac47421a45"
+}

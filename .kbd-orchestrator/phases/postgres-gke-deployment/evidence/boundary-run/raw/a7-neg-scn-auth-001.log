@@ -1,0 +1,1 @@
+NEGATIVE-CONTROL SCN-AUTH-001 PASS: forged header, wrong audience, expired token and non-allowlisted identity each 401 with no data; both positive controls 200

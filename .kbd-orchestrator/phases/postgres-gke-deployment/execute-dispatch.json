@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "phase": "postgres-gke-deployment",
+  "dispatchedAt": "2026-11-18T07:21:33Z",
+  "backend": "hybrid",
+  "branch": "kbd/postgres-gke-deployment",
+  "contractDigest": "81908290905a9d1e820e0e6c332a42bc4b28b8a86b44100f51d5d3a952fa1181",
+  "assigned": [
+    {
+      "change": "baseline-test-green",
+      "role": "qa-engineer",
+      "round": 1
+    },
+    {
+      "change": "platform-interface-contract",
+      "role": "architect",
+      "round": 1
+    }
+  ],
+  "pending": [
+    "postgres-storage-backend",
+    "hosted-gateway-mode",
+    "sqlite-to-postgres-move-tool",
+    "cluster-ready-container-image",
+    "sellbird-gateway-route-config",
+    "image-build-scan-publish",
+    "gitops-deploy-sellbird",
+    "hosted-mode-docs-and-review"
+  ]
+}

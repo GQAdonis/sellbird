@@ -1,0 +1,1 @@
+NEGATIVE-CONTROL SCN-BRAIN-001 PASS: token unset: 'Non-retryable Claude error (auth)', empty reply, no credential file

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "kind": "kbd.boundary-authorization",
+  "phaseId": "postgres-gke-deployment",
+  "events": [
+    {
+      "boundary": "B4",
+      "authorizedAt": "2026-11-18T20:14:20.120Z",
+      "authorizer": "Travis James",
+      "contractDigest": "04f6a6fd074a61503bd4e893bf64cacb0a61fcd6af0b1260a4ed69b2aac4ab15",
+      "reason": "All 10 changes complete; security fixes in 9d95113"
+    },
+    {
+      "boundary": "B5",
+      "authorizedAt": "2026-11-18T20:23:11.279Z",
+      "authorizer": "Travis James",
+      "contractDigest": "04f6a6fd074a61503bd4e893bf64cacb0a61fcd6af0b1260a4ed69b2aac4ab15",
+      "reason": "Repair 1: add libatomic1 so playwright installs on arm64 (authorized in chat)"
+    },
+    {
+      "boundary": "B5",
+      "authorizedAt": "2026-11-19T00:15:02.981Z",
+      "authorizer": "operator",
+      "contractDigest": "04f6a6fd074a61503bd4e893bf64cacb0a61fcd6af0b1260a4ed69b2aac4ab15",
+      "reason": "Repair 2, approved by the operator in chat ('Yes, fix it'): kratos_session.py reuses the TOTP enrolment session, so the aal2 sign-in step is refused with session_already_available; sign in fresh with password then TOTP"
+    },
+    {
+      "boundary": "B5",
+      "authorizedAt": "2026-11-19T00:54:04.139Z",
+      "authorizer": "operator",
+      "contractDigest": "0298f387d54c6cbc815f906044fe890fb02c34dc2e900b5053d3cb588f38e91e",
+      "reason": "Repair 3 under signed amendment 4 (repairAttempts 3), approved by the operator in chat ('Yes, prepare it'; signed amend-4): password_login must accept Kratos HTTP 422 browser_location_change_required when the aal1 session cookie is set"
+    },
+    {
+      "boundary": "B5",
+      "authorizedAt": "2026-11-19T14:51:14.145Z",
+      "authorizer": "operator",
+      "contractDigest": "fd8ba0479d45d75569d040969f08fb4415707d1b57d7dd0617dcdf8019cf19fb",
+      "reason": "Repair 4 (final): operator approved preparing amendment 5 ('Yes, prepare it') and signed amend-5 raising repairAttempts to 4; combined fix of attempt-6 defects: brain.py stdout auth error, check_manifests SB_ROOT, ALLOWED_SUB hex, test_home /data, postgres extra in venv + preflight check"
+    },
+    {
+      "boundary": "B5",
+      "authorizedAt": "2026-11-19T15:15:39.233Z",
+      "authorizer": "operator",
+      "contractDigest": "7f35692c36e20aaee939c5a64126014532abac4f5eb7fa58da181a780c1e7419",
+      "reason": "Repair 5: operator approved preparing amendment 6 ('Yes, prepare the amendment') and signed amend-6 raising repairAttempts to 5; oracle-only fixes after attempt 7: pg_attver normalisation in schema-dump comparison, yq ingress-from query, STORE-001 dedup plant, deterministic BASE-001 timing control"
+    },
+    {
+      "boundary": "B5",
+      "authorizedAt": "2026-11-19T18:25:22.898Z",
+      "authorizer": "operator",
+      "contractDigest": "7d8112c02343cc0118a315dea16d8f75d3ad05eea1a31bf8c220b4e320cfff53",
+      "reason": "Repair 6 (amendment 7): fix the three confirmed review findings (images.yml Trivy path match, storage_postgres/errors.py fallback message, PostgresBackend.exists hiding connection errors) and rerun only the affected scenarios and negative controls."
+    }
+  ]
+}

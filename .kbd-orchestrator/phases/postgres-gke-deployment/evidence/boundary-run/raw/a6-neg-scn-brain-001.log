@@ -1,0 +1,5 @@
+      | ERROR:sellbird.brain:Claude exited with code 1: 
+      | ERROR:sellbird.brain:Brain call failed after 1 attempts. Last error: 
+      | BRAIN_REPLY_EMPTY=True
+      | CREDENTIAL_FILES=0
+NEGATIVE-CONTROL SCN-BRAIN-001 FAIL: no documented missing-login error with the token unset

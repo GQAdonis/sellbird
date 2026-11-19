@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 1,
+  "kind": "kbd.closure-view",
+  "generatedAt": "2026-11-19T18:54:53.249Z",
+  "authority": "derived view; the canonical disposition recorded by prometheus kbd phase close is authoritative",
+  "phaseId": "postgres-gke-deployment",
+  "contractVersion": "2",
+  "contractDigest": "7d8112c02343cc0118a315dea16d8f75d3ad05eea1a31bf8c220b4e320cfff53",
+  "evidenceDigest": "c5381fb8b667df693c8d18dce879137594acb9c71e578aa0f94773df12966342",
+  "disposition": "CLOSED",
+  "reason": "budget-exhausted",
+  "states": {
+    "implementationComplete": true,
+    "behaviorAccepted": true,
+    "releaseEligible": true,
+    "releaseAuthorized": false
+  },
+  "method": {
+    "name": "VLBV",
+    "source": "project-pin",
+    "deviation": null
+  },
+  "executedBy": {
+    "harness": "Claude Code (desktop app)",
+    "version": "unknown",
+    "model": "claude-opus-5-5"
+  },
+  "preAuthorizationArtifacts": {
+    "status": "none",
+    "authorizedAt": "2026-11-18T20:14:20.120Z",
+    "globs": [
+      ".kbd-orchestrator/phases/postgres-gke-deployment/evidence/**"
+    ],
+    "scanned": 90,
+    "artifacts": []
+  },
+  "scenarios": [
+    {
+      "id": "SCN-BASE-001",
+      "name": "Baseline suite still collected and green",
+      "actor": "Contributor running the project test command",
+      "usefulOutcome": "The configured test command runs and every baseline test still passes, with only justified test-file changes",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "does not prove performance on production hardware"
+      ],
+      "substitutedBoundaries": [],
+      "realCollaborators": [
+        "project virtualenv",
+        "pytest",
+        "SQLite on disk"
+      ]
+    },
+    {
+      "id": "SCN-STORE-001",
+      "name": "SQLite behaviour unchanged after the backend split",
+      "actor": "Local single-user operator",
+      "usefulOutcome": "State operations on SQLite return the same results as before",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "does not cover the dashboard UI"
+      ],
+      "substitutedBoundaries": [],
+      "realCollaborators": [
+        "SQLite on disk"
+      ]
+    },
+    {
+      "id": "SCN-STORE-002",
+      "name": "Postgres 18 matches the same expectations",
+      "actor": "Hosted operator",
+      "usefulOutcome": "State operations on Postgres 18 behave exactly like SQLite, including signal governance",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "single-node Postgres only"
+      ],
+      "substitutedBoundaries": [],
+      "realCollaborators": [
+        "flint-forge Postgres 18 container",
+        "psycopg 3"
+      ]
+    },
+    {
+      "id": "SCN-STORE-003",
+      "name": "Migrations reverse cleanly and the runtime role cannot change schema",
+      "actor": "Hosted operator upgrading or rolling back",
+      "usefulOutcome": "Schema changes can be undone and the running app cannot alter the schema",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "does not test data-preserving down migrations beyond schema"
+      ],
+      "substitutedBoundaries": [],
+      "realCollaborators": [
+        "flint-forge Postgres 18 container",
+        "pg_dump 18"
+      ]
+    },
+    {
+      "id": "SCN-SEND-001",
+      "name": "Concurrent claimers send an approved item once",
+      "actor": "A prospect receiving outreach",
+      "usefulOutcome": "An approved email is sent exactly once even when the heartbeat and dashboard race",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "concurrency is simulated in one host, not across pods"
+      ],
+      "substitutedBoundaries": [],
+      "realCollaborators": [
+        "flint-forge Postgres 18 container",
+        "asyncio concurrent connections"
+      ]
+    },
+    {
+      "id": "SCN-SEND-002",
+      "name": "Sending safety identical on Postgres",
+      "actor": "A prospect and the sender's domain reputation",
+      "usefulOutcome": "Quiet hours, daily limit, opt-out and approval ladder behave the same on both backends",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "real mailbox delivery is not exercised"
+      ],
+      "substitutedBoundaries": [
+        "the outbound mailbox is a recording test double; no email leaves the machine"
+      ],
+      "realCollaborators": [
+        "SQLite on disk",
+        "flint-forge Postgres 18 container"
+      ]
+    },
+    {
+      "id": "SCN-MOVE-001",
+      "name": "A fixture database moves intact",
+      "actor": "An operator moving from local to hosted",
+      "usefulOutcome": "An existing SQLite database lands in Postgres with nothing lost",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "the operator's real database is not moved"
+      ],
+      "substitutedBoundaries": [],
+      "realCollaborators": [
+        "SQLite on disk",
+        "flint-forge Postgres 18 container"
+      ]
+    },
+    {
+      "id": "SCN-AUTH-001",
+      "name": "Only the allowlisted identity reaches the hosted dashboard",
+      "actor": "The operator signing in",
+      "usefulOutcome": "The operator gets in through Kratos and flint-gate; nobody else gets anything",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "the public hostname and TLS are not exercised (carried CG-2)"
+      ],
+      "substitutedBoundaries": [],
+      "realCollaborators": [
+        "sellbird:boundary container",
+        "Ory Kratos container",
+        "flint-gate container",
+        "flint-forge Postgres 18 container"
+      ]
+    },
+    {
+      "id": "SCN-AUTH-002",
+      "name": "Local token mode unchanged",
+      "actor": "Local single-user operator",
+      "usefulOutcome": "Local installs keep the token link and refuse public binds",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "does not exercise MCP agent clients"
+      ],
+      "substitutedBoundaries": [],
+      "realCollaborators": [
+        "uvicorn dashboard on loopback"
+      ]
+    },
+    {
+      "id": "SCN-LOG-001",
+      "name": "No secrets in logs; locked-down runtime",
+      "actor": "An operator whose cluster logs are widely readable",
+      "usefulOutcome": "Neither the dashboard token nor the Claude credential leaks, and the runtime is non-root and read-only",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "cluster log pipeline itself not exercised"
+      ],
+      "substitutedBoundaries": [],
+      "realCollaborators": [
+        "sellbird:boundary image",
+        "running compose container"
+      ]
+    },
+    {
+      "id": "SCN-BRAIN-001",
+      "name": "AI credential from the environment only",
+      "actor": "The operator running the hosted brain",
+      "usefulOutcome": "The brain authenticates from the Secret-provided variable without persisting it",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "provider terms for headless subscription use are the operator's risk and are not tested"
+      ],
+      "substitutedBoundaries": [
+        "no real inference call unless the operator supplies a token; without it that sub-check is BLOCKED"
+      ],
+      "realCollaborators": [
+        "sellbird:boundary container",
+        "claude CLI subprocess"
+      ]
+    },
+    {
+      "id": "SCN-SHIP-001",
+      "name": "Guarded digest pin and hardened manifests",
+      "actor": "The operator shipping a release",
+      "usefulOutcome": "A merge produces a scanned image and a guarded pin with no real hostname in this fork",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "no real GitHub Actions run, registry push or cluster sync"
+      ],
+      "substitutedBoundaries": [
+        "the platform repository is replaced by a scratch fixture repository; live run and Argo CD sync are NOT_EXERCISED (carried CG-1)"
+      ],
+      "realCollaborators": [
+        "kustomize",
+        "actionlint",
+        "deploy guard script",
+        "scratch git repository"
+      ]
+    },
+    {
+      "id": "SCN-CONTRACT-001",
+      "name": "Platform interface contract published and well-formed",
+      "actor": "The platform repository's maintainers",
+      "usefulOutcome": "Both repositories can build against one agreed interface",
+      "mandatory": true,
+      "verdict": "PASS",
+      "limitations": [
+        "agreement by the platform repository's own phase is outside this contract"
+      ],
+      "substitutedBoundaries": [],
+      "realCollaborators": [
+        "contract check script"
+      ]
+    }
+  ]
+}

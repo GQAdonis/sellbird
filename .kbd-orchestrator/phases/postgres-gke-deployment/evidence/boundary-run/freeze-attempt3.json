@@ -1,0 +1,12 @@
+{
+  "attempt": 3,
+  "boundary": "B5",
+  "repair": 1,
+  "reason": "attempt 2 BLOCKED by a host port conflict; rerun from run-standin under the same repair",
+  "frozenAt": "2026-11-18T23:33:54.384991+00:00",
+  "commit": "39ab979980feff9da3e78a2824f16a7019f6ecce",
+  "tree": "78d06338ed102c6f92de72b7c40dacfba1093fe1",
+  "trackedChanges": "",
+  "Dockerfile": "229eba07ba0f027c3f8687fc65921d0a9a50d9d852d3c60576f99603698b8ebf",
+  "image": "sha256:764bb477ab1114eb3f4dcc2a34c3cd36ceb035a88445f4aa7fc57b2c251a661c"
+}
