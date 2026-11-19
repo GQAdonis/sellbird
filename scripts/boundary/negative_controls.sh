@@ -42,17 +42,22 @@ scn_base_001() {
   nc_scratch_tree; local tree="$NC_DIR"
   nc_scratch; local plug="$NC_DIR"
   cat >"$plug/negctl_quadratic.py" <<'PLUGIN'
-"""Pytest plugin: makes the testimonial and reply scans quadratic (K * n * n/step)."""
+"""Pytest plugin: makes the testimonial and reply scans quadratic (K * n * n/step).
+
+The cost is a sleep proportional to n*n, so quadrupling the input costs 16x on
+any machine; a real scan was so fast (memchr) that the ratio depended on load.
+"""
 import os
+import time
 
 os.environ.pop("SELLBIRD_HOME", None)
 
 
+SECONDS_PER_UNIT = 2e-11  # ~0.05 s at the tests' small sizes, ~0.8 s at 4x
+
+
 def _burn(size, step, times=1):
-    hay = "a" * size
-    for _ in range(times):
-        for start in range(0, size, step):
-            hay.find("\0", start)  # a full scan of the rest of the text, per step
+    time.sleep(times * size * size / step * SECONDS_PER_UNIT)
 
 
 def pytest_configure(config):

@@ -6,6 +6,7 @@ them they must all run, pg_dump included.
 """
 
 import os
+import re
 import shutil
 import subprocess
 
@@ -72,6 +73,10 @@ def pg():
     runner.migrate_up(migrate_dsn)      # leave the newest schema for the other tests
 
 
+_PG_ATTVER = re.compile(r"pg_attver=\d+")
+_PG_ATTVER_ONLY = re.compile(r"^ALTER TABLE ONLY \S+ ALTER COLUMN \S+ SET \(pg_attver=\d+\);$")
+
+
 def _pg_dump(dsn: str) -> str:
     """pg_dump --schema-only, without lines that differ run to run."""
     exe = os.environ.get(PG_DUMP_ENV) or shutil.which("pg_dump")
@@ -86,7 +91,11 @@ def _pg_dump(dsn: str) -> str:
             continue
         if line.startswith(("\\restrict", "\\unrestrict")):  # a random key per run
             continue
-        keep.append(line)
+        # The flint-forge image stamps each column with a per-create attribute
+        # option (pg_attver=<n>); it differs every time a column is created.
+        if _PG_ATTVER_ONLY.match(line):
+            continue
+        keep.append(_PG_ATTVER.sub("pg_attver=N", line))
     return "\n".join(keep)
 
 

@@ -67,12 +67,16 @@ def replace_once(path: Path, old: str, new: str) -> None:
 PLANTS = {
     # Company dedup stops normalising the domain: " Bakery.Example.test" and
     # "bakery.example.test" become two companies.
-    "dedup": ("sellbird/state.py", "company.domain = _norm(company.domain)",
-              "company.domain = company.domain or \"\""),
+    # Both layers normalise (the Company model's validator and add_company),
+    # so both are planted; either alone would still dedup.
+    "dedup": (("sellbird/state.py", "company.domain = _norm(company.domain)",
+               "company.domain = company.domain or \"\""),
+              ("sellbird/models/company.py", 'return (v or "").strip().lower()',
+               'return v or ""')),
     # The container guard that withholds the unlock link from logs is removed.
-    "log": ("sellbird/dashboard.py",
-            "    if running_in_container():\n        # Container logs",
-            "    if False:  # planted: token printing re-enabled\n        # Container logs"),
+    "log": (("sellbird/dashboard.py",
+             "    if running_in_container():\n        # Container logs",
+             "    if False:  # planted: token printing re-enabled\n        # Container logs"),),
 }
 
 
@@ -273,9 +277,9 @@ def main(argv: list[str]) -> int:
         copy_tree(Path(argv[1]), Path(argv[2]))
         return 0
     if argv[:1] == ["plant"] and len(argv) == 3 and argv[1] in PLANTS:
-        rel, old, new = PLANTS[argv[1]]
         try:
-            replace_once(Path(argv[2]) / rel, old, new)
+            for rel, old, new in PLANTS[argv[1]]:
+                replace_once(Path(argv[2]) / rel, old, new)
         except Blocked as exc:
             print(f"PROBE BLOCKED: {exc}")
             return 2

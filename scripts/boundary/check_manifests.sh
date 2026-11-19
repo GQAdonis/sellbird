@@ -128,7 +128,7 @@ ok; [ -n "$peers" ] || fail "no ingress allowance from flint-gate"
 expect_empty "ingress peer other than flint-gate pods in namespace flint-gate" \
   "$(printf '%s\n' "$peers" | grep . | grep -vxF 'flint-gate|flint-gate|-')"
 expect_empty "ingress rule without a 'from' (allows every source)" \
-  "$(q '.[] | select(.kind == "NetworkPolicy") | . as $n | (.spec.ingress // []) | .[] | select(((.from // []) | length) == 0) | $n.metadata.name')"
+  "$(q '.[] | select(.kind == "NetworkPolicy") | select(((.spec.ingress // []) | map(select(((.from // []) | length) == 0)) | length) > 0) | .metadata.name')"
 expect_empty "ingress port other than 5555" \
   "$(q '.[] | select(.kind == "NetworkPolicy") | (.spec.ingress // []) | .[] | (.ports // [{"port": "any"}]) | .[] | select(.port != 5555) | .port')"
 
