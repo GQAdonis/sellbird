@@ -214,7 +214,8 @@ jobs:
           set -euo pipefail
           found() {
             jq -e --arg f "$1" \
-              '[.Results[]? | select((.Target // "") | endswith($f))
+              '[.Results[]? | select((.Target // "" | ltrimstr("/")) as $t
+                  | $t == $f or ($t | endswith("/" + $f)))
                 | .Secrets[]? | select(.RuleID == "github-pat")] | length >= 1' \
               "$REPORT" > /dev/null
           }
@@ -223,9 +224,9 @@ jobs:
             exit 1
           fi
           [ -s "$REPORT" ] || { echo "::error::no control report: the scan failed for another reason"; exit 1; }
-          found "/app/planted-control.env" \
+          found "app/planted-control.env" \
             || { echo "::error::planted secret in /app not detected"; exit 1; }
-          found "/usr/local/share/sellbird/skills/zz-planted-control.md" \
+          found "usr/local/share/sellbird/skills/zz-planted-control.md" \
             || { echo "::error::planted secret in shipped Markdown not detected"; exit 1; }
           docker image rm "$CONTROL_REF" > /dev/null
           echo "Negative control tripped: both planted secrets detected, scan exited non-zero."

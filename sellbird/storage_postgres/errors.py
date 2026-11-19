@@ -78,4 +78,9 @@ def _translate(exc: psycopg.Error) -> storage.DatabaseError:
     if isinstance(exc, psycopg.OperationalError):
         # Connection failures: say so without the connection string.
         return storage.OperationalError("could not reach the Postgres database")
-    return storage.DatabaseError(exc.diag.message_primary or type(exc).__name__)
+    # Anything else: Postgres's own text can quote the offending value (for
+    # example ``invalid input syntax for type integer: "..."``), so name the
+    # error class and SQLSTATE only.
+    sqlstate = getattr(exc, "sqlstate", None)
+    return storage.DatabaseError(
+        f"database error: {type(exc).__name__}" + (f" (SQLSTATE {sqlstate})" if sqlstate else ""))

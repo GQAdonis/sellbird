@@ -27,6 +27,10 @@ from sellbird import storage
 # migrations/postgres. A test keeps the two equal.
 EXPECTED_SCHEMA_VERSION = 5
 
+# SQLSTATEs that mean "this database isn't there yet", not "can't tell":
+# invalid_catalog_name (no such database) and undefined_table (not migrated).
+_NOT_THERE = frozenset({"3D000", "42P01"})
+
 
 def _dsn(name: str) -> str:
     """The connection string again: the locator ``postgresql://...`` was split
@@ -78,13 +82,20 @@ class PostgresBackend:
         self._known.add(name)
 
     def exists(self, name: str) -> bool:
-        """Whether the database is reachable and has been migrated at least once."""
+        """Whether the database is there and has been migrated at least once.
+
+        False only when Postgres itself says so: no such database, or no
+        ``schema_version`` table yet. An unreachable server, a refused
+        password or a missing grant raise (as ``storage.ERRORS``), so an
+        outage is never mistaken for an empty install."""
         if name in self._known:
             return True
         try:
             row = self.read_one(name, "SELECT 1 FROM schema_version LIMIT 1", ())
-        except storage.ERRORS:
-            return False
+        except storage.ERRORS as e:
+            if getattr(e, "sqlstate", None) in _NOT_THERE:
+                return False
+            raise
         if row is not None:
             self._known.add(name)
         return row is not None
