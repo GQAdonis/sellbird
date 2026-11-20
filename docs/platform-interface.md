@@ -17,10 +17,13 @@ The words MUST, MUST NOT, SHOULD and MAY are used as in RFC 2119.
 
 ## Status and agreement
 
-- Contract version: `1`
-- Status: proposed. It is agreed only when the operator records an agreement
-  decision in the KBD decision log for phase `postgres-gke-deployment`. Editing
-  this file, merging it, or a passing contract check does not agree it.
+- Contract version: `2`
+- Status: agreed. The operator agreed version 1 and then version 2 as recorded
+  decisions in the KBD decision log of the shared platform repository's phase
+  (decisions D-101 and D-107). This repository's phase `postgres-gke-deployment`
+  closed before agreement and left it to that counterparty phase. Editing this
+  file, merging it, or a passing contract check does not agree it; only an
+  operator decision does.
 - The counterparty is the shared platform repository and its own KBD phase. That
   phase verifies its side against this document; this repository verifies its side
   with `scripts/boundary/check_platform_contract.sh docs/platform-interface.md`.
@@ -28,6 +31,21 @@ The words MUST, MUST NOT, SHOULD and MAY are used as in RFC 2119.
   and needs a new agreement decision. Additive, optional fields need a version bump
   but not a change on the other side.
 - Rationale for the overall split: `docs/adr/0001-shared-platform-and-single-tenant-database.md`.
+
+### Changes from version 1
+
+Version 2 changes only operator identity provisioning. Sellbird's code and
+manifests are unaffected.
+
+- Version 1 created the operator identity with no credentials and had the operator
+  redeem an admin recovery code. Kratos (checked on v1.3.1) refuses every recovery
+  flow while `selfservice.flows.recovery.enabled` is `false`, which this contract
+  requires, so that code could never be redeemed.
+- Version 2 creates the identity with a password credential that the operator
+  supplies, and recovery stays disabled. Lost access is restored through the admin
+  API by replacing the password credential (see
+  [Rotation and revocation](#rotation-and-revocation)).
+- The agreement now lives in the platform phase's decision log (see Status above).
 
 ## Ownership summary
 
@@ -136,7 +154,7 @@ Kratos is shared and platform-owned. For Sellbird the platform MUST configure:
 | `selfservice.methods.lookup_secret.enabled` | `true` | recovery codes for the second factor |
 | `session.whoami.required_aal` | `highest_available` | a session without the second factor gets no identity from `whoami`, so flint-gate refuses it |
 | `selfservice.flows.settings.required_aal` | `highest_available` | changing credentials needs the second factor |
-| `selfservice.flows.recovery.enabled` | `false` | an email account alone must not reset access; recovery is through the admin API |
+| `selfservice.flows.recovery.enabled` | `false` | an email account alone must not reset access; lost access is restored by replacing the password credential through the admin API |
 | `selfservice.allowed_return_urls` | includes `https://sellbird.example.test/` | return to Sellbird after sign-in |
 | Identity schema traits | `email` only (password identifier and TOTP account name) | no trait may be named `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `aal` or `kid`, because flint-gate merges traits into the tokens it mints |
 | Admin API | cluster-internal only, never routed through the Gateway or flint-gate | it can create identities and sessions |
@@ -155,13 +173,18 @@ through the platform's Kratos admin API from inside the cluster (for example wit
 port-forward):
 
 1. `POST /admin/identities` with the platform's schema id, `traits.email` set to an
-   address the operator owns, `state: active`, and no credentials in the body.
-2. `POST /admin/recovery/code` for that identity; the operator uses the one-time
-   code to set a password in the browser.
-3. The operator signs in and enrols TOTP in the settings flow, then saves the
-   recovery codes offline. The next sign-in is `aal2`.
-4. The operator copies the identity's `id` (a UUID) into the platform overlay's
+   address the operator owns, `state: active`, and a password credential
+   (`credentials.password.config.password`, or `hashed_password` holding a hash the
+   operator made locally). The operator types or pastes it in their own shell. It is
+   never written to a file, committed, logged or handled by anyone else.
+2. The operator signs in at the auth host with that password, enrols TOTP in the
+   settings flow, then saves the recovery codes offline. The next sign-in is `aal2`.
+3. The operator copies the identity's `id` (a UUID) into the platform overlay's
    `SELLBIRD_GATE_ALLOWED_SUBS` (see [Gateway configuration values](#gateway-configuration-values)).
+
+Recovery stays disabled throughout. Version 1's `POST /admin/recovery/code` step is
+removed, because Kratos refuses to redeem a recovery code while recovery is
+disabled.
 
 The operator's email address and identity id MUST NOT appear in this repository,
 its commits, issues or pull requests. In examples here the id is
@@ -447,6 +470,7 @@ flint-forge ingress from `sellbird` on TCP 5432, and flint-gate ingress from
 | Event | Action | Residual exposure |
 |---|---|---|
 | Remove the operator's access | remove the id from `SELLBIRD_GATE_ALLOWED_SUBS` and roll the Deployment; revoke Kratos sessions with `DELETE /admin/identities/<id>/sessions` | tokens already minted stay valid for at most 300 s |
+| Operator lost the password or second factor | through the admin API from inside the cluster: `PUT /admin/identities/<id>` with a new password credential supplied by the operator (and, for a lost second factor, the TOTP credential removed so it can be re-enrolled), then `DELETE /admin/identities/<id>/sessions` | none; recovery flows stay disabled |
 | flint-gate signing key rotation | publish the new key beside the old one, switch signing, keep the old key published for at least 10 minutes | none, if the overlap is kept |
 | Suspected signing key leak | remove the key from the JWKS at once | Sellbird drops it within its 5-minute cache window |
 | Database password rotation | `ALTER ROLE ... PASSWORD`, update the matching Secret, restart the consumer | none |
