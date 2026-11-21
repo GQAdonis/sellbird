@@ -2896,9 +2896,16 @@ async def static_file(path: str):
     )
 
 
+# Tells the page a gateway signs the operator in (see sellbird/web/auth.js).
+GATEWAY_MODE_META = '<meta name="sellbird-dashboard-mode" content="gateway">'
+
+
 @app.get("/", response_class=HTMLResponse)
-async def dashboard():
-    return (WEB_DIR / "index.html").read_text(encoding="utf-8")
+async def dashboard(request: Request):
+    html = (WEB_DIR / "index.html").read_text(encoding="utf-8")
+    if getattr(request.app.state, "dashboard_mode", "local") == "gateway":
+        html = html.replace("<head>", "<head>\n" + GATEWAY_MODE_META, 1)
+    return html
 
 
 class DashboardSetupError(Exception):
@@ -2986,8 +2993,10 @@ def build_gateway_app(config, *, fetch=None) -> FastAPI:
     from sellbird.auth.jwks import JwksCache
 
     verifier = GateTokenVerifier(config, JwksCache(config.jwks_url, fetch=fetch))
-    return build_app(guard=Middleware(GatewayGuard, config=config, verifier=verifier),
-                     routers=[whoami_router])
+    gateway_app = build_app(guard=Middleware(GatewayGuard, config=config, verifier=verifier),
+                            routers=[whoami_router])
+    gateway_app.state.dashboard_mode = "gateway"
+    return gateway_app
 
 
 def _bind_for_gateway(host: str) -> str:

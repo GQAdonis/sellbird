@@ -222,6 +222,11 @@ minor versions can still change behaviour.
 
 ### Fixed
 
+- **The hosted dashboard works after you sign in.** In gateway mode the page
+  now sends your sign-in cookie with its API calls, so the gateway can check
+  it. Before, every call went out without it and the page showed "Dashboard
+  locked" and asked for a local token that hosted mode doesn't have. Local
+  mode is unchanged: the dashboard token only, and no cookies.
 - **Instantly's daily cap counts your local day, not UTC** (from #177 by
   @solvejet-team), so the cap resets at your midnight.
 
