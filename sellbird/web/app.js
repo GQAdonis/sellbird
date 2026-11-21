@@ -324,9 +324,11 @@ async function lockIfRefused(r) {
   }
   showLock(r.status === 503
     ? 'The dashboard server can\'t use its token file, so it is refusing every request. ' + why
-    : authToken()
-      ? 'The saved token was not accepted (the dashboard may have a new one).'
-      : 'This tab doesn\'t have the dashboard token yet.');
+    : gatewayMode()
+      ? 'You\'re not signed in, or your sign-in has expired. Sign in again, then reload this page.'
+      : authToken()
+        ? 'The saved token was not accepted (the dashboard may have a new one).'
+        : 'This tab doesn\'t have the dashboard token yet.');
   return true;
 }
 
@@ -335,6 +337,9 @@ function showLock(reason) {
   const el = document.getElementById('lock-screen');
   if (!el) return;
   document.getElementById('lock-reason').textContent = reason;
+  // Gateway mode has no dashboard token to paste.
+  const tokenHelp = document.getElementById('lock-token-help');
+  if (tokenHelp) tokenHelp.style.display = gatewayMode() ? 'none' : '';
   el.style.display = 'flex';
   const dot = document.getElementById('header-dot');
   const text = document.getElementById('header-status-text');
