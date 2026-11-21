@@ -409,7 +409,8 @@ const fs = require('fs'), vm = require('vm');
 const calls = [], revoked = [], links = [];
 global.window = {location: {origin: 'http://127.0.0.1:5555', hash: ''}};
 global.sessionStorage = {getItem: () => 'T'.repeat(43)};
-global.document = {body: {appendChild: x => links.push(x)}, createElement: () =>
+global.document = {querySelector: () => null,  // no gateway-mode mark: local mode
+  body: {appendChild: x => links.push(x)}, createElement: () =>
   ({click() {this.clicked = true;}, remove() {this.removed = true;}})};
 global.setTimeout = fn => fn();
 const locks = [];
