@@ -22,7 +22,7 @@ WEB = Path(dash.__file__).resolve().parent / "web"
 
 HARNESS = r"""
 const src = require('fs').readFileSync(process.argv[1], 'utf8');
-const m = src.match(/function hostedStatusView[\s\S]*?\n}\n/);
+const m = src.match(/function hostedStatusView[\s\S]*?\r?\n}\r?\n/);
 eval(m[0] + ';globalThis.V = hostedStatusView;');
 const ago = t => 'AGO(' + t + ')', abs = t => 'ABS(' + t + ')';
 const cases = JSON.parse(process.argv[2]);
