@@ -120,10 +120,11 @@ def test_exists_is_false_when_schema_version_is_not_there():
 
 
 def test_exists_raises_for_a_refused_grant():
+    # Skip first: without the test DSNs the postgres extra may not be installed.
+    migrate_dsn, app_dsn = require_pg()
     import psycopg
     from psycopg import sql
 
-    migrate_dsn, app_dsn = require_pg()
     migrate_to_latest(migrate_dsn)
     with psycopg.connect(app_dsn, autocommit=True) as conn:
         app_role = conn.execute("SELECT current_user").fetchone()[0]
