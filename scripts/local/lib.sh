@@ -34,3 +34,16 @@ sb_python() {
     command -v python3 || sb_die "python3 is required"
   fi
 }
+
+# sb_gate_port: the host port flint-gate is published on. SELLBIRD_LOCAL_GATE_PORT
+# from the environment, else from infra/local/.env (make-env.sh writes it), else
+# 4456 (an .env written before the port became a variable). Dies unless numeric.
+sb_gate_port() {
+  local port="${SELLBIRD_LOCAL_GATE_PORT:-}"
+  if [[ -z "$port" && -f "$SB_ENV_FILE" ]]; then
+    port="$(sed -n 's/^SELLBIRD_LOCAL_GATE_PORT=//p' "$SB_ENV_FILE" | tail -n 1)"
+  fi
+  port="${port:-4456}"
+  [[ "$port" =~ ^[0-9]+$ ]] || sb_die "SELLBIRD_LOCAL_GATE_PORT must be numeric"
+  printf '%s' "$port"
+}

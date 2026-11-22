@@ -7,12 +7,18 @@
 #   - ConfigMap `sellbird-gateway` (the six SELLBIRD_* gateway keys);
 #   - any patch for its own cluster (for example extra egress `except` ranges).
 #
-# Secrets (`sellbird-db-app`, `sellbird-db-migrate`, `sellbird-claude`) are
-# created by the operator in namespace `sellbird` and are only referenced here,
-# by name and key, through `secretKeyRef`. No Secret, Namespace, Ingress,
-# HTTPRoute or PersistentVolumeClaim is created by this base: the AppProject
-# allows only Deployment, Service, ServiceAccount, ConfigMap, NetworkPolicy and
-# Job, in namespace `sellbird`.
+# Secrets are created by the operator in namespace `sellbird` and are only
+# referenced here, by name and key, through `secretKeyRef` (key name = variable
+# name): required `sellbird-db-app`, `sellbird-db-migrate` (migration Job only)
+# and `sellbird-claude`; optional `sellbird-mail`, `sellbird-discovery`,
+# `sellbird-verifiers` and `sellbird-extras`, each created only for the
+# providers in use (the full key list per container is in deployment.yaml and
+# openspec/changes/hosted-heartbeat/design.md). No Secret, Namespace, Ingress or
+# HTTPRoute is created by this base. It creates Deployment, Service,
+# ServiceAccount (`sellbird` for the app, `sellbird-migrate` for the migration
+# Job), NetworkPolicy, Job and one PersistentVolumeClaim (`sellbird-data`, the
+# hosted home folder), in namespace `sellbird`; the AppProject must allow these
+# kinds, PersistentVolumeClaim included.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: sellbird
@@ -21,4 +27,5 @@ resources:
   - service.yaml
   - networkpolicy.yaml
   - migrate-job.yaml
+  - persistentvolumeclaim.yaml
   - deployment.yaml

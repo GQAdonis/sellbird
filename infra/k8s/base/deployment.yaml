@@ -1,24 +1,81 @@
-# Sellbird's dashboard in gateway mode (platform contract v1;
+# Hosted Sellbird: one pod, two containers (platform contract v1;
 # openspec/changes/cluster-ready-container-image/design.md, "Notes for the
-# manifests").
+# manifests"; openspec/changes/hosted-heartbeat/design.md, "Per-container
+# secret split"; design calls A2, A5 and A15 in
+# .kbd-orchestrator/phases/sellbird-go-live/analysis.md).
 #
-# - One replica (decision D12) and the Recreate strategy, so two Sellbird
-#   processes never run against the same database at once.
+# Containers (same image; the overlay's single `images` entry for the logical
+# name `sellbird` pins both to <registry>/<owner>/sellbird:<sha>@sha256:<digest>):
+# - `sellbird`, the dashboard in gateway mode (`dashboard --host 0.0.0.0`). The
+#   only container with a port; the Service routes to it alone. It is first in
+#   the list and the default for `kubectl logs`/`exec`, so anything that
+#   addresses containers by index or by name `sellbird` still reaches it.
+# - `heartbeat`, the outreach loop (`sellbird run`). No port, no probes: it has
+#   nothing to probe over the network and long quiet-hours or over-budget
+#   sleeps are normal, so a liveness probe could only kill a healthy loop. If
+#   the loop exits, Kubernetes restarts it. Each cycle, idle ones included,
+#   writes an `actions` row, and the dashboard reports it running only while the
+#   newest row is under three heartbeat intervals old (hosted-heartbeat D2, D3).
+#   Training is an operator command (design call A6), run in either container:
+#   `kubectl -n sellbird exec deploy/sellbird -c sellbird -- python -m sellbird
+#   train <url>`.
+#   Until Sellbird is trained, in gateway mode `sellbird run` does not exit: it
+#   waits, re-checks the trained configuration every minute and starts the loop
+#   by itself, so this container stays running and the pod stays Ready. Any
+#   other failure still exits non-zero; while this container is restarting the
+#   pod is not Ready and the dashboard is unreachable through flint-gate.
+#
+# - One replica (decision D12) and the Recreate strategy, so two Sellbird pods
+#   never run against the same database at once, and so the old pod releases the
+#   ReadWriteOnce home volume before the new pod mounts it (a rolling update
+#   would leave the new pod waiting on the attach). Inside the pod only one loop
+#   runs: `sellbird run` takes an flock on /data/data/sellbird.lock, which the
+#   kernel drops when the process dies, so a PID file left on the volume by an
+#   earlier container never blocks a restart (sellbird/pidfile.py, main.main).
+# - terminationGracePeriodSeconds 120: on SIGTERM the loop finishes the work in
+#   hand (a model call, an SMTP send) before exiting; 30 s could cut a send
+#   short. The dashboard exits on SIGTERM at once, so a normal stop is no slower.
 # - Gateway mode is selected only by SELLBIRD_DASHBOARD_MODE=gateway from
-#   ConfigMap `sellbird-gateway`; without it the image refuses `--host 0.0.0.0`.
-#   The ConfigMap is required (not optional): if it is missing the pod does not
-#   start, rather than starting in some other mode.
-# - Secrets reach the container only as single keys through `secretKeyRef`:
-#   SELLBIRD_DATABASE_URL from `sellbird-db-app` (runtime role) and
-#   CLAUDE_CODE_OAUTH_TOKEN from `sellbird-claude`. Never `sellbird-db-migrate`,
-#   never a Secret volume, never `envFrom: secretRef`.
-# - Probes are tcpSocket on 5555: gateway mode answers 400 to any request
-#   without the public Host, so an httpGet probe would always fail.
-# - Read-only root filesystem; writable paths are emptyDirs: /data
-#   (SELLBIRD_HOME, seeded from the image on start; state is in Postgres),
-#   /tmp (Python temp files, the Claude CLI config dir, Chromium) and /dev/shm.
-#   Settings saved from the dashboard to /data do not survive a restart: the
-#   AppProject allows no PersistentVolumeClaim (contract v1).
+#   ConfigMap `sellbird-gateway` (design call A15), on both containers: the
+#   dashboard loads the whole ConfigMap (it needs the gateway settings); the
+#   heartbeat takes only that one key. The ConfigMap is required (not
+#   optional): if it is missing the pod does not start, rather than starting in
+#   some other mode.
+# - Secrets reach the containers only as single keys through `secretKeyRef`,
+#   key name equal to the variable name. Never `sellbird-db-migrate`, never a
+#   Secret volume, never `envFrom: secretRef`. Secrets are created by the
+#   operator; this base only names them. Split (hosted-heartbeat design.md):
+#     sellbird-db-app      SELLBIRD_DATABASE_URL                 both, required
+#     sellbird-claude      CLAUDE_CODE_OAUTH_TOKEN               both, required
+#                          (the dashboard's offer suggest and preview call the model)
+#     sellbird-mail        SMTP_*, IMAP_*, GMAIL_*, M365_*,      both, optional
+#                          INSTANTLY_API_KEY (the dashboard only reads them to
+#                          decide whether Sellbird can send; the heartbeat sends
+#                          and reads replies)
+#     sellbird-discovery   DATAFORSEO_*, SERPER_API_KEY,         both, optional
+#                          TINYFISH_API_KEY, SCAVIO_API_KEY (the Discover tab
+#                          runs paid discovery from the dashboard)
+#     sellbird-verifiers   REOON_API_KEY, ZEROBOUNCE_API_KEY,    heartbeat, optional
+#                          HUNTER_API_KEY, HUNTER_MONTHLY_SEARCHES
+#     sellbird-extras      PRECLEARED_API_KEY, TRULYINBOX_*,     heartbeat, optional
+#                          CLOUDFLARE_*, LINKEDIN_*
+#   An optional Secret or key that is absent leaves the variable unset; the
+#   feature then shows as not configured. Gmail and Microsoft 365 also need a
+#   token from a browser sign-in, so hosted Sellbird uses SMTP and IMAP.
+# - Probes on the dashboard are tcpSocket on 5555: gateway mode answers 400 to
+#   any request without the public Host, so an httpGet probe would always fail.
+# - Read-only root filesystem on both. /data (SELLBIRD_HOME) is the
+#   PersistentVolumeClaim `sellbird-data` (persistentvolumeclaim.yaml), mounted
+#   by both containers, so training, the offer and dashboard settings survive
+#   restarts and deploys and the heartbeat reads what the dashboard saves;
+#   `seed_home` adds only the shipped defaults that are missing and never
+#   overwrites. Business state is in Postgres. fsGroup 1000 makes the volume
+#   writable by the non-root `sellbird` user (uid/gid 1000); OnRootMismatch
+#   skips the recursive ownership change when the volume root already matches.
+#   /tmp (Python temp files, the Claude CLI config dir CLAUDE_CONFIG_DIR=/tmp/claude,
+#   Chromium) and /dev/shm are emptyDirs, one set per container, so the two
+#   Claude CLI processes never share a config directory and the internet-facing
+#   dashboard never sees the heartbeat's temporary files.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -43,19 +100,24 @@ spec:
       labels:
         app.kubernetes.io/name: sellbird
         app.kubernetes.io/component: app
+      annotations:
+        # `kubectl logs` and `kubectl exec` without -c pick the dashboard.
+        kubectl.kubernetes.io/default-container: sellbird
     spec:
       serviceAccountName: sellbird
       automountServiceAccountToken: false
       enableServiceLinks: false
-      terminationGracePeriodSeconds: 30
+      terminationGracePeriodSeconds: 120
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
       containers:
+        # --- dashboard ---------------------------------------------------
         - name: sellbird
           # Logical name; the overlay's `images` entry pins it to
           # <registry>/<owner>/sellbird:<commit sha>@sha256:<digest>.
@@ -80,6 +142,66 @@ spec:
                 secretKeyRef:
                   name: sellbird-claude
                   key: CLAUDE_CODE_OAUTH_TOKEN
+            # sellbird-mail (optional): read only to decide whether Sellbird
+            # can send, which decides whether "mark as sent by hand" is offered.
+            - name: SMTP_HOST
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: SMTP_HOST, optional: true}
+            - name: SMTP_PORT
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: SMTP_PORT, optional: true}
+            - name: SMTP_USERNAME
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: SMTP_USERNAME, optional: true}
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: SMTP_PASSWORD, optional: true}
+            - name: IMAP_HOST
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: IMAP_HOST, optional: true}
+            - name: IMAP_PORT
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: IMAP_PORT, optional: true}
+            - name: IMAP_USERNAME
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: IMAP_USERNAME, optional: true}
+            - name: IMAP_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: IMAP_PASSWORD, optional: true}
+            - name: GMAIL_CLIENT_ID
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: GMAIL_CLIENT_ID, optional: true}
+            - name: GMAIL_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: GMAIL_CLIENT_SECRET, optional: true}
+            - name: M365_CLIENT_ID
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: M365_CLIENT_ID, optional: true}
+            - name: M365_TENANT_ID
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: M365_TENANT_ID, optional: true}
+            - name: INSTANTLY_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: INSTANTLY_API_KEY, optional: true}
+            # sellbird-discovery (optional): the Discover tab runs discovery.
+            - name: DATAFORSEO_LOGIN
+              valueFrom:
+                secretKeyRef: {name: sellbird-discovery, key: DATAFORSEO_LOGIN, optional: true}
+            - name: DATAFORSEO_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: sellbird-discovery, key: DATAFORSEO_PASSWORD, optional: true}
+            - name: DATAFORSEO_SANDBOX
+              valueFrom:
+                secretKeyRef: {name: sellbird-discovery, key: DATAFORSEO_SANDBOX, optional: true}
+            - name: SERPER_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-discovery, key: SERPER_API_KEY, optional: true}
+            - name: TINYFISH_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-discovery, key: TINYFISH_API_KEY, optional: true}
+            - name: SCAVIO_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-discovery, key: SCAVIO_API_KEY, optional: true}
           securityContext:
             runAsNonRoot: true
             readOnlyRootFilesystem: true
@@ -115,14 +237,165 @@ spec:
               mountPath: /tmp
             - name: dshm
               mountPath: /dev/shm
+        # --- heartbeat ---------------------------------------------------
+        - name: heartbeat
+          # Same logical name, so the overlay's one `images` entry pins both.
+          image: sellbird
+          imagePullPolicy: IfNotPresent
+          args: ["run"]
+          # No ports and no probes (see the header).
+          env:
+            - name: SELLBIRD_DASHBOARD_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: sellbird-gateway
+                  key: SELLBIRD_DASHBOARD_MODE
+            - name: SELLBIRD_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sellbird-db-app
+                  key: SELLBIRD_DATABASE_URL
+            - name: CLAUDE_CODE_OAUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: sellbird-claude
+                  key: CLAUDE_CODE_OAUTH_TOKEN
+            # sellbird-mail (optional): sends and reads replies.
+            - name: SMTP_HOST
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: SMTP_HOST, optional: true}
+            - name: SMTP_PORT
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: SMTP_PORT, optional: true}
+            - name: SMTP_USERNAME
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: SMTP_USERNAME, optional: true}
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: SMTP_PASSWORD, optional: true}
+            - name: IMAP_HOST
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: IMAP_HOST, optional: true}
+            - name: IMAP_PORT
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: IMAP_PORT, optional: true}
+            - name: IMAP_USERNAME
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: IMAP_USERNAME, optional: true}
+            - name: IMAP_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: IMAP_PASSWORD, optional: true}
+            - name: GMAIL_CLIENT_ID
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: GMAIL_CLIENT_ID, optional: true}
+            - name: GMAIL_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: GMAIL_CLIENT_SECRET, optional: true}
+            - name: M365_CLIENT_ID
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: M365_CLIENT_ID, optional: true}
+            - name: M365_TENANT_ID
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: M365_TENANT_ID, optional: true}
+            - name: INSTANTLY_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-mail, key: INSTANTLY_API_KEY, optional: true}
+            # sellbird-discovery (optional): Scout prospecting.
+            - name: DATAFORSEO_LOGIN
+              valueFrom:
+                secretKeyRef: {name: sellbird-discovery, key: DATAFORSEO_LOGIN, optional: true}
+            - name: DATAFORSEO_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: sellbird-discovery, key: DATAFORSEO_PASSWORD, optional: true}
+            - name: DATAFORSEO_SANDBOX
+              valueFrom:
+                secretKeyRef: {name: sellbird-discovery, key: DATAFORSEO_SANDBOX, optional: true}
+            - name: SERPER_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-discovery, key: SERPER_API_KEY, optional: true}
+            - name: TINYFISH_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-discovery, key: TINYFISH_API_KEY, optional: true}
+            - name: SCAVIO_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-discovery, key: SCAVIO_API_KEY, optional: true}
+            # sellbird-verifiers (optional, heartbeat only): Scout verifies
+            # one candidate address per company.
+            - name: REOON_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-verifiers, key: REOON_API_KEY, optional: true}
+            - name: ZEROBOUNCE_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-verifiers, key: ZEROBOUNCE_API_KEY, optional: true}
+            - name: HUNTER_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-verifiers, key: HUNTER_API_KEY, optional: true}
+            - name: HUNTER_MONTHLY_SEARCHES
+              valueFrom:
+                secretKeyRef: {name: sellbird-verifiers, key: HUNTER_MONTHLY_SEARCHES, optional: true}
+            # sellbird-extras (optional, heartbeat only): cold-email check,
+            # warmup status, training crawl, LinkedIn prospecting.
+            - name: PRECLEARED_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-extras, key: PRECLEARED_API_KEY, optional: true}
+            - name: TRULYINBOX_API_KEY
+              valueFrom:
+                secretKeyRef: {name: sellbird-extras, key: TRULYINBOX_API_KEY, optional: true}
+            - name: TRULYINBOX_WORKSPACE_ID
+              valueFrom:
+                secretKeyRef: {name: sellbird-extras, key: TRULYINBOX_WORKSPACE_ID, optional: true}
+            - name: CLOUDFLARE_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef: {name: sellbird-extras, key: CLOUDFLARE_ACCOUNT_ID, optional: true}
+            - name: CLOUDFLARE_API_TOKEN
+              valueFrom:
+                secretKeyRef: {name: sellbird-extras, key: CLOUDFLARE_API_TOKEN, optional: true}
+            - name: LINKEDIN_EMAIL
+              valueFrom:
+                secretKeyRef: {name: sellbird-extras, key: LINKEDIN_EMAIL, optional: true}
+            - name: LINKEDIN_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: sellbird-extras, key: LINKEDIN_PASSWORD, optional: true}
+          securityContext:
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          # Mostly asleep between cycles; a cycle runs the Claude CLI and, for
+          # LinkedIn prospecting, a headless Chromium. The request covers the
+          # idle Python loop plus one CLI process; the limit leaves room for
+          # the CLI and Chromium at once (memory-backed /dev/shm counts toward
+          # it). No CPU limit, like the dashboard: a CPU limit only throttles
+          # bursts that the node can spare.
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              memory: 1536Mi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: heartbeat-tmp
+              mountPath: /tmp
+            - name: heartbeat-dshm
+              mountPath: /dev/shm
       volumes:
         - name: data
-          emptyDir:
-            sizeLimit: 1Gi
+          persistentVolumeClaim:
+            claimName: sellbird-data
         - name: tmp
           emptyDir:
             sizeLimit: 2Gi
         - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
+        - name: heartbeat-tmp
+          emptyDir:
+            sizeLimit: 2Gi
+        - name: heartbeat-dshm
           emptyDir:
             medium: Memory
             sizeLimit: 256Mi

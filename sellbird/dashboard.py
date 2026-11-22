@@ -860,25 +860,73 @@ async def get_feedback(entity_type: str, entity_id: str):
 # ── Sellbird Controls ──
 
 
+HOSTED_CONTROLS_MESSAGE = (
+    "In hosted mode Sellbird is started and stopped by the platform, not from the dashboard."
+)
+HEARTBEAT_STALE_INTERVALS = 3
+DEFAULT_HEARTBEAT_MINUTES = 15
+
+
+def _is_gateway(request: Request) -> bool:
+    return getattr(request.app.state, "dashboard_mode", "local") == "gateway"
+
+
+def heartbeat_is_fresh(now: datetime, last: datetime | None, stale_after_seconds: int) -> bool:
+    """True when the newest cycle row is younger than ``stale_after_seconds``.
+    Both times are timezone-aware UTC; no row means not running."""
+    if last is None:
+        return False
+    return (now - last).total_seconds() < stale_after_seconds
+
+
+def _heartbeat_stale_after_seconds() -> int:
+    minutes = DEFAULT_HEARTBEAT_MINUTES
+    try:
+        from sellbird.config import load_config
+        minutes = int(load_config().usage.heartbeat_interval_minutes)
+    except Exception:
+        pass
+    return max(minutes, 1) * HEARTBEAT_STALE_INTERVALS * 60
+
+
 @app.get("/api/sellbird/status")
-async def get_sellbird_status():
+async def get_sellbird_status(request: Request):
     """Check if Sellbird is currently running."""
-    pid = _check_sellbird_pid()
-    started = _sellbird_started_at.isoformat() if _sellbird_started_at else None
     try:
         state = _state()
         await state.init_db()
         paused = await state.get_setting("sending_paused") or ""
     except Exception:
+        state = None
         paused = ""
+    if _is_gateway(request):
+        # The heartbeat is another container: its pidfile is invisible here,
+        # so its newest cycle row in the database is the evidence.
+        stale_after = _heartbeat_stale_after_seconds()
+        last = None
+        if state is not None:
+            try:
+                last = await state.last_heartbeat_at()
+            except Exception as e:
+                logger.warning("Couldn't read the last heartbeat time: %s", e)
+        running = heartbeat_is_fresh(datetime.now(timezone.utc), last, stale_after)
+        return {"running": running, "pid": None, "started_at": None,
+                "sending_paused": paused, "mode": "gateway",
+                "last_cycle_at": last.isoformat() if last else None,
+                "stale_after_seconds": stale_after}
+    pid = _check_sellbird_pid()
+    started = _sellbird_started_at.isoformat() if _sellbird_started_at else None
     return {"running": pid is not None, "pid": pid, "started_at": started,
-            "sending_paused": paused}
+            "sending_paused": paused, "mode": "local"}
 
 
 @app.post("/api/sellbird/start")
-async def start_sellbird():
+async def start_sellbird(request: Request):
     """Start Sellbird's heartbeat loop as a subprocess."""
     global _sellbird_process, _sellbird_started_at
+
+    if _is_gateway(request):
+        return {"success": False, "message": HOSTED_CONTROLS_MESSAGE}
 
     if _check_sellbird_pid():
         return {"success": False, "message": "Sellbird is already running."}
@@ -923,9 +971,12 @@ async def start_sellbird():
 
 
 @app.post("/api/sellbird/stop")
-async def stop_sellbird():
+async def stop_sellbird(request: Request):
     """Stop the Sellbird subprocess."""
     global _sellbird_process, _sellbird_started_at
+
+    if _is_gateway(request):
+        return {"success": False, "message": HOSTED_CONTROLS_MESSAGE}
 
     pid = _check_sellbird_pid()
     if not pid:

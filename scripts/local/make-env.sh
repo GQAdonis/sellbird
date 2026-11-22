@@ -18,7 +18,7 @@
 #   5. Creates operator@example.test and other@example.test through the Kratos
 #      admin API (inside the compose network; infra/kratos/create-identities.sh).
 #   6. For each identity, through flint-gate's auth-host passthrough
-#      (http://127.0.0.1:4456, Host auth.example.test), runs Kratos's browser
+#      (http://127.0.0.1:$SELLBIRD_LOCAL_GATE_PORT, Host auth.example.test), runs Kratos's browser
 #      flows: password login, TOTP enrolment in the settings flow, then an aal2
 #      TOTP login (scripts/local/kratos_session.py). The resulting
 #      `ory_kratos_session` cookies are aal2.
@@ -30,13 +30,15 @@
 # Nothing secret is printed. Requires: docker (Compose v2), openssl, python3,
 # and Sellbird's .venv (for PyYAML) or a python3 with PyYAML.
 # Environment overrides: SELLBIRD_LOCAL_PG_PORT (default 55432),
-# SELLBIRD_LOCAL_DIRECT_PORT (default 5555).
+# SELLBIRD_LOCAL_DIRECT_PORT (default 5555), SELLBIRD_LOCAL_GATE_PORT (the
+# host port flint-gate is published on, default 4456; inside the compose
+# network flint-gate always listens on 4456).
 set -euo pipefail
 # shellcheck source=scripts/local/lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 umask 077
 
-GATE_PORT=4456
+GATE_PORT="${SELLBIRD_LOCAL_GATE_PORT:-4456}"
 GATE_KID=sellbird-local-rs256
 GATE_ISSUER=https://gate.example.test
 PUBLIC_HOST=sellbird.example.test
@@ -49,7 +51,8 @@ for tool in docker openssl python3; do
   command -v "$tool" >/dev/null || sb_die "$tool is required"
 done
 PY="$(sb_python)"
-[[ "$PG_PORT" =~ ^[0-9]+$ && "$DIRECT_PORT" =~ ^[0-9]+$ ]] || sb_die "ports must be numeric"
+[[ "$PG_PORT" =~ ^[0-9]+$ && "$DIRECT_PORT" =~ ^[0-9]+$ && "$GATE_PORT" =~ ^[0-9]+$ ]] \
+  || sb_die "ports must be numeric"
 
 rand_hex() { openssl rand -hex "$1"; }
 
@@ -113,6 +116,7 @@ LOCAL_UID=$(id -u)
 LOCAL_GID=$(id -g)
 SELLBIRD_LOCAL_PG_PORT=$PG_PORT
 SELLBIRD_LOCAL_DIRECT_PORT=$DIRECT_PORT
+SELLBIRD_LOCAL_GATE_PORT=$GATE_PORT
 POSTGRES_SUPERUSER_PASSWORD=$POSTGRES_SUPERUSER_PASSWORD
 SELLBIRD_MIGRATE_PASSWORD=$SELLBIRD_MIGRATE_PASSWORD
 SELLBIRD_APP_PASSWORD=$SELLBIRD_APP_PASSWORD

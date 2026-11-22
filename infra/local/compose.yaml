@@ -14,7 +14,8 @@
 # cluster-ready-container-image).
 #
 # Published on the host, loopback only:
-#   127.0.0.1:4456  flint-gate proxy (Host sellbird.example.test / auth.example.test)
+#   127.0.0.1:${SELLBIRD_LOCAL_GATE_PORT}  flint-gate proxy (default 4456; Host
+#                   sellbird.example.test / auth.example.test)
 #   127.0.0.1:5555  Sellbird directly (the e2e test's negative controls)
 #   127.0.0.1:${SELLBIRD_LOCAL_PG_PORT}  Postgres (storage tests via scripts/local/dsn.sh)
 # Never published: Kratos admin (4434), Kratos public (4433, reached through
@@ -123,7 +124,8 @@ services:
       - ./.env.generated/flint-gate.yaml:/app/config/config.yaml:ro
       - ./.env.generated/gate-keys:/run/flint-gate:ro
     ports:
-      - "127.0.0.1:4456:4456"
+      # Host port is a variable (default 4456); the container port stays 4456.
+      - "127.0.0.1:${SELLBIRD_LOCAL_GATE_PORT:-4456}:4456"
     networks:
       default:
         aliases:

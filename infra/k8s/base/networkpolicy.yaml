@@ -2,12 +2,22 @@
 #
 # 1. default deny, ingress and egress, for every pod in the namespace;
 # 2. ingress to the app on TCP 5555 from flint-gate pods only;
-# 3. egress for every Sellbird pod (app and migration Job) to kube-dns and to
-#    flint-forge Postgres only;
-# 4. extra egress for the app only: flint-gate JWKS (TCP 4456) and the public
-#    internet on the ports the model API and email providers use, never to
+# 3. egress for every Sellbird pod (app and migration Job) to DNS and to
+#    flint-forge Postgres only. DNS is UDP and TCP 53 to the kube-dns pods and
+#    to 169.254.20.10/32, the address GKE's NodeLocal DNSCache listens on
+#    (design call A16); without NodeLocal DNSCache that second rule matches
+#    nothing. No other link-local address is allowed, on any port;
+# 4. extra egress for the app pod only: flint-gate JWKS (TCP 4456) and the
+#    public internet on the ports the model API, email providers and
+#    prospecting use (80, 443, SMTP 465/587, IMAPS 993), never to
 #    cluster, private, shared-address or link-local ranges (so not the metadata
-#    server either).
+#    server either). NetworkPolicies add up: the only link-local traffic any
+#    policy here allows is port 53 to 169.254.20.10.
+#
+# Policies select pods, not containers: the app pod's two containers (the
+# dashboard and the heartbeat, deployment.yaml) share every rule above. The
+# heartbeat is what needs the internet egress in rule 4 (Claude, SMTP and IMAP,
+# prospecting); the dashboard uses it for offer previews and discovery runs.
 #
 # Peers are selected by the namespace's `kubernetes.io/metadata.name` label and
 # the pods' contract labels. Kubelet probes are not subject to these rules.
@@ -80,6 +90,17 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+    # NodeLocal DNSCache (GKE): pods resolve through this node-local address
+    # when the add-on is on. This one /32 on port 53 only; the metadata server
+    # (169.254.169.254) and the rest of 169.254.0.0/16 stay blocked.
+    - to:
+        - ipBlock:
+            cidr: 169.254.20.10/32
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
     - to:
         - namespaceSelector:
             matchLabels:
@@ -125,7 +146,7 @@ spec:
               - 172.16.0.0/12     # RFC 1918
               - 192.168.0.0/16    # RFC 1918
               - 100.64.0.0/10     # RFC 6598 shared address space (some cluster ranges)
-              - 169.254.0.0/16    # link-local, including the metadata server
+              - 169.254.0.0/16    # link-local, including the metadata server (DNS to NodeLocal DNSCache is allowed above, port 53 only)
               - 127.0.0.0/8       # loopback
       ports:
         - protocol: TCP

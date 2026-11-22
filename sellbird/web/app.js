@@ -1414,6 +1414,24 @@ async function testInstantly() {
 
 // ── Controls ──
 
+// What the Agent card shows for a status response. Hosted (gateway) mode: the
+// loop runs elsewhere, so there are no controls, only whether it is running and
+// when it last completed a cycle. `ago` and `abs` format a timestamp.
+function hostedStatusView(data, hostedFallback, ago, abs) {
+  const hosted = data.mode ? data.mode === 'gateway' : !!hostedFallback;
+  if (!hosted) return {hosted: false};
+  const running = !!data.running;
+  const last = data.last_cycle_at || '';
+  return {
+    hosted: true, running,
+    label: running ? 'Running' : 'Not running',
+    detail: last ? 'Last cycle: ' + ago(last) : 'No cycle recorded yet',
+    title: last ? abs(last) : '',
+    note: running ? '' : "Sellbird isn't running. It's started by the platform, not from this page.",
+    showControls: false
+  };
+}
+
 async function loadSellbirdStatus() {
   const data = await api('/api/sellbird/status');
   const headerDot = document.getElementById('header-dot');
@@ -1426,15 +1444,26 @@ async function loadSellbirdStatus() {
     return;
   }
   const running = !!data.running;
+  const hv = hostedStatusView(data, gatewayMode(), relTime, formatDate);
 
   headerDot.className = 'status-dot ' + (running ? 'running' : 'stopped');
-  headerText.textContent = running ? 'Sellbird is running' : 'Sellbird is stopped';
+  headerText.textContent = hv.hosted
+    ? (running ? 'Sellbird is running' : 'Sellbird is not running')
+    : (running ? 'Sellbird is running' : 'Sellbird is stopped');
   document.getElementById('control-dot').className = 'dot ' + (running ? 'running' : 'stopped');
   const label = document.getElementById('control-label');
   label.className = 'label ' + (running ? 'running' : 'stopped');
-  label.textContent = running ? 'Running' : 'Stopped';
+  label.textContent = hv.hosted ? hv.label : (running ? 'Running' : 'Stopped');
 
   const meta = document.getElementById('control-meta');
+  if (hv.hosted) {
+    meta.textContent = [hv.detail, hv.note].filter(Boolean).join('. ') + (hv.note ? '' : '.');
+    meta.title = hv.title;
+    document.getElementById('btn-start').style.display = 'none';
+    document.getElementById('btn-stop').style.display = 'none';
+    return;
+  }
+  meta.title = '';
   if (running && data.pid) {
     let info = 'PID ' + escHtml(String(data.pid));
     if (data.started_at) info += ' &middot; started ' + formatDate(data.started_at);
@@ -1448,6 +1477,7 @@ async function loadSellbirdStatus() {
 }
 
 async function startSellbird() {
+  if (gatewayMode()) return;  // hosted: the platform starts it
   const btn = document.getElementById('btn-start');
   btn.disabled = true;
   const data = await api('/api/sellbird/start', {method: 'POST'});
@@ -1458,6 +1488,7 @@ async function startSellbird() {
 }
 
 async function stopSellbird() {
+  if (gatewayMode()) return;
   const btn = document.getElementById('btn-stop');
   btn.disabled = true;
   const data = await api('/api/sellbird/stop', {method: 'POST'});

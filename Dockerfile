@@ -117,21 +117,19 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Python deps first (cached layer: rebuilds only when requirements or the
-# pyproject extras change), then Chromium + its system libraries. The
-# `hosted` (PyJWT) and `postgres` (psycopg[binary]) extras are read from
-# pyproject.toml so the image can never drift from them; the project itself
-# is not installed (the code runs from /app). pyproject.toml is only bind
-# mounted for this step: copying it into /app would make /app look like a
-# source checkout to sellbird.paths.
-COPY requirements.txt .
-RUN --mount=type=bind,source=pyproject.toml,target=/tmp/build/pyproject.toml \
-    set -eu; \
-    python -I -c 'import tomllib; \
-extras = tomllib.load(open("/tmp/build/pyproject.toml", "rb"))["project"]["optional-dependencies"]; \
-print("\n".join(extras["hosted"] + extras["postgres"]))' > /tmp/extras.txt; \
-    pip install --no-cache-dir -r requirements.txt -r /tmp/extras.txt; \
-    rm -f /tmp/extras.txt; \
+# Python deps first (cached layer: rebuilds only when the lock changes), then
+# Chromium + its system libraries. requirements.lock is the only dependency
+# input: pyproject.toml's runtime dependencies plus the `hosted` (PyJWT) and
+# `postgres` (psycopg[binary]) extras, every version pinned and every file
+# hashed, for linux/amd64 and linux/arm64 (scripts/ci/lock-requirements.sh;
+# CI fails when it is stale). --require-hashes makes pip refuse any package or
+# file whose hash is not in the lock, and --only-binary=:all: refuses source
+# builds, whose build backends pip would fetch without hash checks. The project
+# itself is not installed (the code runs from /app). requirements.txt is the
+# unlocked developer file and is not used here.
+COPY requirements.lock .
+RUN set -eu; \
+    pip install --no-cache-dir --require-hashes --only-binary=:all: -r requirements.lock; \
     python -c "import jwt, psycopg; print('hosted and postgres extras ok')"; \
     # Playwright's bundled Node needs libatomic on arm64, before --with-deps
     # can install anything else; it is a no-op on amd64.

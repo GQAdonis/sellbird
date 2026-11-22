@@ -3,7 +3,9 @@
 import asyncio
 import logging
 import signal
+import os
 import sys
+import time as _time
 from datetime import datetime, time, timedelta
 
 import pytz
@@ -272,6 +274,30 @@ async def record_send_phase(state, held_reason: str):
         logger.warning(f"Couldn't record the send hold: {e}")
 
 
+async def _log_cycle(state, action: str) -> None:
+    """Write this cycle's action-log row (best-effort; never kills the loop).
+    A hosted dashboard judges the heartbeat by the newest agent="main" row."""
+    try:
+        await state.log_action(action_type=action, agent="main")
+    except Exception as e:
+        logger.warning(f"Failed to log action '{action}': {e}")
+
+
+async def _sleep_logging(state, seconds: float, action: str,
+                         stop_event: asyncio.Event, interval: float) -> bool:
+    """Sleep ``seconds`` like _interruptible_sleep (True if told to stop),
+    writing one ``action`` row per heartbeat interval so a long wait still
+    shows the loop alive."""
+    remaining = seconds
+    while remaining > 0:
+        await _log_cycle(state, action)
+        chunk = min(interval, remaining)
+        if await _interruptible_sleep(chunk, stop_event):
+            return True
+        remaining -= chunk
+    return False
+
+
 async def heartbeat(stop_event: asyncio.Event | None = None):
     """Sellbird's main loop. Wakes up, decides, acts, sleeps. Repeat."""
     if stop_event is None:
@@ -345,7 +371,12 @@ async def heartbeat(stop_event: asyncio.Event | None = None):
                 # bounds the worst case to QUIET_HOURS_POLL_SECONDS instead
                 # of however long the missed timer would have run.
                 shutting_down = False
+                await _log_cycle(state, "quiet_hours")
+                last_row = _time.monotonic()
                 while in_quiet_hours(config):
+                    if _time.monotonic() - last_row >= interval:
+                        await _log_cycle(state, "quiet_hours")
+                        last_row = _time.monotonic()
                     if await _interruptible_sleep(QUIET_HOURS_POLL_SECONDS, stop_event):
                         shutting_down = True
                         break
@@ -361,7 +392,7 @@ async def heartbeat(stop_event: asyncio.Event | None = None):
                     f"Quiet hours. No cold email can go now; checking again in "
                     f"{config.usage.heartbeat_interval_minutes} minutes."
                 )
-                if await _interruptible_sleep(interval, stop_event):
+                if await _sleep_logging(state, interval, "quiet_hours", stop_event, interval):
                     break
                 continue
 
@@ -375,7 +406,7 @@ async def heartbeat(stop_event: asyncio.Event | None = None):
                     f"Sellbird is paused: {problem} Nothing was sent or changed. "
                     f"Re-checking in {config.usage.heartbeat_interval_minutes} minutes."
                 )
-                if await _interruptible_sleep(interval, stop_event):
+                if await _sleep_logging(state, interval, "brain_paused", stop_event, interval):
                     break
                 continue
 
@@ -389,7 +420,7 @@ async def heartbeat(stop_event: asyncio.Event | None = None):
                     f"({config.usage.max_daily_claude_percent}% of quota or "
                     f"{max_calls} calls). Sleeping 1h, then re-checking."
                 )
-                if await _interruptible_sleep(3600, stop_event):
+                if await _sleep_logging(state, 3600, "over_budget", stop_event, interval):
                     break
                 continue
 
@@ -466,10 +497,7 @@ async def heartbeat(stop_event: asyncio.Event | None = None):
                     await _run_agents([(name, run()) for name, run in send_tasks])
 
             # 6. Log the action (best-effort; never kills the loop)
-            try:
-                await state.log_action(action_type=action, agent="main")
-            except Exception as e:
-                logger.warning(f"Failed to log action '{action}': {e}")
+            await _log_cycle(state, action)
 
             # 7. Extensions' tick steps (sellbird.extensions). Each is
             # isolated: a failing step is logged and never stops the loop.
@@ -503,6 +531,22 @@ async def heartbeat(stop_event: asyncio.Event | None = None):
     logger.info("Sellbird shutting down. Deals don't close themselves, but I need a break.")
 
 
+# Hosted only: how often an untrained heartbeat re-checks for training, and
+# how often it repeats the "waiting" line (the first line is logged on entry).
+SETUP_RECHECK_SECONDS = 60
+SETUP_REMINDER_SECONDS = 15 * 60
+
+WAITING_FOR_TRAINING_LINE = (
+    "Sellbird is waiting to be trained. Run `python -m sellbird train <website>` "
+    "inside this pod; the heartbeat starts by itself once training is done."
+)
+
+
+def _hosted_mode() -> bool:
+    from sellbird.auth.config import MODE_ENV
+    return os.environ.get(MODE_ENV, "").strip() == "gateway"
+
+
 def _needs_setup() -> bool:
     """Check if Sellbird needs first-time setup."""
     from sellbird.paths import PROJECT_ROOT
@@ -510,8 +554,12 @@ def _needs_setup() -> bool:
 
     env_file = PROJECT_ROOT / ".env"
 
+    # Hosted (gateway) mode: secrets arrive as environment variables and
+    # there is no .env file, so only the trained configuration is judged.
+    hosted = _hosted_mode()
+
     # If .env doesn't exist, definitely needs setup
-    if not env_file.exists():
+    if not hosted and not env_file.exists():
         return True
 
     # sellbird.local.yaml wins over the tracked sellbird.yaml template, same
@@ -536,9 +584,8 @@ def _needs_setup() -> bool:
     return False
 
 
-async def _run_with_signals():
-    """Run the heartbeat with SIGINT/SIGTERM wired to a graceful shutdown."""
-    stop_event = asyncio.Event()
+def _install_signal_handlers(stop_event: asyncio.Event) -> None:
+    """Wire SIGINT/SIGTERM to a graceful shutdown on ``stop_event``."""
     loop = asyncio.get_running_loop()
 
     def _request_shutdown(sig_name: str):
@@ -555,21 +602,65 @@ async def _run_with_signals():
             # Windows / non-main-thread fallback
             signal.signal(sig, lambda s, f: _request_shutdown(signal.Signals(s).name))
 
+
+async def _run_with_signals():
+    """Run the heartbeat with SIGINT/SIGTERM wired to a graceful shutdown."""
+    stop_event = asyncio.Event()
+    _install_signal_handlers(stop_event)
     await heartbeat(stop_event)
+
+
+async def wait_for_training(stop_event: asyncio.Event, needs_setup=None, sleep=None) -> bool:
+    """Hosted heartbeat, not trained yet: wait, re-checking, until Sellbird is
+    trained. Returns True once setup is no longer needed, False if told to
+    stop first. Touches neither the database nor the loop lock, so
+    `sellbird train` can run meanwhile in the other container."""
+    needs_setup = needs_setup or _needs_setup
+    sleep = sleep or _interruptible_sleep
+    since_log = 0
+    logger.info(WAITING_FOR_TRAINING_LINE)
+    while True:
+        if await sleep(SETUP_RECHECK_SECONDS, stop_event):
+            return False
+        since_log += SETUP_RECHECK_SECONDS
+        try:
+            still_needed = needs_setup()
+        except Exception as e:
+            logger.debug(f"Setup re-check failed, still waiting: {e}")
+            still_needed = True
+        if not still_needed:
+            logger.info("Training detected. Starting the heartbeat.")
+            return True
+        if since_log >= SETUP_REMINDER_SECONDS:
+            since_log = 0
+            logger.info(WAITING_FOR_TRAINING_LINE)
+
+
+async def _wait_phase() -> bool:
+    stop_event = asyncio.Event()
+    _install_signal_handlers(stop_event)
+    return await wait_for_training(stop_event)
 
 
 def main():
     """Entry point."""
     # Check for first-time setup
     if _needs_setup():
-        if not sys.stdin.isatty():
+        if _hosted_mode():
+            # In a pod a missing training must not crash-loop the container
+            # (that would take the dashboard container's pod down with it):
+            # wait, outside the loop lock, until `sellbird train` has run.
+            if not asyncio.run(_wait_phase()):
+                return
+        elif not sys.stdin.isatty():
             # Started by the dashboard or a service: nobody can answer the wizard.
             print("Sellbird isn't set up yet. Run `sellbird setup` in a terminal first.")
             sys.exit(1)
-        print("\n  First time running Sellbird? Let's get you set up.\n")
-        from sellbird.setup import run_setup
-        asyncio.run(run_setup())
-        return
+        else:
+            print("\n  First time running Sellbird? Let's get you set up.\n")
+            from sellbird.setup import run_setup
+            asyncio.run(run_setup())
+            return
 
     # One loop at a time: two would both drain the same Outbox. The lock
     # also tells the dashboard the PID file names a live loop.
