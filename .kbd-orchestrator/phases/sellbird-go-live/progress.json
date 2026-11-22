@@ -2,16 +2,16 @@
   "schemaVersion": "2",
   "generatedBy": "kbd-runtime",
   "projectionContractVersion": 2,
-  "sourceRevision": 360,
-  "derivedRevision": 360,
+  "sourceRevision": 361,
+  "derivedRevision": 361,
   "frontier": {
-    "6a8a0899-8ef7-41ad-b20f-dc28120196cf": 360
+    "6a8a0899-8ef7-41ad-b20f-dc28120196cf": 361
   },
   "conflictCount": 0,
   "phase": "sellbird-go-live",
   "phaseId": "sellbird-go-live",
   "parentPhase": null,
-  "last_updated": "2026-11-22T02:11:20.432482Z",
+  "last_updated": "2026-11-22T09:44:00.371803Z",
   "last_updated_by": "kbd-runtime",
   "changes_total": 6,
   "changes_completed": 6,

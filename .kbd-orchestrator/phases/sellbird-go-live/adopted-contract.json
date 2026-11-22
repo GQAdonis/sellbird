@@ -6,7 +6,7 @@
     "runId": "postgres-gke-deployment-20261118T052720Z",
     "phaseId": "sellbird-go-live",
     "planRevision": 1,
-    "contractDigest": "f045388b6650c28fb70a4e69531cfc02628bb88c1c74a3eadfc2afc0f6e9006c"
+    "contractDigest": "b47f6cfc6a4745787a5d629dea5bfdcc4acc6c75d333de3ac08aef09dc515479"
   },
   "digestNormalization": {
     "algorithm": "sha256",
@@ -121,7 +121,7 @@
     "reviewRoundsMax": 2
   },
   "status": {
-    "implementationComplete": false
+    "implementationComplete": true
   },
   "method": {
     "name": "VLBV",
@@ -135,7 +135,7 @@
     "sha256": "0d45284b70364677dcce368515c631dc53b467da904cb0d6fd639bd949bab36e"
   },
   "closure": {
-    "implementationComplete": false,
+    "implementationComplete": true,
     "behaviorAccepted": false,
     "releaseEligible": false,
     "releaseAuthorized": false
