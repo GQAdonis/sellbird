@@ -1,0 +1,16 @@
+{
+  "phase": "sellbird-go-live",
+  "dispatchedAt": "2026-11-22T01:22:34Z",
+  "branch": "kbd/sellbird-go-live",
+  "round": 1,
+  "assigned": [
+    "hosted-persistent-home",
+    "hosted-small-fixes",
+    "pipeline-hardening"
+  ],
+  "pending": [
+    "hosted-heartbeat",
+    "go-live-docs",
+    "go-live-boundary"
+  ]
+}

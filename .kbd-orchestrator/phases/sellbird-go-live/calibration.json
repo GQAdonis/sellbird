@@ -1,0 +1,17 @@
+{
+  "phase": "sellbird-go-live",
+  "source": "operator answers of 2026-11-22 and the closed postgres-gke-deployment contract",
+  "positive": [
+    "SCN-AUTH-001 of the last phase: a scenario run against real Kratos and flint-gate containers",
+    "operator decision: Operating scope with approval on"
+  ],
+  "rejectedOrDeferred": [
+    "dashboard training screen (follow-up)",
+    "real empty-namespace sync (static check instead)",
+    "backups, high availability, autoscaling"
+  ],
+  "rareCritical": [
+    "an email sent without approval",
+    "a secret, name or address in boundary evidence"
+  ]
+}

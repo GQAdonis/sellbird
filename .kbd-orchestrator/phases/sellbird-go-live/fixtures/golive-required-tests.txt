@@ -1,0 +1,64 @@
+# Required pytest node IDs for SCN-REG-001 (go-live-boundary/1.1).
+# Taken from the `tests:` lines of openspec/changes/hosted-small-fixes/tasks.md and
+# openspec/changes/hosted-heartbeat/tasks.md. Function-level IDs match every parametrized
+# variant (test_f matches test_f[...]); an ID with [..] matches exactly that variant.
+# Every matched test must have PASSED (a skip counts as not passed). This file is read and
+# accepted at the cumulative review before the run; its SHA-256 goes in the evidence README.
+# Format: a `# task: <change>/<n>` line starts a group; one node ID per line.
+# hosted-small-fixes/3 (local gate port) has no test of its own.
+
+# task: hosted-small-fixes/1
+tests/test_gateway_jwks_url.py::test_jwks_url_accepted
+tests/test_gateway_jwks_url.py::test_jwks_url_http_refused
+tests/test_gateway_jwks_url.py::test_jwks_url_previous_refusals_still_hold
+tests/test_gateway_jwks_url.py::test_jwks_url_refusal_names_the_variable_not_the_value
+
+# task: hosted-small-fixes/2
+tests/storage_contract/test_pg_failures.py::test_exists_raises_for_a_missing_database_reported_at_connect
+tests/storage_contract/test_pg_failures.py::test_exists_raises_for_a_refused_password
+tests/storage_contract/test_pg_failures.py::test_exists_is_false_when_schema_version_is_not_there
+tests/storage_contract/test_pg_failures.py::test_exists_raises_for_a_refused_grant
+tests/storage_contract/test_pg_failures.py::test_exists_is_false_only_for_the_not_there_sqlstates[3D000]
+tests/storage_contract/test_pg_failures.py::test_exists_is_false_only_for_the_not_there_sqlstates[42P01]
+tests/storage_contract/test_pg_failures.py::test_exists_raises_for_any_other_sqlstate[28P01]
+tests/storage_contract/test_pg_failures.py::test_exists_raises_for_any_other_sqlstate[42501]
+tests/storage_contract/test_pg_failures.py::test_exists_raises_for_any_other_sqlstate[42703]
+tests/storage_contract/test_pg_failures.py::test_exists_raises_for_any_other_sqlstate[57P03]
+tests/storage_contract/test_pg_failures.py::test_exists_never_reads_the_message_of_an_error_without_a_sqlstate
+
+# task: hosted-heartbeat/1
+tests/test_hosted_setup_check.py::test_gateway_mode_without_env_file_and_trained_config_needs_no_setup
+tests/test_hosted_setup_check.py::test_gateway_mode_with_template_config_needs_setup
+tests/test_hosted_setup_check.py::test_local_mode_without_env_file_still_needs_setup
+tests/test_hosted_setup_check.py::test_local_mode_with_env_file_and_trained_config_needs_no_setup
+tests/test_hosted_setup_check.py::test_an_idle_cycle_writes_a_row
+tests/test_hosted_setup_check.py::test_a_quiet_hours_period_writes_one_row_not_a_flood
+tests/test_hosted_setup_check.py::test_a_long_wait_writes_one_row_per_interval
+tests/test_hosted_setup_check.py::test_wait_for_training_returns_true_once_setup_is_done
+tests/test_hosted_setup_check.py::test_wait_for_training_stops_cleanly_on_a_stop_signal
+tests/test_hosted_setup_check.py::test_wait_for_training_really_wakes_on_the_event
+tests/test_hosted_setup_check.py::test_wait_for_training_logs_on_entry_every_fifteen_minutes_and_on_detection
+tests/test_hosted_setup_check.py::test_wait_for_training_survives_a_failing_check
+tests/test_hosted_setup_check.py::test_hosted_untrained_main_does_not_exit_and_enters_the_loop_once_trained
+tests/test_hosted_setup_check.py::test_hosted_untrained_main_returns_without_the_loop_when_stopped
+tests/test_hosted_setup_check.py::test_local_mode_untrained_without_a_tty_still_exits_1
+
+# task: hosted-heartbeat/2
+tests/test_hosted_status.py::test_fresh_row_is_running
+tests/test_hosted_status.py::test_row_four_intervals_old_is_not_running
+tests/test_hosted_status.py::test_no_row_is_not_running
+tests/test_hosted_status.py::test_timestamps_parse_as_utc_from_either_backend
+tests/test_hosted_status.py::test_gateway_status_running_for_a_fresh_row
+tests/test_hosted_status.py::test_gateway_status_stopped_for_a_row_four_intervals_old
+tests/test_hosted_status.py::test_gateway_status_stopped_with_no_rows
+tests/test_hosted_status.py::test_gateway_status_ignores_rows_from_other_agents
+tests/test_hosted_status.py::test_gateway_start_and_stop_do_nothing
+tests/test_hosted_status.py::test_local_status_is_unchanged_apart_from_mode
+
+# task: hosted-heartbeat/3
+tests/test_hosted_status_ui.py::test_local_status_is_left_to_the_existing_controls
+tests/test_hosted_status_ui.py::test_hosted_running_shows_last_cycle_and_no_controls
+tests/test_hosted_status_ui.py::test_hosted_stale_says_not_running_and_who_starts_it
+tests/test_hosted_status_ui.py::test_hosted_never_run_says_no_cycle_recorded
+tests/test_hosted_status_ui.py::test_a_missing_mode_field_falls_back_to_the_page_mode
+tests/test_hosted_status_ui.py::test_hosted_status_never_calls_start_or_stop

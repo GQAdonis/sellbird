@@ -3,8 +3,10 @@
 # to the builder.
 **
 !Dockerfile
-!requirements.txt
-!pyproject.toml
+# The hash-locked dependency list (scripts/ci/lock-requirements.sh). Neither
+# requirements.txt nor pyproject.toml is a build input, so no unlocked install
+# path can reach the image.
+!requirements.lock
 !sellbird.yaml
 !sellbird/
 !sellbird/**

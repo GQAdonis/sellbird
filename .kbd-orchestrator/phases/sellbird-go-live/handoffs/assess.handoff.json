@@ -1,0 +1,11 @@
+{
+  "stage": "assess",
+  "completedAt": "2026-11-22T00:19:35Z",
+  "outputs": [
+    "assessment.md"
+  ],
+  "nextStage": "analyze",
+  "summaryForNext": "Go-live is not finished: the hosted pod only serves the dashboard and the heartbeat does not run in the cluster. Operator chose Operating scope (heartbeat plus hosted configuration, approval mode on) and SEC-03, SEC-04, SEC-05. Also in scope: migration Job ServiceAccount deadlock, JWKS https rule, DNS policy, F1-F3 and the Trivy control. Open for analyze/plan: how hosted mode gets product configuration and provider secrets, heartbeat workload shape, whether the Claude secret works. Review: round 1 BLOCK fixed, round 2 PASS with 4 warnings fixed but not re-reviewed; cross-model check recorded as unverified-producer-unknown.",
+  "skipped": false,
+  "skipReason": null
+}

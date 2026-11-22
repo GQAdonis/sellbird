@@ -1,0 +1,36 @@
+# Sellbird's hosted home folder, /data (SELLBIRD_HOME), kept across restarts and
+# deploys (openspec/changes/hosted-persistent-home; design call A1).
+#
+# Training, the offer and dashboard settings are files under /data
+# (`sellbird.local.yaml`, `skills/`). `seed_home` copies the shipped defaults in
+# on every start but never overwrites a file that exists, so whatever was saved
+# here stays saved. Business state is in Postgres, not here.
+#
+# - 1Gi, ReadWriteOnce: one replica (Recreate strategy) is the only writer.
+# - No storageClassName, so the cluster's default StorageClass applies (on GKE,
+#   a zonal persistent disk that binds on first consumer).
+# - Same sync wave as the Deployment (0). With a WaitForFirstConsumer class the
+#   claim stays Pending until the pod is scheduled, so an earlier wave would
+#   wait on it forever.
+# - Prune=false and Delete=false: Argo CD never deletes this claim, neither when
+#   it drops out of the manifests nor when the Application is deleted. Removing
+#   the saved configuration is an operator decision, done by hand.
+#
+# The platform AppProject must list PersistentVolumeClaim in its
+# namespaceResourceWhitelist for this to sync.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sellbird-data
+  labels:
+    app.kubernetes.io/name: sellbird
+    app.kubernetes.io/component: app
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

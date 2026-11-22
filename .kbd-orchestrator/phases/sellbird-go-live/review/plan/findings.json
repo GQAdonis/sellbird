@@ -1,0 +1,90 @@
+{
+  "mode": "artifact",
+  "verdict": "BLOCK",
+  "judge_model": "mimo-v2.6-pro",
+  "producer_model": "claude-fable-5-2",
+  "isolation_mode": "rest-gateway:http://localhost:4000/v1",
+  "cross_model_check": "unverified-producer-unknown",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "SCN-PIPE-001's dynamic oracle cannot show that a red test run blocks deploy, because the control run it observes is by construction incapable of deploying.",
+      "evidence": "`pipeline-hardening/4` defines control inputs that \"run the real gates and can never publish or deploy\", yet SCN-PIPE-001 passes when \"the deploy and publish jobs conclude skipped\" in that same control run \u2014 a result guaranteed regardless of gating. The only static check is \"deploy's needs include the tests job\", which does not inspect the deploy job's `if:` guard. False result that passes: deploy carries `needs: [tests]` plus `if: always()` (or a separate push-triggered deploy workflow), so a red run still ships on main while every listed pass criterion is satisfied.",
+      "suggested_fix": "Add a static assertion that the publish and deploy jobs cannot run when the tests job fails (no `if: always()`/`if: !cancelled()`/separate push-path deploy), and/or run the control on a scratch registry/repository where publish is actually attempted and must be blocked."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "SCN-PIPE-002's registry oracle is vacuous for the same reason: the vulnerable-image control run can never publish, so \"no new tag or digest appears in the registry\" passes even if nothing gates publish on the real path.",
+      "evidence": "SCN-PIPE-002 passes when \"the scan step fails, no new tag or digest appears in the registry, and in the latest main run the image-ID step precedes every scan step and the post-scan recheck passed\". The first two observations hold for any dispatch control run (\"can never publish or deploy\" per `pipeline-hardening/4`), and \"the post-scan recheck passed\" on a clean main run only shows a green recheck, never a blocking one. False result that passes: publish ignores the recheck (`if: always()`) and vulnerable images ship on tag push; the scenario still passes. Nothing exercises the failing-scan-blocks-publish chain the plan's own lesson demands (\"no failing scan has ever been shown to stop a release\").",
+      "suggested_fix": "Have the control run attempt publish against a scratch registry and assert it is blocked by the scan/recheck failure, or add a static check that publish's `if:` cannot run when the scan or recheck step fails."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "SCN-REG-001 takes its test truth from the system under test and its negative control covers only two of the five task test sets, so vacuous tests would pass.",
+      "evidence": "\"Required test IDs for SCN-REG-001: each of `hosted-small-fixes/1`, `/2`, `hosted-heartbeat/1`, `/2` and `/3` names its new tests in its change's `tasks.md` when done\" \u2014 the IDs are chosen by the implementer after the tests exist. The negative control only requires that \"the required JWKS and setup tests fail against the scratch copies\", leaving `hosted-small-fixes/2` (exists() contract), `hosted-heartbeat/2` (running-status rule) and `hosted-heartbeat/3` with no negative control. `hosted-small-fixes/3` is an owner task of SCN-REG-001 but appears in no required-test-ID list at all. False result that passes: tautological tests (e.g., asserting a function returns what it just computed) are named in tasks.md, the suite is green, and the scenario passes while the behaviour is wrong.",
+      "suggested_fix": "Fix the required test IDs at plan time (or bind them at the cumulative review before any run), and extend the negative control to every required test set, e.g., scratch-revert each change and require exactly its tests to fail."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "SCN-LIVE-002's pass criterion compares \"the two values\" that the plan never defines.",
+      "evidence": "SCN-LIVE-002: \"each of the two values is identical before and after\" \u2014 no packet section names which two values (training? settings? which fields?), yet `go-live-boundary/2` must write `live-restart.sh` against this oracle. The task author must invent the compared values, and different choices yield different sensitivity to a persistence failure.",
+      "suggested_fix": "Name the two compared values explicitly (e.g., a trained-model checksum and a settings row) and state where they are read from."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "SCN-LIVE-002's negative control passes regardless of whether /data persistence works, so it cannot demonstrate that the harness would detect a broken claim/volume.",
+      "evidence": "Negative control: \"the /tmp marker is absent in the new pod\" (`live-restart.sh --check-tmp-marker`). This only proves /tmp is ephemeral; it passes identically if the `sellbird-data` PVC were replaced by an emptyDir again. The control never exercises the failure mode the scenario exists to catch (configuration lost on restart).",
+      "suggested_fix": "Make the negative control the actual failure mode, e.g., verify the check reports failure when the compared values are seeded from a non-persistent location, or add a step that writes a marker to /data before the restart and requires its absence to be detected as a failure by the same oracle path."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "`hosted-heartbeat/2` can require editing `sellbird/main.py`, which the plan assigns to `hosted-heartbeat/1` in the same round, breaking the stated one-file-one-writer rule.",
+      "evidence": "`hosted-heartbeat/2`: \"confirm an idle cycle writes a row and add one if not\" with files \"sellbird/dashboard.py, sellbird/state.py, tests/**\" \u2014 but the plan itself locates the write at \"`sellbird/state.py` line 2582, called from `sellbird/main.py` line 470\", so the \"add one if not\" fix lands in `sellbird/main.py`, owned by `hosted-heartbeat/1` in the same round 2, while the round rules say \"Two writers never share a file inside a round.\"",
+      "suggested_fix": "Either list sellbird/main.py explicitly in hosted-heartbeat/2 and sequence it strictly after hosted-heartbeat/1, or move the idle-row write task into hosted-heartbeat/1 so one task owns main.py."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The F1\u2013F3 findings the assess handoff placed in scope are never named or mapped in the plan, so their closure cannot be verified at the cumulative review.",
+      "evidence": "assess.handoff.json: \"Also in scope: migration Job ServiceAccount deadlock, JWKS https rule, DNS policy, F1-F3 and the Trivy control.\" The plan never contains the strings F1, F2 or F3; its goal 5 lists four unlabeled defects (\"the JWKS, exists() and DNS defects\" plus the deadlock), so it is impossible to tell which tasks close which F-item or whether one F-item is unaddressed.",
+      "suggested_fix": "Add a mapping row per F-item (F1/F2/F3 \u2192 change/task \u2192 scenario) or state explicitly which plan defect each F label corresponds to."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The `none` control run's publish/deploy behaviour is unspecified, so the negative control for SCN-PIPE-001 may push a real image and trigger a real deploy, and can pollute SCN-PIPE-002's registry observation.",
+      "evidence": "`pipeline-hardening/4` declares only the `failing-test` and `vulnerable-image` inputs as ones that \"can never publish or deploy\", while operator step 5 approves \"the three workflow_dispatch control runs (failing-test, none, vulnerable-image)\" and boundary step 11 runs `pipe-control.sh none` before step 12's vulnerable-image scenario whose oracle reads \"no new tag or digest appears in the registry\". If a `none` run is allowed to publish, it creates real registry state between the two steps and may deploy to the cluster.",
+      "suggested_fix": "State that every workflow_dispatch control run (including `none`) never publishes or deploys, and pin the registry observation of SCN-PIPE-002 to the specific control run ID."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "`hosted-small-fixes/2` leaves the exists() contract undefined for connect failures that carry a sqlstate other than 3D000/42P01.",
+      "evidence": "\"Make exists() return False only for sqlstate 3D000 or 42P01, raise for any connect failure without a sqlstate\" \u2014 the specified cases are (a) 3D000/42P01 \u2192 False, (b) no sqlstate \u2192 raise; behaviour for e.g. 28P01 (bad credentials) or 53300 (too many connections) is unstated, so two compliant implementations would differ and the \"connect-time missing-database test\" would not catch it.",
+      "suggested_fix": "Specify the remaining case explicitly (e.g., \"any other sqlstate raises\") and add one test for a non-3D000/42P01 sqlstate."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "plan.md",
+      "claim": "The goals' live-check items CG-1..3 (domain resolves, TLS serves, Kratos session required) are neither covered by a task or scenario nor deferred in LIMITS OF THIS PLAN.",
+      "evidence": "goals: \"`sellbird.know-me.tools` resolves, serves TLS and requires a Kratos session (CG-1..3)\". The plan's live scenarios cover rollout, restart, heartbeat and no-send only, and its limits section does not mention CG-1..3, so the reader cannot tell whether they are out of scope, deferred to the platform phase, or silently dropped.",
+      "suggested_fix": "Add one line to LIMITS OF THIS PLAN stating where CG-1..3 are verified (platform phase or a later phase) or add a scenario for them."
+    }
+  ],
+  "judge_identity": {
+    "providerConnectionId": "xiaomi-token-plan",
+    "providerId": "xiaomi",
+    "modelId": "mimo-v2.6-pro"
+  },
+  "sycophancy_screen": {
+    "reject_cap": 2,
+    "cap_overridden": false,
+    "cap_default": 2
+  }
+}

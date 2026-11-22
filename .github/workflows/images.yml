@@ -1,7 +1,7 @@
 # Build, scan and publish the Sellbird image to GHCR by digest.
 #
 # Contract (OpenSpec change image-build-scan-publish; docs/platform-interface.md):
-#   - Build once with BuildKit (the Dockerfile needs RUN --mount and network
+#   - Build once with BuildKit (the Dockerfile uses BuildKit args and network
 #     access to downloads.claude.ai), linux/amd64, VCS_REF = the commit SHA.
 #   - Refuse to publish unless: the image config user is not root, the image's
 #     uid is not 0, the secret scanner trips on a planted-secret control image,
@@ -17,6 +17,22 @@
 # a read-only token; only job `images`, which runs no third-party actions
 # besides artifact transfer, gets packages: write.
 #
+# Hardening (OpenSpec change pipeline-hardening):
+#   - Job `tests` calls tests.yml (workflow_call) on this commit; `images`
+#     (publish) and `deploy` both need it and `build`, with no `if:` that lets
+#     them run after a failed need.
+#   - The image ID and a `docker save` archive are recorded right after the
+#     build step, before any scan; after the last scan
+#     scripts/ci/recheck-image.sh fails unless the image in the engine and the
+#     archive are unchanged. Publish loads that archive.
+#   - The Trivy binary is downloaded and checked against
+#     SCANNER_TRIVY_SHA256_LINUX_64BIT (scripts/ci/verify-trivy.sh) before any
+#     scan; the scan actions use it (skip-setup-trivy).
+#   - workflow_dispatch input `control` runs negative controls through the real
+#     gates. Publish and deploy run only for a push to main, so no dispatched
+#     run, whatever `control` is, can publish or deploy. To retry a failed
+#     publish or deploy, re-run the failed jobs of the original push run.
+#
 # Every action is pinned by full commit SHA (tag in the trailing comment).
 # Thresholds and the negative control are documented in
 # openspec/changes/image-build-scan-publish/design.md.
@@ -26,9 +42,12 @@ on:
   push:
     branches: [main]
     # Only paths that cannot change the image. The build context is the
-    # .dockerignore allowlist (Dockerfile, requirements.txt, pyproject.toml,
-    # sellbird.yaml, sellbird/, migrations/, prompts/, skills/), so those, this
-    # workflow and scripts/ci/ always trigger a build. `*.md` matches root-level
+    # .dockerignore allowlist (Dockerfile, requirements.lock, sellbird.yaml,
+    # sellbird/, migrations/, prompts/, skills/), so those, pyproject.toml (the
+    # version label and the lock's source), this workflow and scripts/ci/
+    # always trigger a build. tests.yml's own push trigger lists exactly these
+    # paths, so a push this workflow ignores is still tested on main: keep the
+    # two lists identical. `*.md` matches root-level
     # Markdown only: prompts/*.md and skills/*.md are shipped in the image and
     # must keep triggering. infra/** covers the Kustomize base and any overlay
     # pins, so a pin commit never rebuilds (the production overlay itself lives
@@ -60,6 +79,21 @@ on:
       - "LICENSE"
       - "NOTICE"
   workflow_dispatch:
+    inputs:
+      control:
+        # Negative controls. Every dispatched run, `none` included, runs the
+        # real tests and scans and can never publish or deploy.
+        #   failing-test      tests.yml adds a job that fails, so `tests` fails
+        #   vulnerable-image  the real-image scan steps scan VULN_CONTROL_IMAGE
+        #                     instead of the built image, with the same
+        #                     settings, so the vulnerability gate must fail
+        description: Negative control to run (no dispatched run publishes or deploys)
+        type: choice
+        options:
+          - none
+          - failing-test
+          - vulnerable-image
+        default: none
 
 permissions: {}
 
@@ -70,8 +104,28 @@ concurrency:
 
 env:
   SCANNER_TRIVY_VERSION: v0.70.0
+  # SHA-256 of trivy_0.70.0_Linux-64bit.tar.gz (the runner is x86_64). Read it
+  # from the official checksums file of the same release:
+  #   https://github.com/aquasecurity/trivy/releases/download/v0.70.0/trivy_0.70.0_checksums.txt
+  # Until the placeholder is replaced, scripts/ci/verify-trivy.sh refuses it and
+  # every run fails closed before any scan. Update it with SCANNER_TRIVY_VERSION.
+  SCANNER_TRIVY_SHA256_LINUX_64BIT: 8b4376d5d6befe5c24d503f10ff136d9e0c49f9127a4279fd110b727929a5aa9
+  # Known-vulnerable public image for `control: vulnerable-image`, by a pinned
+  # old tag: Alpine 3.12.0 ships OpenSSL 1.1.1g and apk-tools 2.10.5, both with
+  # CRITICAL vulnerabilities that have fixed package versions.
+  VULN_CONTROL_IMAGE: alpine:3.12.0
 
 jobs:
+  # The deploy gate: the full test workflow on this commit. A dispatched
+  # `control: failing-test` makes it fail on purpose.
+  tests:
+    name: tests (deploy gate)
+    permissions:
+      contents: read
+    uses: ./.github/workflows/tests.yml
+    with:
+      control: ${{ inputs.control || 'none' }}
+
   build:
     name: build and scan
     runs-on: ubuntu-24.04
@@ -86,6 +140,8 @@ jobs:
       # Scan only the image in the local Docker engine: never fall back to a
       # registry copy that may be something else.
       TRIVY_IMAGE_SRC: docker
+      # Empty on push; `none` then.
+      CONTROL: ${{ inputs.control || 'none' }}
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -132,6 +188,49 @@ jobs:
           cache-from: type=gha,scope=sellbird-image
           cache-to: type=gha,mode=min,scope=sellbird-image
 
+      # Immediately after the build and before any scan or third-party scan
+      # action: the image ID publish will trust and the archive it will load.
+      # scripts/ci/recheck-image.sh compares both again after the last scan.
+      - name: Record the built image ID and save the image
+        id: save
+        env:
+          REF: ${{ steps.meta.outputs.ref }}
+        run: |
+          set -euo pipefail
+          image_id="$(docker image inspect --format '{{.Id}}' "$REF")"
+          [[ "$image_id" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::unexpected image id"; exit 1; }
+          docker save -o "$RUNNER_TEMP/sellbird-image.tar" "$REF"
+          archive_sha="$(sha256sum "$RUNNER_TEMP/sellbird-image.tar" | cut -d' ' -f1)"
+          [[ "$archive_sha" =~ ^[0-9a-f]{64}$ ]] || { echo "::error::unexpected archive digest"; exit 1; }
+          {
+            echo "image-id=$image_id"
+            echo "archive-sha256=$archive_sha"
+          } >> "$GITHUB_OUTPUT"
+          echo "Built $REF as $image_id; archive sha256 $archive_sha."
+
+      # The scan actions below run with skip-setup-trivy: true and use this
+      # binary from PATH, so no scan runs with an unchecked Trivy.
+      - name: Install Trivy (checksum verified)
+        env:
+          TRIVY_SHA256: ${{ env.SCANNER_TRIVY_SHA256_LINUX_64BIT }}
+        run: |
+          set -euo pipefail
+          [ "$(uname -s)-$(uname -m)" = "Linux-x86_64" ] \
+            || { echo "::error::the pinned Trivy checksum is for Linux-64bit only"; exit 1; }
+          version="${SCANNER_TRIVY_VERSION#v}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::unexpected Trivy version"; exit 1; }
+          dir="$RUNNER_TEMP/trivy"
+          rm -rf "$dir" && mkdir -p "$dir/bin"
+          archive="$dir/trivy_${version}_Linux-64bit.tar.gz"
+          curl -fsSL --proto '=https' --tlsv1.2 --retry 3 -o "$archive" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${version}/trivy_${version}_Linux-64bit.tar.gz"
+          bash scripts/ci/verify-trivy.sh "$archive" "$TRIVY_SHA256"
+          tar -xzf "$archive" -C "$dir/bin" trivy
+          installed="$("$dir/bin/trivy" --version | sed -n 's/^Version: //p' | head -n 1)"
+          [ "$installed" = "$version" ] \
+            || { echo "::error::installed Trivy reports '$installed', expected $version"; exit 1; }
+          echo "$dir/bin" >> "$GITHUB_PATH"
+
       - name: Non-root check
         env:
           REF: ${{ steps.meta.outputs.ref }}
@@ -161,6 +260,28 @@ jobs:
         run: |
           set -euo pipefail
           printf 'disable-allow-rules:\n  - markdown\n' > "$TRIVY_SECRET_CONFIG"
+
+      # What the real-image scans look at: the built image, or for the
+      # vulnerable-image control a known-vulnerable public image, pulled into
+      # the local engine (TRIVY_IMAGE_SRC=docker) and scanned by the very same
+      # steps and settings. The secret negative control below always uses the
+      # built image.
+      - name: Scan target
+        id: target
+        env:
+          REF: ${{ steps.meta.outputs.ref }}
+        run: |
+          set -euo pipefail
+          case "$CONTROL" in
+            none|failing-test) target="$REF" ;;
+            vulnerable-image)
+              docker pull --platform linux/amd64 "$VULN_CONTROL_IMAGE"
+              target="$VULN_CONTROL_IMAGE"
+              echo "::warning::negative control: scanning $VULN_CONTROL_IMAGE instead of the built image; the vulnerability scan must fail"
+              ;;
+            *) echo "::error::unknown control '$CONTROL'"; exit 1 ;;
+          esac
+          echo "ref=$target" >> "$GITHUB_OUTPUT"
 
       - name: Secret scan negative control (build a planted-secret derivative)
         id: control
@@ -196,7 +317,7 @@ jobs:
         env:
           TRIVY_SECRET_CONFIG: ${{ runner.temp }}/trivy-secret.yaml
         with:
-          version: ${{ env.SCANNER_TRIVY_VERSION }}
+          skip-setup-trivy: true
           scan-type: image
           image-ref: ${{ steps.control.outputs.ref }}
           scanners: secret
@@ -236,9 +357,9 @@ jobs:
         env:
           TRIVY_SECRET_CONFIG: ${{ runner.temp }}/trivy-secret.yaml
         with:
-          version: ${{ env.SCANNER_TRIVY_VERSION }}
+          skip-setup-trivy: true
           scan-type: image
-          image-ref: ${{ steps.meta.outputs.ref }}
+          image-ref: ${{ steps.target.outputs.ref }}
           scanners: secret
           exit-code: "1"
           format: table
@@ -247,9 +368,9 @@ jobs:
       - name: Vulnerability scan (fixable CRITICAL blocks publishing)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          version: ${{ env.SCANNER_TRIVY_VERSION }}
+          skip-setup-trivy: true
           scan-type: image
-          image-ref: ${{ steps.meta.outputs.ref }}
+          image-ref: ${{ steps.target.outputs.ref }}
           scanners: vuln
           vuln-type: os,library
           severity: CRITICAL
@@ -258,36 +379,31 @@ jobs:
           format: table
           timeout: 20m0s
 
-      - name: Save the scanned image
-        id: save
+      # After the last scan: the image in the engine and the saved archive must
+      # still be exactly what was recorded right after the build.
+      - name: Recheck the image and archive after the scans
         env:
           REF: ${{ steps.meta.outputs.ref }}
-        run: |
-          set -euo pipefail
-          image_id="$(docker image inspect --format '{{.Id}}' "$REF")"
-          [[ "$image_id" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::unexpected image id"; exit 1; }
-          docker save "$REF" | gzip -1 > "$RUNNER_TEMP/sellbird-image.tar.gz"
-          archive_sha="$(sha256sum "$RUNNER_TEMP/sellbird-image.tar.gz" | cut -d' ' -f1)"
-          {
-            echo "image-id=$image_id"
-            echo "archive-sha256=$archive_sha"
-          } >> "$GITHUB_OUTPUT"
+          IMAGE_ID: ${{ steps.save.outputs.image-id }}
+          ARCHIVE_SHA256: ${{ steps.save.outputs.archive-sha256 }}
+        run: bash scripts/ci/recheck-image.sh "$IMAGE_ID" "$ARCHIVE_SHA256" "$REF" "$RUNNER_TEMP/sellbird-image.tar"
 
       - name: Upload the scanned image for the publish job
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: sellbird-image-${{ github.sha }}
-          path: ${{ runner.temp }}/sellbird-image.tar.gz
-          compression-level: 0
+          path: ${{ runner.temp }}/sellbird-image.tar
+          compression-level: 1
           retention-days: 1
           if-no-files-found: error
 
   images:
     name: publish to GHCR
-    needs: build
-    # Publish only from main (push or a manual run on main). A manual run on
-    # another branch builds and scans but never pushes.
-    if: github.ref == 'refs/heads/main'
+    needs: [tests, build]
+    # Publish only for a push to main, and only after the test gate and the
+    # build-and-scan job both succeeded (no status function here, so a failed
+    # or skipped need skips this job). A dispatched run never publishes.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -314,9 +430,10 @@ jobs:
           [[ "$TAG" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::bad tag"; exit 1; }
           [[ "$IMAGE" =~ ^ghcr\.io/[a-z0-9]([a-z0-9-]*[a-z0-9])?/sellbird$ ]] || { echo "::error::bad image name"; exit 1; }
           [[ "$IMAGE_ID" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::bad image id"; exit 1; }
-          archive="$RUNNER_TEMP/image/sellbird-image.tar.gz"
+          [[ "$ARCHIVE_SHA256" =~ ^[0-9a-f]{64}$ ]] || { echo "::error::bad archive digest"; exit 1; }
+          archive="$RUNNER_TEMP/image/sellbird-image.tar"
           echo "$ARCHIVE_SHA256  $archive" | sha256sum -c --quiet -
-          gunzip -c "$archive" | docker load
+          docker load -i "$archive"
           loaded_id="$(docker image inspect --format '{{.Id}}' "$IMAGE:$TAG")"
           [ "$loaded_id" = "$IMAGE_ID" ] \
             || { echo "::error::loaded image $loaded_id is not the scanned image $IMAGE_ID"; exit 1; }
@@ -383,7 +500,8 @@ jobs:
   # (OpenSpec change gitops-deploy-sellbird; docs/platform-interface.md,
   # "Overlay location and pin format"). Argo CD syncs that overlay.
   #
-  # - Runs only on main, after `images` published and verified the digest.
+  # - Runs only for a push to main, after `tests` passed and `images`
+  #   published and verified the digest.
   # - environment: production holds the deploy GitHub App's private key; its
   #   deployment branch policy is main only, so no branch or PR workflow can
   #   read it.
@@ -397,8 +515,9 @@ jobs:
   #   resetting to the new remote main and pinning again.
   deploy:
     name: pin production overlay
-    needs: images
-    if: github.ref == 'refs/heads/main'
+    needs: [tests, build, images]
+    # Same rule as publish: a push to main only, every need succeeded.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: production

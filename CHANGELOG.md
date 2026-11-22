@@ -9,6 +9,37 @@ minor versions can still change behaviour.
 
 ### Added
 
+- **A hosted Sellbird now runs its own outreach loop.** The pod has a second
+  container, `heartbeat`, that runs `sellbird run`, next to the dashboard
+  container (still named `sellbird`). Both share one folder and the database. The
+  pod is Ready only while both are running. If the loop exits, Kubernetes
+  restarts it. [Running it hosted](docs/hosted-operations.md) is the new runbook.
+- **Hosted Sellbird keeps its training.** `/data` is now a 1Gi disk
+  (`sellbird-data`) that Argo CD never prunes or deletes, so training, your offer
+  and your dashboard settings survive restarts and deploys. Each deploy replaces
+  the pod (`Recreate`), so the dashboard is down for a short while every time.
+- **In a hosted pod the heartbeat waits to be trained.** It needs no `.env` file;
+  keys arrive as environment variables. Until you run
+  `python -m sellbird train <your-site>` in the pod, it waits and checks again
+  every minute instead of exiting, and it starts by itself once training is done.
+- **The hosted dashboard says whether the heartbeat is running.** It reads the
+  heartbeat's newest action-log row and shows "running" only if it's younger than
+  three heartbeat intervals (45 minutes at the default 15), with the time of the
+  last cycle. Every wait (quiet hours, over budget, the brain unavailable) now
+  leaves one row per interval, so a quiet loop doesn't look dead. Start and stop
+  are refused in hosted mode, and the buttons are hidden.
+- **Provider keys are split by what each container needs.** The optional
+  `sellbird-providers` Secret is replaced by `sellbird-mail`, `sellbird-discovery`,
+  `sellbird-verifiers` and `sellbird-extras`, one key per variable. Create only the
+  ones you use. A missing one just shows that feature as not configured. The
+  dashboard doesn't get the verifier or extras keys.
+- **`SELLBIRD_LOCAL_GATE_PORT` sets the local stand-in's flint-gate port** on the
+  host (default 4456), for when that port is taken.
+- **The image installs from a hash-locked `requirements.lock`.** Every package is
+  pinned and hashed, wheels only. Regenerate it with
+  `scripts/ci/lock-requirements.sh`; CI fails when it no longer matches
+  `pyproject.toml`.
+
 - **Sellbird can keep its state in Postgres 18.** Set `SELLBIRD_DATABASE_URL`
   to a `postgresql://` string (and `pip install 'sellbird[postgres]'`) and every
   store runs on Postgres instead of `data/sellbird.db`. Unset, nothing changes.
@@ -63,6 +94,30 @@ minor versions can still change behaviour.
 
 ### Changed
 
+- **Running the image's tests is now part of releasing it.** `images.yml` calls the
+  test workflow, and both publishing and deploying need it to pass. The image ID
+  and a saved copy of the image are recorded right after the build and checked
+  again after the scans, and the Trivy scanner is checked against a pinned
+  checksum before it runs.
+- **A manual run of the images workflow no longer publishes.** Its three
+  `workflow_dispatch` choices (`none`, `failing-test`, `vulnerable-image`) are test
+  runs of the gates and can never publish or deploy. To retry a failed release,
+  re-run the failed jobs of the push run.
+- **The migration runs as its own ServiceAccount.** `sellbird-migrate` is a PreSync
+  hook one step ahead of the migration Job, so a first install no longer waits on
+  an account that isn't there yet.
+- **The network policy also allows DNS to `169.254.20.10`**, where GKE's NodeLocal
+  DNSCache listens, on port 53 only. Without that add-on it matches nothing. Mail
+  from a hosted pod must use SMTP on 587 or 465 and IMAP on 993; 25 and 143 are
+  blocked.
+- **The JWKS address must be https.** `SELLBIRD_GATE_JWKS_URL` is refused over
+  plain http unless the host is loopback or an in-cluster service name (`*.svc`,
+  `*.svc.cluster.local`). A name with a trailing dot is refused over http.
+- **A missing Postgres database is told apart from an outage more strictly.** The
+  check for whether a Sellbird database exists returns "not there" only for
+  Postgres error `3D000` (no such database) or `42P01` (no such table), and raises
+  for anything else, including a connection that fails with no error code, so an
+  outage is never read as an empty install.
 - **The writer sees what Sellbird read off a company's own site.** The free
   homepage signals (no structured data, a site untouched for six months, a very
   small sitemap, AI crawlers blocked) were collected but
@@ -103,6 +158,11 @@ minor versions can still change behaviour.
 
 ### Security
 
+- **Postgres error messages carry no values.** Database errors now name what
+  went wrong without repeating a connection string, a password or a value from
+  your data.
+- **Dependencies are installed only from hashes.** A release can't pick up a
+  package that isn't in the reviewed `requirements.lock`.
 - **Autopilot holds phone numbers and money requests.** An email nobody
   approved now waits in the Outbox when it gives a phone number that isn't
   yours (`channels.email.phone_numbers`, or one in your postal address) or

@@ -17,11 +17,12 @@ The words MUST, MUST NOT, SHOULD and MAY are used as in RFC 2119.
 
 ## Status and agreement
 
-- Contract version: `2`
-- Status: agreed. The operator agreed version 1 and then version 2 as recorded
-  decisions in the KBD decision log of the shared platform repository's phase
-  (decisions D-101 and D-107). This repository's phase `postgres-gke-deployment`
-  closed before agreement and left it to that counterparty phase. Editing this
+- Contract version: `3`
+- Status: version 3 is proposed and not yet agreed. The operator agreed version 1
+  and then version 2 as recorded decisions in the KBD decision log of the shared
+  platform repository's phase (decisions D-101 and D-107). Version 3 needs its own
+  agreement decision there, because it changes what the platform must allow and
+  create (see [Changes from version 2](#changes-from-version-2)). Editing this
   file, merging it, or a passing contract check does not agree it; only an
   operator decision does.
 - The counterparty is the shared platform repository and its own KBD phase. That
@@ -31,6 +32,38 @@ The words MUST, MUST NOT, SHOULD and MAY are used as in RFC 2119.
   and needs a new agreement decision. Additive, optional fields need a version bump
   but not a change on the other side.
 - Rationale for the overall split: `docs/adr/0001-shared-platform-and-single-tenant-database.md`.
+
+### Changes from version 2
+
+Version 3 changes the manifests in `infra/k8s/base` and what the platform must
+allow and supply around them. The identity, gateway, token and database parts are
+unchanged, except for the JWKS address rule below.
+
+- The home folder `/data` is now a 1Gi ReadWriteOnce PersistentVolumeClaim,
+  `sellbird-data`, that Argo CD never prunes or deletes. The AppProject's
+  `namespaceResourceWhitelist` MUST now include PersistentVolumeClaim, or the sync
+  fails. See [Workload layout](#workload-layout).
+- The Deployment uses the `Recreate` strategy, so each deploy has a short gap with
+  no running pod.
+- The pod has a second container, `heartbeat`, that runs the outreach loop. The
+  dashboard container keeps the name `sellbird`. Both mount `/data`.
+- The one optional `sellbird-providers` Secret is replaced by four optional Secrets
+  split by what each container needs: `sellbird-mail`, `sellbird-discovery`,
+  `sellbird-verifiers` and `sellbird-extras`. The required Secrets are unchanged.
+  See [Secrets](#secrets).
+- The migration Job runs as its own ServiceAccount, `sellbird-migrate`, which is a
+  PreSync hook at wave -2 (the Job is wave -1), so a fresh install does not wait on
+  an account that is not applied yet. See [Migration flow](#migration-flow).
+- The NetworkPolicy also allows DNS to `169.254.20.10/32`. See
+  [NetworkPolicy](#networkpolicy).
+- `SELLBIRD_GATE_JWKS_URL` MUST now be `https`, unless its host is loopback or an
+  in-cluster service name. See [Issuer and JWKS](#issuer-and-jwks).
+
+What the platform must change to take this base: add PersistentVolumeClaim to the
+AppProject whitelist; create the optional Secrets it wants; check any overlay patch
+that addresses containers by index or replaces the container list; expect a brief
+outage on each deploy. The overlay's `images` entry needs no change: both
+containers use the logical image name `sellbird`, so the one entry pins both.
 
 ### Changes from version 1
 
@@ -67,7 +100,7 @@ manifests are unaffected.
 
 | Namespace | Holds | Owner |
 |---|---|---|
-| `sellbird` | Sellbird's Deployment, Service, ServiceAccount, ConfigMap, NetworkPolicy, migration Job and Secrets | platform creates the namespace; Argo CD syncs Sellbird's resources into it |
+| `sellbird` | Sellbird's Deployment, Service, two ServiceAccounts, PersistentVolumeClaim, ConfigMap, NetworkPolicies, migration Job and Secrets | platform creates the namespace; Argo CD syncs Sellbird's resources into it |
 | `flint-gate` | flint-gate (pods labelled `app.kubernetes.io/name: flint-gate`, proxy port `4456`) | platform |
 | `ory` | Kratos | platform |
 | `flint-forge` | the shared Postgres 18 (pods labelled `app.kubernetes.io/name: flint-forge-postgres`, port `5432`) | platform |
@@ -235,6 +268,14 @@ Sellbird's verifier MUST:
 The JWKS is fetched over plain HTTP inside the cluster; the NetworkPolicy in
 [NetworkPolicy](#networkpolicy) is what keeps that path to flint-gate alone.
 
+Sellbird refuses to start in gateway mode unless `SELLBIRD_GATE_JWKS_URL` is
+`https`, with one exception: plain `http` is accepted when the host is loopback
+(`localhost`, a name ending in `.localhost`, `127.0.0.0/8` or `::1`) or an
+in-cluster service name ending in `.svc` or `.svc.cluster.local`. A trailing-dot
+name such as `gate.example.test.` is refused over `http`. The URL must carry no
+credentials and no fragment. The in-cluster URL in the table above therefore stays
+valid; any other address needs `https`.
+
 ## Minted claims
 
 flint-gate mints one token per forwarded request through the `claims_enhancement`
@@ -333,12 +374,28 @@ by name and key through `secretKeyRef` only.
 | Secret | Key | Consumer | Content |
 |---|---|---|---|
 | `sellbird-db-migrate` | `SELLBIRD_DATABASE_URL` | migration Job only | connection string for `sellbird_migrate` |
-| `sellbird-db-app` | `SELLBIRD_DATABASE_URL` | Sellbird app container only | connection string for `sellbird_app` |
-| `sellbird-claude` | `CLAUDE_CODE_OAUTH_TOKEN` | Sellbird app container only | see [AI credential](#ai-credential) |
-| `sellbird-providers` | provider keys as named in `.env.example` (for example `REOON_API_KEY`, `SMTP_PASSWORD`) | Sellbird app container only, each key `optional: true` | the email provider, verifier and discovery keys the operator uses |
+| `sellbird-db-app` | `SELLBIRD_DATABASE_URL` | `sellbird` and `heartbeat` containers (required) | connection string for `sellbird_app` |
+| `sellbird-claude` | `CLAUDE_CODE_OAUTH_TOKEN` | `sellbird` and `heartbeat` containers (required) | see [AI credential](#ai-credential) |
+| `sellbird-mail` | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `IMAP_HOST`, `IMAP_PORT`, `IMAP_USERNAME`, `IMAP_PASSWORD`, `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `M365_CLIENT_ID`, `M365_TENANT_ID`, `INSTANTLY_API_KEY` | both containers, optional | the mailbox keys; the heartbeat sends and reads replies, the dashboard only reads them to know whether Sellbird can send |
+| `sellbird-discovery` | `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD`, `DATAFORSEO_SANDBOX`, `SERPER_API_KEY`, `TINYFISH_API_KEY`, `SCAVIO_API_KEY` | both containers, optional | prospecting keys; the dashboard's Discover tab runs paid discovery |
+| `sellbird-verifiers` | `REOON_API_KEY`, `ZEROBOUNCE_API_KEY`, `HUNTER_API_KEY`, `HUNTER_MONTHLY_SEARCHES` | `heartbeat` only, optional | email verification keys |
+| `sellbird-extras` | `PRECLEARED_API_KEY`, `TRULYINBOX_API_KEY`, `TRULYINBOX_WORKSPACE_ID`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, `LINKEDIN_EMAIL`, `LINKEDIN_PASSWORD` | `heartbeat` only, optional | the cold-email check, warmup status, training crawl and LinkedIn prospecting keys |
 
-The migration Job MUST NOT receive `sellbird-db-app`, `sellbird-claude` or
-`sellbird-providers`. The app container MUST NOT receive `sellbird-db-migrate`.
+One key per variable, the key name equal to the variable name, each reached
+through `secretKeyRef` and nothing else: never `envFrom: secretRef`, never a Secret
+volume. The four optional Secrets and every key in them are marked
+`optional: true`. A Secret or key the operator did not create leaves the variable
+unset, and the feature shows as not configured; the pod still starts. Create each
+optional Secret only for the providers in use.
+
+The migration Job MUST NOT receive `sellbird-db-app`, `sellbird-claude` or any
+optional Secret. The `sellbird` and `heartbeat` containers MUST NOT receive
+`sellbird-db-migrate`. The internet-facing `sellbird` container does not receive
+`sellbird-verifiers` or `sellbird-extras`.
+
+Gmail and Microsoft 365 also need a token from a browser sign-in, which a pod
+cannot do, so a hosted Sellbird sends and reads mail over SMTP and IMAP. The
+`GMAIL_*` and `M365_*` keys are wired but not usable hosted.
 
 Platform-side secrets (Postgres superuser, Kratos cookie and cipher secrets,
 flint-gate's signing key) live in platform namespaces. Sellbird never references
@@ -348,8 +405,8 @@ them.
 
 - Secret `sellbird-claude`, key `CLAUDE_CODE_OAUTH_TOKEN`, holding the token the
   operator creates with `claude setup-token` on their own machine (decision D4).
-- It reaches the Sellbird app container only as the environment variable
-  `CLAUDE_CODE_OAUTH_TOKEN` through `env.valueFrom.secretKeyRef`. It MUST NOT be
+- It reaches the `sellbird` and `heartbeat` containers (never the migration Job)
+  only as the environment variable `CLAUDE_CODE_OAUTH_TOKEN` through `env.valueFrom.secretKeyRef`. It MUST NOT be
   mounted as a file, MUST NOT be written to disk (not under `/data`, not under
   `$HOME`), MUST NOT be logged, printed, returned by the dashboard API, stored in
   the database or placed in a ConfigMap.
@@ -363,9 +420,12 @@ them.
 
 ## Gateway configuration values
 
-Non-secret settings reach the app container from ConfigMap `sellbird-gateway`,
-which lives in the platform's production overlay (the example overlay in this
-repository uses the placeholders):
+Non-secret settings reach the app pod from ConfigMap `sellbird-gateway`, which
+lives in the platform's production overlay (the example overlay in this repository
+uses the placeholders). The `sellbird` container loads the whole ConfigMap; the
+`heartbeat` container takes only `SELLBIRD_DASHBOARD_MODE`. The ConfigMap is
+required: if it is missing the pod does not start, rather than starting in another
+mode.
 
 | Key | Example value | Meaning |
 |---|---|---|
@@ -418,13 +478,65 @@ The deploy App needs only Contents read and write, installed only on the platfor
 repository. The platform repository's ruleset lets the App push to `main` and
 requires review for every other writer.
 
+## Workload layout
+
+Every resource the base in `infra/k8s/base` creates, all in namespace `sellbird`:
+
+| Kind | Name | Notes |
+|---|---|---|
+| Deployment | `sellbird` | one replica, `Recreate` strategy, sync wave 0; two containers |
+| Service | `sellbird` | ClusterIP, port `5555` (name `http`), selects the app pod |
+| ServiceAccount | `sellbird` | the app pod's account; no token mounted, no Role |
+| ServiceAccount | `sellbird-migrate` | the migration Job's account; PreSync hook, wave -2 |
+| Job | `sellbird-migrate` | PreSync hook, wave -1 (see [Migration flow](#migration-flow)) |
+| PersistentVolumeClaim | `sellbird-data` | 1Gi, ReadWriteOnce, default StorageClass, sync wave 0, `Prune=false,Delete=false` |
+| NetworkPolicy | `sellbird-default-deny` | default deny, ingress and egress, whole namespace |
+| NetworkPolicy | `sellbird-app-ingress-from-flint-gate` | app pod ingress, TCP 5555 from flint-gate |
+| NetworkPolicy | `sellbird-egress-dns-and-postgres` | DNS and Postgres egress, all Sellbird pods |
+| NetworkPolicy | `sellbird-app-egress` | flint-gate JWKS and the internet, app pod only |
+
+The base creates no Secret, ConfigMap, Namespace, Ingress or HTTPRoute.
+
+Containers in the `sellbird` Deployment's pod, which share one pod, one volume and
+one image (both use the logical image name `sellbird`):
+
+| Container | Command | Port and probes | Secrets (see [Secrets](#secrets)) |
+|---|---|---|---|
+| `sellbird` (first in the list; the default for `kubectl logs` and `exec`) | `dashboard --host 0.0.0.0 --port 5555`, gateway mode | port `5555` (`http`); `tcpSocket` startup, readiness and liveness probes | `sellbird-db-app`, `sellbird-claude`, `sellbird-mail`, `sellbird-discovery` |
+| `heartbeat` | `run` (the outreach loop) | no port, no probes | those four plus `sellbird-verifiers` and `sellbird-extras` |
+
+- The Service routes to `sellbird` only. The pod is Ready only while both
+  containers are running, because the pod's readiness is the readiness of all its
+  containers. The heartbeat has no probe of its own, since it has nothing to probe
+  over the network and long waits are normal; a liveness probe could only kill a
+  healthy loop. If the process exits, Kubernetes restarts it.
+- Until Sellbird has been trained, `heartbeat` does not exit: it waits, re-checks
+  every minute and starts the loop by itself once training is done. Training is an
+  operator command (see `docs/hosted-operations.md`).
+- Each heartbeat wait or cycle writes one action-log row at most once per heartbeat
+  interval. The dashboard reports the heartbeat as running only while the newest
+  row is younger than three intervals; start and stop are refused in hosted mode.
+- `Recreate` is used so two pods never run against the same database, and so the
+  old pod releases the ReadWriteOnce volume before the new one mounts it. The cost
+  is a short outage on every deploy: the old pod stops (up to
+  `terminationGracePeriodSeconds`, 120 seconds, so a send in progress can finish),
+  then the new pod starts. flint-gate has no endpoint for that time.
+- `/data` (`SELLBIRD_HOME`) is the claim `sellbird-data`, mounted by both
+  containers. It holds training, the offer and dashboard settings; business state
+  is in Postgres. `fsGroup: 1000` makes it writable by the non-root user. `/tmp`
+  and `/dev/shm` are separate `emptyDir` volumes per container.
+- Both containers run non-root on a read-only root filesystem with all
+  capabilities dropped. Neither pod mounts a Kubernetes API token.
+- A platform overlay patch MUST NOT address these containers by list index or
+  replace the whole container list. Address them by name (`sellbird`, `heartbeat`).
+
 ## Argo CD ownership
 
 The platform repository owns both objects:
 
 | Object | Name | Required settings |
 |---|---|---|
-| AppProject | `sellbird` | `sourceRepos`: the platform repository and this repository (for the pinned remote base); `destinations`: in-cluster server, namespace `sellbird` only; `clusterResourceWhitelist`: empty; `namespaceResourceWhitelist`: Deployment, Service, ServiceAccount, ConfigMap, NetworkPolicy, Job; Secrets are not in the list |
+| AppProject | `sellbird` | `sourceRepos`: the platform repository and this repository (for the pinned remote base); `destinations`: in-cluster server, namespace `sellbird` only; `clusterResourceWhitelist`: empty; `namespaceResourceWhitelist`: Deployment, Service, ServiceAccount, ConfigMap, NetworkPolicy, Job, PersistentVolumeClaim; Secrets are not in the list |
 | Application | `sellbird` in namespace `argocd` | `project: sellbird`; source path `apps/sellbird/overlays/production` at `main`; destination namespace `sellbird`; `syncPolicy.automated` with `prune: true` and `selfHeal: true`; `CreateNamespace=false` |
 
 Syncing into the cluster is gated on the platform phase and is an operator-approved
@@ -433,8 +545,15 @@ action.
 ## Migration flow
 
 1. Sellbird's base includes Job `sellbird-migrate` annotated
-   `argocd.argoproj.io/hook: PreSync` and
-   `argocd.argoproj.io/hook-delete-policy: BeforeHookCreation`.
+   `argocd.argoproj.io/hook: PreSync`,
+   `argocd.argoproj.io/hook-delete-policy: BeforeHookCreation` and sync wave `-1`.
+   It runs as ServiceAccount `sellbird-migrate`, which is itself a PreSync hook at
+   wave `-2` with the same delete policy, so on a fresh install the account exists
+   before the Job is created (the app's own `sellbird` account is applied later,
+   with the ordinary resources). The Deployment and the PersistentVolumeClaim are
+   wave `0`. The Job mounts a throwaway `emptyDir` as `/data`, not
+   `sellbird-data`, because that ReadWriteOnce claim may still be attached to the
+   running app pod during PreSync.
 2. It runs `sellbird storage migrate` from the same pinned image, with
    `SELLBIRD_DATABASE_URL` from `sellbird-db-migrate`, and applies pending up
    migrations in order inside transactions.
@@ -454,9 +573,19 @@ allowances:
 |---|---|---|---|
 | ingress | `component: app` | pods `app.kubernetes.io/name: flint-gate` in namespace `flint-gate` | TCP 5555 |
 | egress | all Sellbird pods | kube-dns in `kube-system` | UDP and TCP 53 |
+| egress | all Sellbird pods | `169.254.20.10/32` (GKE NodeLocal DNSCache) | UDP and TCP 53 |
 | egress | all Sellbird pods | pods `app.kubernetes.io/name: flint-forge-postgres` in namespace `flint-forge` | TCP 5432 |
 | egress | `component: app` | pods `app.kubernetes.io/name: flint-gate` in namespace `flint-gate` | TCP 4456 (JWKS) |
 | egress | `component: app` | `0.0.0.0/0` except cluster, private (RFC 1918) and link-local `169.254.0.0/16` ranges | TCP 80, 443, 465, 587, 993 (model API, email providers, prospecting) |
+
+The `169.254.20.10/32` rule is for clusters that run NodeLocal DNSCache, where pods
+send DNS to that address. Without the add-on it matches nothing. No other
+link-local address is allowed, on any port, so the metadata server stays blocked.
+
+Policies select pods, not containers, so the `sellbird` and `heartbeat` containers
+share every rule. Mail goes out on TCP 587 or 465 (SMTP submission) and 993 (IMAPS)
+only. Port 25 and plain IMAP on 143 are not allowed, so a hosted mailbox must offer
+submission and IMAPS.
 
 The migration Job gets DNS and Postgres egress only. Nothing else may reach
 Sellbird's port: not the Gateway, not other namespaces.

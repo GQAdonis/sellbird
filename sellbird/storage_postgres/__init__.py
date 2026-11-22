@@ -27,8 +27,13 @@ from sellbird import storage
 # migrations/postgres. A test keeps the two equal.
 EXPECTED_SCHEMA_VERSION = 5
 
-# SQLSTATEs that mean "this database isn't there yet", not "can't tell":
-# invalid_catalog_name (no such database) and undefined_table (not migrated).
+# The only SQLSTATEs exists() reads as "not there yet" rather than "can't
+# tell": invalid_catalog_name (3D000, no such database) and undefined_table
+# (42P01, no schema_version table: never migrated). The match is on the
+# error's ``sqlstate`` alone, never on its message text. psycopg 3 reports a
+# failure while connecting (a missing database included) with no sqlstate,
+# because libpq hands it only the message, so that case raises like any
+# other connect failure; 3D000 counts only when a driver supplies it.
 _NOT_THERE = frozenset({"3D000", "42P01"})
 
 
@@ -84,16 +89,21 @@ class PostgresBackend:
     def exists(self, name: str) -> bool:
         """Whether the database is there and has been migrated at least once.
 
-        False only when Postgres itself says so: no such database, or no
-        ``schema_version`` table yet. An unreachable server, a refused
-        password or a missing grant raise (as ``storage.ERRORS``), so an
+        False only when the error carries sqlstate ``3D000`` (no such
+        database) or ``42P01`` (no ``schema_version`` table). Every other
+        failure raises (as ``storage.ERRORS``): any other sqlstate (a refused
+        grant, for example), and any connect failure that carries no sqlstate,
+        whatever its message says. That includes an unreachable server, a
+        refused password and, with psycopg 3, a database that doesn't exist,
+        since psycopg reports connect-time failures without a sqlstate. So an
         outage is never mistaken for an empty install."""
         if name in self._known:
             return True
         try:
             row = self.read_one(name, "SELECT 1 FROM schema_version LIMIT 1", ())
         except storage.ERRORS as e:
-            if getattr(e, "sqlstate", None) in _NOT_THERE:
+            sqlstate = getattr(e, "sqlstate", None)
+            if sqlstate is not None and sqlstate in _NOT_THERE:
                 return False
             raise
         if row is not None:

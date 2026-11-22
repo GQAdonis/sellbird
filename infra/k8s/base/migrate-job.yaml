@@ -10,7 +10,16 @@
 # the migration role: the DSN comes only from Secret `sellbird-db-migrate`
 # (key SELLBIRD_DATABASE_URL) as SELLBIRD_MIGRATE_DATABASE_URL, which the
 # migrate command prefers. It receives no other Secret. SELLBIRD_MIGRATIONS_DIR
-# is set in the image. Network: DNS and Postgres only (see networkpolicy.yaml).
+# is set in the image. Network: DNS and Postgres only (see networkpolicy.yaml;
+# the policies select the pod by its labels, which are unchanged).
+#
+# It runs as ServiceAccount `sellbird-migrate` (serviceaccount.yaml), a PreSync
+# hook at wave -2, so the account exists before this Job is created even on a
+# fresh install, where the app's ordinary `sellbird` account is not yet applied.
+#
+# /data here is a throwaway emptyDir, not the app's `sellbird-data` volume: that
+# claim is ReadWriteOnce and still attached to the running app pod during
+# PreSync, and migrations need nothing from it.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -32,7 +41,7 @@ spec:
         app.kubernetes.io/component: migrate
     spec:
       restartPolicy: Never
-      serviceAccountName: sellbird
+      serviceAccountName: sellbird-migrate
       automountServiceAccountToken: false
       enableServiceLinks: false
       securityContext:

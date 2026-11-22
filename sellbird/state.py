@@ -149,6 +149,26 @@ def _new_id() -> str:
     return uuid.uuid4().hex[:12]
 
 
+def parse_db_timestamp(value) -> datetime | None:
+    """A timestamp read from either backend as timezone-aware UTC.
+
+    SQLite returns naive UTC text ("2026-01-01 12:00:00", or ISO with a "T");
+    Postgres may return a datetime or text, naive (UTC by convention here) or
+    aware. Anything unreadable is None."""
+    if value is None or value == "":
+        return None
+    if isinstance(value, datetime):
+        parsed = value
+    else:
+        try:
+            parsed = datetime.fromisoformat(str(value).strip().replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
 def _utcnow() -> datetime:
     """Naive UTC now (matches how timestamps are stored in the DB)."""
     return datetime.now(timezone.utc).replace(tzinfo=None)
@@ -2586,6 +2606,18 @@ class StateManager:
                 (_new_id(), action_type, agent, json.dumps(details or {})),
             )
             await db.commit()
+
+    async def last_heartbeat_at(self) -> datetime | None:
+        """When the heartbeat loop last logged a cycle (UTC, timezone-aware),
+        or None if it never has. The loop writes one agent="main" row per
+        cycle; a hosted dashboard reads it because it cannot see the loop's
+        process."""
+        async with self._connect() as db:
+            async with db.execute(
+                "SELECT MAX(created_at) FROM actions WHERE agent = ?", ("main",)
+            ) as cursor:
+                row = await cursor.fetchone()
+        return parse_db_timestamp(row[0] if row else None)
 
     # ── Analytics ──
 

@@ -1,0 +1,118 @@
+{
+  "mode": "artifact",
+  "verdict": "BLOCK",
+  "judge_model": "mimo-v2.6-pro",
+  "producer_model": "claude-fable-5-2",
+  "isolation_mode": "rest-gateway:http://localhost:4000/v1",
+  "cross_model_check": "unverified-producer-unknown",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "The SCN-LIVE-003 negative control requires an actual send while operator step 5 and the plan's limits require sending to stay paused for the entire boundary run.",
+      "evidence": "Boundary packet item 21 `neg-scn-live-003` runs `neg-approved-send.sh` and 'Negative control must show: exactly that one item is sent, showing the count would move if approval were given', but OPERATOR STEPS item 5 states 'Sending stays paused (`sellbird sending pause`) for the whole boundary run' and LIMITS states 'The hosted Sellbird will not send email at the end of this phase: sending stays paused until the operator chooses a mailbox and resumes it.'",
+      "suggested_fix": "Decide which is true: either the negative control sends against a local/mock transport that never reaches a provider (and the script says so), or the pause is lifted only for that one operator-approved item and operator step 5 is amended to say so. As written the boundary run stalls or silently violates the sending pause."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "SEC-04 and SEC-05, declared in scope by the operator, appear in no change, task, scenario or operator step, and SEC-03 is deferred to a platform request the plan explicitly allows to remain open.",
+      "evidence": "Inputs section: 'Operator decisions (2026-11-22): go-live means Operating; SEC-03, SEC-04 and SEC-05 are all in scope.' The string 'SEC-04' and 'SEC-05' occur nowhere else in the plan, and the only SEC-03 work is `go-live-docs/4` 'Draft the platform request: ... narrow the deploy App's push scope and remove its rule bypass (SEC-03)', while LIMITS says 'SEC-02 and the deploy App's push scope are requested from the platform; this phase can close with them still open there.'",
+      "suggested_fix": "Add changes (or an explicit mapping) that close SEC-04 and SEC-05, and either bring SEC-03 into this phase's deliverables or correct the operator-decision line to say it was descoped to a platform request."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "All five pipeline-hardening tasks edit `.github/workflows/**` and name `tests.yml` / `images.yml` as existing files, but the file tree contains no `.github` directory at all.",
+      "evidence": "`pipeline-hardening/1`: 'Make tests.yml callable (`workflow_call`), call it from images.yml and make the deploy job need it. Files: .github/workflows/**.' The packet's file_tree lists `.agent-team`, `.agents`, `.claude`, `.codex`, `.dockerignore`, `.env.example`, `.impeccable`, ... but no `.github` entry (only `./infra/github`), and no tests.yml or images.yml anywhere. The goals list 'first runs of the CI matrix, the Postgres job and `images.yml`' as future go-live work, suggesting the workflows may not exist yet.",
+      "suggested_fix": "Confirm where the workflows live (e.g. `infra/github/`) or add the missing creation work for `.github/workflows/tests.yml` and `images.yml` as a prerequisite change; otherwise every pipeline-hardening task and SCN-PIPE-001/002 apply to nothing."
+    },
+    {
+      "severity": "CRITICAL",
+      "file": "plan.md",
+      "claim": "The image-ID mismatch recheck (pipeline-hardening/2) has no negative control that demonstrates it can detect a substituted image, so a broken recheck would pass all listed evidence.",
+      "evidence": "SCN-PIPE-002 'Passes when' includes 'the post-scan recheck passed', and pipeline-hardening/2 is 'after all scans recompute the ID and fail on mismatch'; the only negative control for SCN-PIPE-002 is item 13 `neg-trivy-checksum.sh`, which must show 'the checksum step exits non-zero before any scan' \u2014 it exercises the Trivy checksum gate, never an ID mismatch. A recheck comparing the ID to itself would satisfy every listed oracle.",
+      "suggested_fix": "Add a negative control that tampers with the saved image tar or recorded ID between build and the post-scan recheck and requires the recheck step to exit non-zero naming the mismatch."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "Operator step 4 approves 'the two workflow_dispatch control runs' but the boundary packet invokes three workflow_dispatch control runs via `pipe-control.sh`.",
+      "evidence": "OPERATOR STEPS item 4: 'Operator approves one pod delete for SCN-LIVE-002 and the two workflow_dispatch control runs.' Boundary items 10, 11 and 12 all run `pipe-control.sh` with inputs `failing-test`, `none` and `vulnerable-image`, each of which is a workflow_dispatch control run per pipeline-hardening/4.",
+      "suggested_fix": "Change 'two' to 'three' (or drop one of the three control invocations) so the single pre-run operator ask covers the whole boundary packet."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The digest-based oracles are ambiguous: SCN-LIVE-002 never says which 'both digests' are compared, and SCN-SHIP-002 never says where the 'published digest' is read from, leaving room for a truth-from-system-under-test oracle.",
+      "evidence": "SCN-LIVE-002 'Passes when': 'both digests are unchanged in the new pod' \u2014 no digest is defined anywhere in the plan (its owner task `hosted-persistent-home/1` only speaks of the PVC and Recreate strategy). SCN-SHIP-002: 'the running digest equals the published digest' with no source given; if the script reads the 'published' digest from the same cluster state it is checking, the oracle passes trivially.",
+      "suggested_fix": "Name the two digests (e.g. trained-config hash and settings hash, with where they are computed) and require the published digest to be taken from the GitHub run/registry record independent of the cluster."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "`hosted-heartbeat/4` has no scenario coverage, contradicting the plan's own statement that only two tasks lack a scenario.",
+      "evidence": "The coverage table's scenario rows list `hosted-heartbeat/1`, `/2`, `/3` and `/5` but never `/4`; the plan says 'Tasks with no scenario of their own: `go-live-docs/3` (CHANGELOG) and `go-live-boundary/1` (the scripts themselves)' and omits `hosted-heartbeat/4` ('Confirm whether any dashboard action sends mail or calls a provider directly and record the per-container secret split').",
+      "suggested_fix": "Either add `hosted-heartbeat/4` to the no-scenario list (it also gates `hosted-heartbeat/5`'s secretKeyRef design, so its output should be read at the cumulative review) or give its secret-split conclusion a verification hook."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "SCN-REG-001's oracle and negative control reference artifacts the plan never defines: 'every required test ID' and 'the scratch copies'.",
+      "evidence": "SCN-REG-001 'Passes when': 'zero failures and every required test ID collected and passed' \u2014 no list of required test IDs appears anywhere in the plan, so the boundary script author decides what counts; 'Negative control must show': 'the required JWKS and setup tests fail against the scratch copies' \u2014 'scratch copies' (what is copied, where, and how the real repo is protected) is never defined.",
+      "suggested_fix": "Enumerate the required test IDs in the change list (they follow from hosted-small-fixes/1-2 and hosted-heartbeat/1-3) and define the scratch-copy procedure in `go-live-boundary/1`."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "SCN-LOCK-001's stale-lock gate has no negative control; the listed negative control only proves hash enforcement, not staleness detection.",
+      "evidence": "pipeline-hardening/5 requires CI to 'fail CI when the lock is stale', but SCN-LOCK-001 'Passes when' is only 'the build succeeds from the committed lock and the stale-lock check exits zero', and its negative control must show only 'the build fails in the dependency install step' \u2014 a mutated-lock run showing the stale-lock check exits non-zero is absent. A staleness check that always exits zero passes every listed oracle.",
+      "suggested_fix": "Add a negative control that edits a dependency without regenerating the lock and requires the stale-lock check to exit non-zero."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The two open items the analysis review required the plan to confirm (A4 table name, A5 dashboard key) are not actually confirmed; the plan substitutes a different item for A5.",
+      "evidence": "Analyze handoff: 'A4 table name and A5 dashboard key need confirming in the plan.' The plan's carried-in sentence says '`hosted-heartbeat/2` names the table the loop writes each cycle; `hosted-heartbeat/4` confirms the per-container secret split' \u2014 'the action log' in `hosted-heartbeat/2` is prose, not a concrete table name, and no dashboard key is named anywhere (A5 is silently replaced by the secret split, which is a different open item).",
+      "suggested_fix": "Name the concrete table both backends use in `hosted-heartbeat/2` and name the dashboard status key in `hosted-heartbeat/3`, or record explicitly that A5 was dropped."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The go-live work item 'push and open a PR' from the goals is covered by no task and no operator step, yet SCN-SHIP-002 and the PIPE evidence depend on a merged main run.",
+      "evidence": "Goals, go-live section: 'history cleanup; push and open a PR; first runs of the CI matrix, the Postgres job and `images.yml`'. Operator step 1 only says 'Operator merges the Sellbird go-live pull request (after CI is green)' \u2014 nothing in the 22 tasks creates the branch, commits, pushes or opens the PR, and SCN-PIPE-002 reads 'the latest main run'.",
+      "suggested_fix": "Add a task or an operator step that owns branch push and PR creation, and state who runs the first CI/Postgres/images runs the goals call for."
+    },
+    {
+      "severity": "WARNING",
+      "file": "plan.md",
+      "claim": "The only boundary oracle for the blocking `no-real-personal-data` constraint is a grep, which the constraint itself declares insufficient, and the required manual diff review is not scheduled anywhere.",
+      "evidence": "Boundary item 22 `redaction-grep.sh` is the sole check mapped to the redaction obligation across SCN-LIVE-001/002/003 and SCN-SHIP-002, while the constraints state for `no-real-personal-data`: 'Manual review of the diff; grep cannot prove absence.' The plan's cumulative review mentions only that `go-live-docs/3` and `go-live-boundary/1` 'are read at the cumulative review', not a manual diff review for personal data.",
+      "suggested_fix": "Add a manual diff/commit review step for real names, emails, addresses and domains as part of the cumulative review, and label redaction-grep.sh as a supplementary check only."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "plan.md",
+      "claim": "The CONTRACT BINDING section claims per-scenario freshness file lists that the scenario table does not carry.",
+      "evidence": "'Freshness: each scenario lists the files whose change invalidates its evidence.' The SCENARIO \u2192 TASK COVERAGE table columns are Scenario / What it shows / Owner tasks / Passes when / Negative control must show \u2014 no invalidating-files list, and the plan is the only source shown for the draft contract.",
+      "suggested_fix": "Add an invalidating-files column (or derive it explicitly from each scenario's owner tasks) so the contract's freshness claim is backed."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "plan.md",
+      "claim": "SCN-FRESH-001's negative control exercises only the ServiceAccount-ordering half of the scenario, leaving the DNS-53 egress oracle unexercised.",
+      "evidence": "SCN-FRESH-001 'Passes when' has two conjuncts ('the Job's ServiceAccount is a PreSync hook with a lower wave than the Job; port 53 egress peers are exactly kube-dns pods and 169.254.20.10/32') but the negative control must show only 'the ordering check exits non-zero and names the ServiceAccount'.",
+      "suggested_fix": "Have `neg-fresh.sh` also remove or widen the 53 egress rule and require the check to exit non-zero on the peer set."
+    }
+  ],
+  "judge_identity": {
+    "providerConnectionId": "xiaomi-token-plan",
+    "providerId": "xiaomi",
+    "modelId": "mimo-v2.6-pro"
+  },
+  "sycophancy_screen": {
+    "reject_cap": 2,
+    "cap_overridden": false,
+    "cap_default": 2
+  }
+}
