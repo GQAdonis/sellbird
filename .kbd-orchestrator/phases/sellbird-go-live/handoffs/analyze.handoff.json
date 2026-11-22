@@ -1,0 +1,12 @@
+{
+  "stage": "analyze",
+  "completedAt": "2026-11-22T00:43:49Z",
+  "outputs": [
+    "analysis.md",
+    "library-candidates.json"
+  ],
+  "nextStage": "spec",
+  "summaryForNext": "One adoption (uv to hash-lock dependencies); the rest is built here. Key calls: a small persistent volume for /data, the heartbeat as a second container in the same pod, hosted mode skips the .env check, hosted running-status from the database, migration Job gets its own PreSync ServiceAccount, deploy gated on tests through a reusable workflow, image ID recorded before scans plus a Trivy checksum and failing-scan control, JWKS https except loopback and in-cluster, DNS egress for NodeLocal DNSCache. Open: mail provider, verifier and product (operator inputs). Review: two rounds both BLOCK, all findings corrected, round-2 corrections unreviewed; A4 table name and A5 dashboard key need confirming in the plan.",
+  "skipped": false,
+  "skipReason": null
+}

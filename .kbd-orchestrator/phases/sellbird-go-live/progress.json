@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "2",
+  "generatedBy": "kbd-runtime",
+  "projectionContractVersion": 2,
+  "sourceRevision": 360,
+  "derivedRevision": 360,
+  "frontier": {
+    "6a8a0899-8ef7-41ad-b20f-dc28120196cf": 360
+  },
+  "conflictCount": 0,
+  "phase": "sellbird-go-live",
+  "phaseId": "sellbird-go-live",
+  "parentPhase": null,
+  "last_updated": "2026-11-22T02:11:20.432482Z",
+  "last_updated_by": "kbd-runtime",
+  "changes_total": 6,
+  "changes_completed": 6,
+  "implementation_total": 6,
+  "implementation_completed": 6,
+  "completion": {
+    "primaryCounter": "implementation",
+    "implementation": {
+      "completed": 6,
+      "total": 6,
+      "status": "COMPLETE"
+    },
+    "evidence": {
+      "status": "NOT_TRACKED",
+      "summary": null,
+      "blockers": []
+    },
+    "certification": {
+      "status": "NOT_TRACKED",
+      "summary": null,
+      "blockers": []
+    },
+    "publication": {
+      "status": "NOT_TRACKED",
+      "summary": null,
+      "blockers": []
+    }
+  },
+  "completionScopes": {
+    "completion": "phase",
+    "runCompletion": "run"
+  },
+  "runCompletion": {
+    "scope": "run",
+    "runId": "postgres-gke-deployment-20261118T052720Z",
+    "primaryCounter": "implementation",
+    "implementation": {
+      "completed": 16,
+      "total": 16,
+      "status": "COMPLETE"
+    },
+    "evidence": {
+      "status": "PENDING",
+      "summary": null,
+      "blockers": []
+    },
+    "certification": {
+      "status": "PENDING",
+      "summary": null,
+      "blockers": []
+    },
+    "publication": {
+      "status": "PENDING",
+      "summary": null,
+      "blockers": []
+    }
+  },
+  "changes": [
+    {
+      "id": "hosted-persistent-home",
+      "title": "Keep the hosted home folder and fix fresh installs",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 3,
+      "tasks_done": 3,
+      "last_task_completed": "Add a DNS egress rule for UDP and TCP 53 to 169.254.20.10/32 beside the kube-dns rule; keep the metadata serve",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "hosted-small-fixes",
+      "title": "JWKS address rule, exists() contract and local port",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 3,
+      "tasks_done": 3,
+      "last_task_completed": "Make the local stand-in's flint-gate host port a variable  defaulting to 4456",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "pipeline-hardening",
+      "title": "Gate deploys on tests, trust the scanned image, lock dependencies",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 5,
+      "tasks_done": 5,
+      "last_task_completed": "Generate a tracked requirements.lock with hashes for linux amd64 and arm64 using uv; install it with --require",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "hosted-heartbeat",
+      "title": "Run the outreach loop in the cluster",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 5,
+      "tasks_done": 5,
+      "last_task_completed": "Add a  container running  to the Deployment, sharing /data, with optional secretKeyRe",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "go-live-docs",
+      "title": "Document hosted operation and file platform requests",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 4,
+      "tasks_done": 4,
+      "last_task_completed": "Draft the platform request: strip the Cookie header upstream (SEC-02), narrow the deploy App's push scope and ",
+      "next_task_pending": null,
+      "blockers": []
+    },
+    {
+      "id": "go-live-boundary",
+      "title": "Boundary scripts for the go-live scenarios",
+      "status": "DONE",
+      "implementation_status": "COMPLETE",
+      "tasks_total": 2,
+      "tasks_done": 2,
+      "last_task_completed": "Write the live scenario scripts (rollout, heartbeat cycle, restart survival, no-send) that read counts and tim",
+      "next_task_pending": null,
+      "blockers": []
+    }
+  ],
+  "children": {},
+  "migrationStatus": null
+}

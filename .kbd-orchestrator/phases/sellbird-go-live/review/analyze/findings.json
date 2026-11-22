@@ -1,0 +1,60 @@
+{
+  "mode": "artifact",
+  "verdict": "BLOCK",
+  "judge_model": "mimo-v2.6-pro",
+  "producer_model": "claude-fable-5-2",
+  "isolation_mode": "rest-gateway:http://localhost:4000/v1",
+  "cross_model_check": "unverified-producer-unknown",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "file": "analysis.md",
+      "line": 61,
+      "claim": "The NodeLocal DNSCache DNS policy change is in the adopted scope but has no design call, no readiness entry, and no spec, while the open-questions section asserts it is already designed.",
+      "evidence": "Goals say 'Also clear F1\u2013F3, the JWKS https requirement and the NodeLocal DNS policy before the first sync' and the assess handoff lists 'DNS policy' as in scope; library-candidates.json build_required also lists 'DNS policy for NodeLocal DNSCache' as work to build. Yet the Design calls table (rows A1\u2013A15) contains no DNS row, the Readiness table contains no DNS row, and the open question claims 'The DNS policy change is written to allow both' \u2014 a change that is nowhere designed in this artifact. The closing line '**READY to spec.** Nothing is blocked.' therefore covers an in-scope item with zero design for the plan stage to spec.",
+      "suggested_fix": "Add a design call (e.g. A16) specifying the dnsPolicy / NodeLocal DNSCache change (what 'written to allow both' means concretely: which dnsPolicy value, which ndots or hostnames), and add it to the readiness table so the plan covers it."
+    },
+    {
+      "severity": "WARNING",
+      "file": "analysis.md",
+      "line": 37,
+      "claim": "A4's 'running' status is defined from 'the heartbeat's last recorded cycle in the database' with no staleness bound and no evidence such a cycle record exists, so a dead heartbeat would still be reported as running.",
+      "evidence": "A4 Call: 'report running from the heartbeat's last recorded cycle in the database, and hide start/stop'. No finding in 'Findings from the code' establishes that the heartbeat writes any per-cycle record to the database (findings 1\u201314 never mention one), and the row 'A3, A4 ... yes, small, hosted mode only' admits new runtime code is needed without saying what is written or how old a cycle may be before 'running' flips to not running. The Why discusses only why the pidfile cannot be used, not how liveness is derived.",
+      "suggested_fix": "State in A4 that the heartbeat writes a cycle timestamp (naming the table/mechanism) and define the staleness threshold after which status shows not-running."
+    },
+    {
+      "severity": "WARNING",
+      "file": "analysis.md",
+      "line": 45,
+      "claim": "A13 does not specify how the connect-time 'database does not exist' error is identified, while finding 12 says exactly that error may carry no sqlstate, so the proposed mapping to False cannot be distinguished from an outage.",
+      "evidence": "Finding 12: 'A missing database reported at connect time may carry no `sqlstate`; that case has no test.' A13 Call: 'if it raises, map the connect-time \"database does not exist\" error to False'. The design gives no discriminator for the no-sqlstate case and is conditional ('if it raises'), yet the stated invariant is 'an outage is never mistaken for an empty install' \u2014 keying the mapping on error text or blanket-mapping connect failures to False would violate it. The Rejected column is empty, so no alternative was weighed.",
+      "suggested_fix": "Specify the discriminator (e.g. sqlstate 3D000 only, plus a defined handling for the sqlstate-less connect case) and make the design unconditional once the test pins the actual error shape."
+    },
+    {
+      "severity": "WARNING",
+      "file": "analysis.md",
+      "line": 24,
+      "claim": "Finding 10 (SEC-04) defers its own factual verification to the plan stage, contradicting the preamble's claim that all findings were read from the working tree on 2026-11-22.",
+      "evidence": "Preamble: 'Every path below is in the working tree of this checkout ... read on 2026-11-22'. Finding 10 instead says: 'Where the image ID is recorded relative to the scan steps is to be re-read line by line in the plan's first task; the security review placed it after the scans (lines 192-273 at the time).' The evidence for the finding is a hedged, stale second-hand claim ('at the time'), not a read of the current `images.yml`, so the analysis asserts a code condition it never confirmed and pushes verification into a stage that is supposed to consume, not re-establish, the analysis.",
+      "suggested_fix": "Re-read the current images.yml in this checkout and state the actual position of the image-ID record relative to the scan steps in the finding itself."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "analysis.md",
+      "line": 38,
+      "claim": "A5 leaves the per-container secret split conditional ('where the dashboard does not need them') without enumerating which keys go to which container, and does not account for dashboard manual-send needing mailbox credentials.",
+      "evidence": "A5 Call: 'Optional `secretKeyRef` entries (`optional: true`) ... on the heartbeat container only where the dashboard does not need them'. The repository has manual-send dashboard behaviour (tests/test_dashboard_manual_send.py in the file tree), so the mailbox keys the heartbeat needs may also be needed by the dashboard; the design neither lists the keys nor states which side of the split each falls on, leaving the plan to guess.",
+      "suggested_fix": "Enumerate the secret keys (database URL, Claude token, gateway, mailbox, verifier, discovery) and state for each whether the dashboard container, the heartbeat container, or both receive it."
+    }
+  ],
+  "judge_identity": {
+    "providerConnectionId": "xiaomi-token-plan",
+    "providerId": "xiaomi",
+    "modelId": "mimo-v2.6-pro"
+  },
+  "sycophancy_screen": {
+    "reject_cap": 2,
+    "cap_overridden": false,
+    "cap_default": 2
+  }
+}

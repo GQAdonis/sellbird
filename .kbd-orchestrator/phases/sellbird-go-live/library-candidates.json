@@ -1,0 +1,23 @@
+{
+  "phase": "sellbird-go-live",
+  "generated_at": "2026-11-22T00:45:00Z",
+  "gaps_addressed": ["SEC-05 hash-locked dependencies"],
+  "candidates": [
+    {
+      "id": "cand-001",
+      "name": "uv (pip compile --generate-hashes)",
+      "kind": "tool",
+      "verdict": "adopt",
+      "fit_for_gap": "Generates one hash-locked requirements file from pyproject.toml and its hosted and postgres extras, for pip install --require-hashes in the image build.",
+      "decision_rationale": "Already installed on the operator's machine (0.11.9) and an untracked uv.lock exists in the checkout; used at lock time only, so the image build keeps plain pip.",
+      "risks": ["Lock must be regenerated on every dependency change; a CI check should fail when it is stale.", "Platform-specific wheels: the lock must cover linux amd64 and arm64."]
+    }
+  ],
+  "build_required": [
+    {"need": "Persistent hosted configuration and a restarted-by-Kubernetes heartbeat", "why_no_candidate": "Sellbird's own manifests and hosted-mode code."},
+    {"need": "Migration Job that works on a fresh install", "why_no_candidate": "Sellbird's own Argo CD hook ordering."},
+    {"need": "Deploy gated on green tests; image ID recorded before scans; Trivy checksum and failing-scan control", "why_no_candidate": "Sellbird's own workflow."},
+    {"need": "JWKS https rule, DNS policy for NodeLocal DNSCache, F1-F3", "why_no_candidate": "Small fixes in Sellbird's own code and manifests."}
+  ],
+  "research_budget": {"max_queries_per_tier": 8, "max_minutes": 20, "queries_used": 0}
+}

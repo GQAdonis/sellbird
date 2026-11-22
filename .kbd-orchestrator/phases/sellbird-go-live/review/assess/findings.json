@@ -1,0 +1,68 @@
+{
+  "mode": "artifact",
+  "verdict": "PASS",
+  "judge_model": "mimo-v2.6-pro",
+  "producer_model": "claude-fable-5-2",
+  "isolation_mode": "rest-gateway:http://localhost:4000/v1",
+  "cross_model_check": "unverified-producer-unknown",
+  "findings": [
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "line": 20,
+      "claim": "F1's unconfirmed connect-time failure mode is identified but then dropped from both the gap-0 precondition-breach list and the proposed scope, so it will silently leave the plan.",
+      "evidence": "The F1 row states \"The connect-time case with no SQLSTATE is not confirmed\", but gap 0 says the first sync happened \"with F2, F3, the JWKS rule and the DNS policy still open\" (omitting F1's residual), and the scope line reads \"F2 CHANGELOG entry; F3 configurable flint-gate port.\" with no F1 item at all.",
+      "suggested_fix": "Either confirm the connect-time case now, or add an explicit scope bullet (e.g. \"F1: confirm exists() returns False for a connect-time failure with no SQLSTATE\") and list it in gap 0."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "line": 75,
+      "claim": "Decision 1's phrase \"The open follow-ups are also closed\" has no defined referent and, read literally, contradicts the dispositions of gaps 3, 6 and 7 that the proposed scope excludes.",
+      "evidence": "Decision 1: \"The open follow-ups are also closed.\" But gap 3 says \"Sellbird's part is nil\", gap 6 says \"the operator's call\", gap 7 says \"It is a skill-pack defect, not Sellbird's\", and none of the three appears in the proposed scope (bullets for migration Job, JWKS, DNS, F2/F3, SEC-03/04/05, Trivy, heartbeat). Downstream scoping has no way to know which items \"open follow-ups\" names.",
+      "suggested_fix": "Replace the phrase with the explicit IDs it covers (e.g. \"the gap-0 remediation items F2, F3, the JWKS rule and the DNS policy\") so the plan scope matches the operator's decision."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "line": 93,
+      "claim": "The claim that \"today training writes `sellbird.local.yaml` and skill files to disk\" is unsupported by the packet's own path evidence and ignores the `sellbird.yaml` that the tree actually contains.",
+      "evidence": "cited_paths reports \"MISSING  sellbird.local.yaml\", and the file tree lists only \"./sellbird.yaml\" at the repo root, which the assessment never mentions; no code citation (file + symbol) is given for where the filename is produced.",
+      "suggested_fix": "Cite the code that writes/reads `sellbird.local.yaml` (file and symbol) or correct the filename, and state the relationship between `sellbird.yaml` and the local override before analyze/plan designs hosted config loading."
+    },
+    {
+      "severity": "WARNING",
+      "file": "assessment.md",
+      "line": 11,
+      "claim": "The seeded requirement that platform provisioning \"matches `docs/platform-interface.md`\" (including \"Sellbird's database and roles\") is compressed out of the coverage table and never assessed.",
+      "evidence": "The goals say the platform repo must provide \"flint-forge PG18 with Sellbird's database and roles\" and \"provisioning that matches `docs/platform-interface.md`\", but the table row reads only \"Platform repo: Gateway, flint-forge PG18, Kratos with MFA, flint-gate, production overlay\" and disclaims \"Not re-checked here\"; the interface-conformance and DB-role requirements appear nowhere else in the assessment, including the proposed scope and open questions.",
+      "suggested_fix": "Add the interface-conformance and database/roles items to the table row (or a gap), even if only as \"reported done, not re-checked\", so the hosted-configuration work in this phase does not assume an unverified interface."
+    },
+    {
+      "severity": "SUGGESTION",
+      "file": "assessment.md",
+      "line": 68,
+      "claim": "The assessment leans on unexplained external IDs (D12, CG-1..3, G3\u2013G6) that cannot be resolved from the packet, since prior_handoffs is null.",
+      "evidence": "Exclusions cite \"backups, high availability and autoscaling (D12)\", the live-check row cites \"(CG-1..3)\", and the knowledge-gaps paragraph cites \"G3, G4, G5 PARTIAL and G6 NOT MET\"; none of these IDs is defined in the artifact or anywhere else in the packet.",
+      "suggested_fix": "Expand each ID with its one-line meaning (or drop the parentheticals) so the plan and contract can cite them unambiguously."
+    }
+  ],
+  "judge_identity": {
+    "providerConnectionId": "xiaomi-token-plan",
+    "providerId": "xiaomi",
+    "modelId": "mimo-v2.6-pro"
+  },
+  "checked_classes": [
+    "goal coverage \u2014 every seeded item (platform repo, history/PR, CI matrix + Postgres job, images.yml, Trivy control, deploy bot + ruleset, Argo digest sync, host resolve/TLS/session, F1\u2013F3, JWKS https, NodeLocal DNS) has a table row; the only coverage defect is the platform-interface/DB-roles sub-item reported as a finding",
+    "claims about the codebase vs the file tree \u2014 infra/k8s/base/deployment.yaml, auth/config.py, tests/storage_contract/test_pg_failures.py, networkpolicy.yaml and storage_postgres/__init__.py all resolve; the one unsupported path claim (sellbird.local.yaml) is reported as a finding",
+    "vague findings \u2014 each gap names a component, file or repo and a concrete defect; no 'needs improvement'-style findings present",
+    "goals restated as findings \u2014 all gaps carry evidence rows or file references rather than restating goal text",
+    "internal contradictions \u2014 Decisions, risk acceptance, exclusions and proposed scope are consistent on SEC-02/03/04/05/06/07 and on sending safety (approval held, autopilot off); no constraint-blocking contradiction found",
+    "scope-vs-gap consistency \u2014 every gap is either scoped (1, 2, 4, 5, gap-0 items) or explicitly dispositioned out (3, 6, 7); the sole silently dropped item is F1's connect-time case, reported as a finding"
+  ],
+  "sycophancy_screen": {
+    "reject_cap": 2,
+    "cap_overridden": false,
+    "cap_default": 2
+  }
+}
